@@ -1811,10 +1811,18 @@
 
         // Load player detail data based on selected map
         async function loadPlayerDetailData(mapName) {
+            console.log('loadPlayerDetailData called with map:', mapName);
+            console.log('currentPlayerName:', currentPlayerName);
+            
             if (!currentPlayerName) return;
             
             const info = PLAYER_INFO[currentPlayerName];
-            if (!info) return;
+            if (!info) {
+                console.error('Player info not found for:', currentPlayerName);
+                return;
+            }
+            
+            console.log('Loading data for player:', info.nickname);
             
             // Fetch data from Google Sheets
             const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
@@ -1823,35 +1831,51 @@
                 return;
             }
             
-            // Map name mapping (convert dropdown value to sheet value)
-            const mapMapping = {
-                'all': 'All',
-                'ancient': 'Ancient',
-                'anubis': 'Anubis',
-                'dust2': 'Dust II',
-                'inferno': 'Inferno',
-                'mirage': 'Mirage',
-                'nuke': 'Nuke',
-                'overpass': 'Overpass'
+            console.log('Fetched data rows:', data.length);
+            
+            // Define row ranges for each map (convert to 0-based indices)
+            const mapRowRanges = {
+                'all': [7, 15],        // rows 8-16
+                'ancient': [18, 26],   // rows 19-27
+                'anubis': [29, 37],    // rows 30-38
+                'dust2': [40, 48],     // rows 41-49
+                'inferno': [51, 59],   // rows 52-60
+                'mirage': [62, 70],    // rows 63-71
+                'nuke': [73, 81],      // rows 74-82
+                'overpass': [84, 92]   // rows 85-93
             };
             
-            const targetMap = mapMapping[mapName.toLowerCase()];
+            const [startRow, endRow] = mapRowRanges[mapName.toLowerCase()];
+            console.log(`Searching in rows ${startRow + 1} to ${endRow + 1} (indices ${startRow}-${endRow})`);
             
-            // Find the row for this player and map
+            // Find the row for this player within the specified range
             let playerRow = null;
-            for (let i = 0; i < data.length; i++) {
+            for (let i = startRow; i <= endRow; i++) {
+                if (i >= data.length) break;
+                
                 const row = data[i];
-                const mapCell = row[1]; // Column B (index 1)
                 const nicknameCell = row[2]; // Column C (index 2)
                 
-                if (mapCell === targetMap && nicknameCell === info.nickname) {
+                console.log(`Row ${i + 1}: Checking nickname "${nicknameCell}" against "${info.nickname}"`);
+                
+                if (nicknameCell === info.nickname) {
                     playerRow = row;
+                    console.log('Found matching row at index:', i, '(row', i + 1, 'in sheet)');
+                    console.log('Row data sample:', {
+                        nickname: nicknameCell,
+                        totalKills: row[10],
+                        rating: row[184]
+                    });
                     break;
                 }
             }
             
             if (!playerRow) {
-                console.error(`No data found for ${info.nickname} on ${targetMap}`);
+                console.error(`No data found for ${info.nickname} in rows ${startRow + 1} to ${endRow + 1}`);
+                console.log('Available players in this range:');
+                for (let i = startRow; i <= endRow && i < data.length; i++) {
+                    console.log(`Row ${i + 1}: "${data[i][2]}"`);
+                }
                 return;
             }
             
