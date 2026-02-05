@@ -325,6 +325,163 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* Player Cards Styles */
+        .players-container {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            padding: 20px 0;
+            scroll-behavior: smooth;
+        }
+
+        .players-container::-webkit-scrollbar {
+            height: 10px;
+        }
+
+        .players-container::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 5px;
+        }
+
+        .players-container::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 5px;
+        }
+
+        .player-card {
+            min-width: 280px;
+            max-width: 280px;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .player-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent-primary);
+            box-shadow: 0 10px 30px var(--shadow);
+        }
+
+        .player-photo {
+            width: 100%;
+            height: 320px;
+            object-fit: cover;
+            border-bottom: 3px solid var(--accent-primary);
+        }
+
+        .player-info {
+            padding: 20px;
+        }
+
+        .player-nickname {
+            font-size: 1.4rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .player-identity {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+            padding: 8px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+        }
+
+        .player-flag {
+            font-size: 1.2rem;
+        }
+
+        .player-realname {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .player-maps {
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .player-stats-label {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .player-rating-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            margin-bottom: 12px;
+        }
+
+        .player-rating-label {
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        .player-rating-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .player-attribute {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .player-attribute:last-child {
+            border-bottom: none;
+        }
+
+        .player-attribute-label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .player-attribute-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .player-complete-stats {
+            display: block;
+            text-align: center;
+            padding: 12px;
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+            text-decoration: none;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+            border-radius: 6px;
+        }
+
+        .player-complete-stats:hover {
+            background: var(--accent-secondary);
+            transform: scale(1.05);
+        }
+
         @media (max-width: 768px) {
             h1 {
                 font-size: 1.8rem;
@@ -356,20 +513,6 @@
         <div class="container">
             <div class="header-content">
                 <h1>🎯 CS2 Squad Stats</h1>
-                <div class="header-stats">
-                    <div class="stat-pill">
-                        <div class="label">Total Games</div>
-                        <div class="value" id="total-games">-</div>
-                    </div>
-                    <div class="stat-pill">
-                        <div class="label">Win Rate</div>
-                        <div class="value" id="win-rate">-</div>
-                    </div>
-                    <div class="stat-pill">
-                        <div class="label">Avg Rating</div>
-                        <div class="value" id="avg-rating">-</div>
-                    </div>
-                </div>
             </div>
         </div>
     </header>
@@ -419,8 +562,14 @@
         <!-- PLAYERS PAGE -->
         <div id="players" class="page">
             <div class="section">
-                <h2 class="section-header">Player Cards - Coming Soon</h2>
-                <p style="color: var(--text-secondary);">Player cards with attributes will be displayed here.</p>
+                <h2 class="section-header">Players</h2>
+                <div class="loading" id="players-loading">
+                    <div class="loading-spinner"></div>
+                    Loading player data from Google Sheets...
+                </div>
+                <div class="players-container" id="players-container" style="display:none;">
+                    <!-- Player cards will be dynamically inserted here -->
+                </div>
             </div>
         </div>
 
@@ -473,6 +622,77 @@
             adr: 22,        // V
             hs_pct: 24,     // X
             rating: 185     // GC
+        };
+
+        const PLAYER_COLUMNS = {
+            name: 3,        // C
+            matches: 5,     // E
+            rating: 185,    // GC
+            firepower: 68,  // BP
+            entrying: 85,   // CG
+            trading: 99,    // CU
+            opening: 119,   // DO
+            clutching: 143, // EM
+            sniping: 157,   // FA
+            utility: 171    // FO
+        };
+
+        // Player data mapping
+        const PLAYER_INFO = {
+            'remokox': {
+                nickname: 'remokox',
+                realname: 'Remokox Dobraes',
+                flag: '🇵🇱',
+                photo: 'remokox.png'
+            },
+            'Große Cigarette': {
+                nickname: 'Große Cigarette',
+                realname: 'Masny Nefer',
+                flag: '🇵🇱',
+                photo: 'nefik.png'
+            },
+            'MasnoPro Vulpes Wójcior': {
+                nickname: 'MasnoPro Vulpes Wójcior',
+                realname: 'Vulpes Wójcior',
+                flag: '🇵🇱',
+                photo: 'vulpes.png'
+            },
+            'Badum': {
+                nickname: 'Badum',
+                realname: 'Assassin Badum28',
+                flag: '🏴',  // Temerian flag placeholder
+                photo: 'badum.png'
+            },
+            'MasnoCoach THUNDER': {
+                nickname: 'MasnoCoach THUNDER',
+                realname: 'Krakers Piorun Miśka',
+                flag: '🇵🇱',
+                photo: 'krakers.png'
+            },
+            'Marnyr': {
+                nickname: 'Marnyr',
+                realname: 'Marcin Gabren',
+                flag: '🇵🇱',
+                photo: 'marcinek.png'
+            },
+            'Torrek': {
+                nickname: 'Torrek',
+                realname: 'Torrek Szymański',
+                flag: '🇵🇱',
+                photo: 'torrek.png'
+            },
+            'Yao Ming': {
+                nickname: 'Yao Ming',
+                realname: 'Mingdon Książewski',
+                flag: '🇵🇱',
+                photo: 'mingdon.png'
+            },
+            'monke': {
+                nickname: 'monke',
+                realname: 'Janusz Półtorak',
+                flag: '🇨🇦',
+                photo: 'jano.png'
+            }
         };
 
         // Fetch data from Google Sheets
@@ -583,14 +803,111 @@
                 tbody.appendChild(row);
             });
 
-            // Update header stats
-            document.getElementById('total-games').textContent = Math.round(totalGames / playerCount);
-            document.getElementById('win-rate').textContent = (totalWinrate / playerCount).toFixed(0) + '%';
-            document.getElementById('avg-rating').textContent = (totalRating / playerCount).toFixed(2);
-
             // Hide loading, show table
             document.getElementById('overview-loading').style.display = 'none';
             document.getElementById('overview-table').style.display = 'table';
+        }
+
+        // Load players page data
+        async function loadPlayersData() {
+            const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
+            
+            if (!data) {
+                document.getElementById('players-loading').innerHTML = '<p style="color: var(--danger);">Error loading data. Please refresh the page.</p>';
+                return;
+            }
+
+            // Extract rows 8-16 (indices 7-15 in 0-indexed array)
+            const players = [];
+            for (let i = 7; i < 16 && i < data.length; i++) {
+                const row = data[i];
+                const name = row[PLAYER_COLUMNS.name - 1];
+                
+                // Skip empty rows or rows with errors
+                if (!name || name === '' || name.includes('#DIV') || !PLAYER_INFO[name]) continue;
+                
+                players.push({
+                    name: name,
+                    matches: parseInt(row[PLAYER_COLUMNS.matches - 1]) || 0,
+                    rating: row[PLAYER_COLUMNS.rating - 1],
+                    firepower: row[PLAYER_COLUMNS.firepower - 1],
+                    entrying: row[PLAYER_COLUMNS.entrying - 1],
+                    trading: row[PLAYER_COLUMNS.trading - 1],
+                    opening: row[PLAYER_COLUMNS.opening - 1],
+                    clutching: row[PLAYER_COLUMNS.clutching - 1],
+                    sniping: row[PLAYER_COLUMNS.sniping - 1],
+                    utility: row[PLAYER_COLUMNS.utility - 1]
+                });
+            }
+
+            // Sort by matches (descending)
+            players.sort((a, b) => b.matches - a.matches);
+
+            displayPlayersData(players);
+        }
+
+        // Display players as cards
+        function displayPlayersData(players) {
+            const container = document.getElementById('players-container');
+            container.innerHTML = '';
+
+            players.forEach(player => {
+                const info = PLAYER_INFO[player.name];
+                if (!info) return;
+
+                const card = document.createElement('div');
+                card.className = 'player-card';
+                card.innerHTML = `
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='320'%3E%3Crect width='280' height='320' fill='%23${Math.floor(Math.random()*16777215).toString(16)}'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='white' font-size='24'%3E${info.nickname}%3C/text%3E%3C/svg%3E" class="player-photo" alt="${info.nickname}">
+                    <div class="player-info">
+                        <div class="player-nickname">${info.nickname}</div>
+                        <div class="player-identity">
+                            <span class="player-flag">${info.flag}</span>
+                            <span class="player-realname">${info.realname}</span>
+                        </div>
+                        <div class="player-maps">${player.matches} maps</div>
+                        <div class="player-stats-label">statistics</div>
+                        <div class="player-rating-row">
+                            <span class="player-rating-label">Rating 3.0</span>
+                            <span class="player-rating-value">${player.rating}</span>
+                        </div>
+                        <div class="player-attribute">
+                            <span class="player-attribute-label">Firepower</span>
+                            <span class="player-attribute-value">${player.firepower}</span>
+                        </div>
+                        <div class="player-attribute">
+                            <span class="player-attribute-label">Entrying</span>
+                            <span class="player-attribute-value">${player.entrying}</span>
+                        </div>
+                        <div class="player-attribute">
+                            <span class="player-attribute-label">Trading</span>
+                            <span class="player-attribute-value">${player.trading}</span>
+                        </div>
+                        <div class="player-attribute">
+                            <span class="player-attribute-label">Opening</span>
+                            <span class="player-attribute-value">${player.opening}</span>
+                        </div>
+                        <div class="player-attribute">
+                            <span class="player-attribute-label">Clutching</span>
+                            <span class="player-attribute-value">${player.clutching}</span>
+                        </div>
+                        <div class="player-attribute">
+                            <span class="player-attribute-label">Sniping</span>
+                            <span class="player-attribute-value">${player.sniping}</span>
+                        </div>
+                        <div class="player-attribute">
+                            <span class="player-attribute-label">Utility</span>
+                            <span class="player-attribute-value">${player.utility}</span>
+                        </div>
+                        <a href="#wip" class="player-complete-stats">Complete statistics for ${info.nickname}</a>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            // Hide loading, show container
+            document.getElementById('players-loading').style.display = 'none';
+            document.getElementById('players-container').style.display = 'flex';
         }
 
         // Navigation functionality
@@ -608,6 +925,11 @@
                 
                 const pageId = link.getAttribute('data-page');
                 document.getElementById(pageId).classList.add('active');
+                
+                // Load page data if needed
+                if (pageId === 'players' && document.getElementById('players-container').children.length === 0) {
+                    loadPlayersData();
+                }
                 
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
