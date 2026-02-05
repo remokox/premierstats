@@ -857,8 +857,29 @@
 
                 const card = document.createElement('div');
                 card.className = 'player-card';
+                
+                // Map player names to their image filenames
+                const imageMap = {
+                    'cigarette': 'badum.png',
+                    'badum': 'badum.png',
+                    'jano': 'jano.png',
+                    'krakers': 'krakers.png',
+                    'marcinek': 'marcinek.png',
+                    'mingdon': 'mingdon.png',
+                    'nefik': 'nefik.png',
+                    'remokox': 'remokox.png',
+                    'torrek': 'torrek.png',
+                    'vulpes': 'vulpes.png'
+                };
+                
+                // Get the image filename for this player
+                const imageFilename = imageMap[player.name.toLowerCase()] || imageMap[info.nickname.toLowerCase()];
+                const imageUrl = imageFilename 
+                    ? `https://raw.githubusercontent.com/remokox/premierstats/main/player-images/${imageFilename}`
+                    : `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='320'%3E%3Crect width='280' height='320' fill='%23333'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle' fill='white' font-size='72'%3E${info.nickname.substring(0, 2).toUpperCase()}%3C/text%3E%3C/svg%3E`;
+                
                 card.innerHTML = `
-                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='320'%3E%3Crect width='280' height='320' fill='%23${Math.floor(Math.random()*16777215).toString(16)}'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='white' font-size='24'%3E${info.nickname}%3C/text%3E%3C/svg%3E" class="player-photo" alt="${info.nickname}">
+                    <img src="${imageUrl}" class="player-photo" alt="${info.nickname}">
                     <div class="player-info">
                         <div class="player-nickname">${info.nickname}</div>
                         <div class="player-identity">
@@ -869,7 +890,7 @@
                         <div class="player-stats-label">statistics</div>
                         <div class="player-rating-row">
                             <span class="player-rating-label">Rating 3.0</span>
-                            <span class="player-rating-value">${player.rating}</span>
+                            <span class="player-rating-value">${parseFloat(player.rating).toFixed(2)}</span>
                         </div>
                         <div class="player-attribute">
                             <span class="player-attribute-label">Firepower</span>
