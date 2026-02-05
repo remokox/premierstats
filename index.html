@@ -1539,6 +1539,33 @@
             utility: 171    // FO
         };
 
+        const INDIVIDUAL_COLUMNS = {
+            // Overall Stats
+            kills: 11,              // K
+            deaths: 12,             // L
+            kdRatio: 14,            // N
+            killRound: 37,          // AK
+            // Round Stats
+            zeroKillRounds: 52,     // AZ
+            oneKillRounds: 51,      // AY
+            twoKillRounds: 50,      // AX
+            threeKillRounds: 49,    // AW
+            fourKillRounds: 48,     // AV
+            fiveKillRounds: 47,     // AU
+            // Opening Stats
+            totalOpeningKills: 100, // CX
+            totalOpeningDeaths: 102,// CZ
+            teamWinAfterFirstKill: 113, // DJ
+            firstKillWonRounds: 112,    // DI
+            // Weapon Stats
+            rifleKills: 215,        // GH
+            sniperKills: 216,       // GI
+            smgKills: 217,          // GJ
+            pistolKills: 218,       // GK
+            grenadeKills: 219,      // GL
+            otherKills: 220         // GM
+        };
+
         // Player data mapping
         const PLAYER_INFO = {
             'remokox': {
@@ -2094,7 +2121,7 @@
             document.getElementById('detail-kpr').textContent = formatValue(playerRow[cols.killsPerRound]);
             
             // Update maps count
-            document.getElementById('detail-maps').textContent = formatValue(playerRow[cols.mapsPlayed]) + ' maps';
+            document.getElementById('detail-maps').textContent = formatInt(playerRow[cols.mapsPlayed]) + ' maps';
             
             // Update attribute scores in sidebar (these come from the player cards data, not the detail sheet)
             // We'll keep the existing values from the player card for now
@@ -2167,6 +2194,57 @@
             utilityRows[1].children[1].textContent = formatValue(playerRow[cols.utilityKillsPer100]);
             utilityRows[2].children[1].textContent = formatValue(playerRow[cols.flashAssistsPerRound]);
             utilityRows[3].children[1].textContent = formatValue(playerRow[cols.timeOpponentFlashed]);
+            
+            // Update Individual tab
+            const indCols = INDIVIDUAL_COLUMNS;
+            
+            // Overall Stats
+            document.getElementById('ind-kills').textContent = formatInt(playerRow[indCols.kills]);
+            document.getElementById('ind-deaths').textContent = formatInt(playerRow[indCols.deaths]);
+            document.getElementById('ind-kd').textContent = formatValue(playerRow[indCols.kdRatio]);
+            document.getElementById('ind-kr').textContent = formatValue(playerRow[indCols.killRound]);
+            
+            // Calculate rounds with kills (sum of 1,2,3,4,5 kill rounds)
+            const roundsWithKills = 
+                (parseInt(playerRow[indCols.oneKillRounds]) || 0) +
+                (parseInt(playerRow[indCols.twoKillRounds]) || 0) +
+                (parseInt(playerRow[indCols.threeKillRounds]) || 0) +
+                (parseInt(playerRow[indCols.fourKillRounds]) || 0) +
+                (parseInt(playerRow[indCols.fiveKillRounds]) || 0);
+            document.getElementById('ind-rounds-kills').textContent = roundsWithKills;
+            
+            // K-D difference
+            const kdDiff = (parseInt(playerRow[indCols.kills]) || 0) - (parseInt(playerRow[indCols.deaths]) || 0);
+            document.getElementById('ind-kd-diff').textContent = kdDiff;
+            
+            // Round Stats
+            document.getElementById('ind-0k-rounds').textContent = formatInt(playerRow[indCols.zeroKillRounds]);
+            document.getElementById('ind-1k-rounds').textContent = formatInt(playerRow[indCols.oneKillRounds]);
+            document.getElementById('ind-2k-rounds').textContent = formatInt(playerRow[indCols.twoKillRounds]);
+            document.getElementById('ind-3k-rounds').textContent = formatInt(playerRow[indCols.threeKillRounds]);
+            document.getElementById('ind-4k-rounds').textContent = formatInt(playerRow[indCols.fourKillRounds]);
+            document.getElementById('ind-5k-rounds').textContent = formatInt(playerRow[indCols.fiveKillRounds]);
+            
+            // Opening Stats
+            document.getElementById('ind-opening-kills').textContent = formatInt(playerRow[indCols.totalOpeningKills]);
+            document.getElementById('ind-opening-deaths').textContent = formatInt(playerRow[indCols.totalOpeningDeaths]);
+            
+            // Calculate opening kill ratio (opening kills / opening deaths)
+            const openingKills = parseFloat(playerRow[indCols.totalOpeningKills]) || 0;
+            const openingDeaths = parseFloat(playerRow[indCols.totalOpeningDeaths]) || 0;
+            const openingRatio = openingDeaths > 0 ? (openingKills / openingDeaths) : 0;
+            document.getElementById('ind-opening-ratio').textContent = formatValue(openingRatio);
+            
+            document.getElementById('ind-team-win-firstkill').textContent = formatPercentage(playerRow[indCols.teamWinAfterFirstKill]);
+            document.getElementById('ind-firstkill-wonrounds').textContent = formatPercentage(playerRow[indCols.firstKillWonRounds]);
+            
+            // Weapon Stats
+            document.getElementById('ind-rifle-kills').textContent = formatInt(playerRow[indCols.rifleKills]);
+            document.getElementById('ind-sniper-kills').textContent = formatInt(playerRow[indCols.sniperKills]);
+            document.getElementById('ind-smg-kills').textContent = formatInt(playerRow[indCols.smgKills]);
+            document.getElementById('ind-pistol-kills').textContent = formatInt(playerRow[indCols.pistolKills]);
+            document.getElementById('ind-grenade-kills').textContent = formatInt(playerRow[indCols.grenadeKills]);
+            document.getElementById('ind-other-kills').textContent = formatInt(playerRow[indCols.otherKills]);
             
             // Update attribute scores above each section and in sidebar
             // Note: These come from the "All" row for this player
