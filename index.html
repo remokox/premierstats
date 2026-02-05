@@ -395,7 +395,11 @@
         }
 
         .player-flag {
-            font-size: 1.2rem;
+            width: 24px;
+            height: 16px;
+            object-fit: cover;
+            border-radius: 2px;
+            vertical-align: middle;
         }
 
         .player-realname {
@@ -642,55 +646,55 @@
             'remokox': {
                 nickname: 'remokox',
                 realname: 'Remokox Dobraes',
-                flag: '🇵🇱',
+                flag: 'poland.png',
                 photo: 'remokox.png'
             },
             'Große Cigarette': {
                 nickname: 'Große Cigarette',
                 realname: 'Masny Nefer',
-                flag: '🇵🇱',
+                flag: 'poland.png',
                 photo: 'nefik.png'
             },
             'MasnoPro Vulpes Wójcior': {
                 nickname: 'MasnoPro Vulpes Wójcior',
                 realname: 'Vulpes Wójcior',
-                flag: '🇵🇱',
+                flag: 'poland.png',
                 photo: 'vulpes.png'
             },
             'Badum': {
                 nickname: 'Badum',
                 realname: 'Assassin Badum28',
-                flag: '🏴',  // Temerian flag placeholder
+                flag: 'temeria.png',
                 photo: 'badum.png'
             },
             'MasnoCoach THUNDER': {
                 nickname: 'MasnoCoach THUNDER',
                 realname: 'Krakers Piorun Miśka',
-                flag: '🇵🇱',
+                flag: 'poland.png',
                 photo: 'krakers.png'
             },
             'Marnyr': {
                 nickname: 'Marnyr',
                 realname: 'Marcin Gabren',
-                flag: '🇵🇱',
+                flag: 'poland.png',
                 photo: 'marcinek.png'
             },
             'Torrek': {
                 nickname: 'Torrek',
                 realname: 'Torrek Szymański',
-                flag: '🇵🇱',
+                flag: 'poland.png',
                 photo: 'torrek.png'
             },
             'Yao Ming': {
                 nickname: 'Yao Ming',
                 realname: 'Mingdon Książewski',
-                flag: '🇵🇱',
+                flag: 'poland.png',
                 photo: 'mingdon.png'
             },
             'monke': {
                 nickname: 'monke',
                 realname: 'Janusz Półtorak',
-                flag: '🇨🇦',
+                flag: 'canada.png',
                 photo: 'jano.png'
             }
         };
@@ -863,12 +867,16 @@
                     ? `https://github.com/remokox/premierstats/blob/main/${info.photo}?raw=true`
                     : `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='320'%3E%3Crect width='280' height='320' fill='%23333'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle' fill='white' font-size='72'%3E${info.nickname.substring(0, 2).toUpperCase()}%3C/text%3E%3C/svg%3E`;
                 
+                const flagUrl = info.flag 
+                    ? `https://github.com/remokox/premierstats/blob/main/${info.flag}?raw=true`
+                    : '';
+                
                 card.innerHTML = `
                     <img src="${imageUrl}" class="player-photo" alt="${info.nickname}">
                     <div class="player-info">
                         <div class="player-nickname">${info.nickname}</div>
                         <div class="player-identity">
-                            <span class="player-flag">${info.flag}</span>
+                            <img src="${flagUrl}" class="player-flag" alt="flag">
                             <span class="player-realname">${info.realname}</span>
                         </div>
                         <div class="player-maps">${player.matches} maps</div>
