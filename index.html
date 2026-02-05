@@ -403,7 +403,7 @@
                             <th>Peak</th>
                             <th>Rank Change</th>
                             <th>Matches</th>
-                            <th>Win Rate</th>
+                            <th>Win Rate (excl. ties)</th>
                             <th>K/D</th>
                             <th>ADR</th>
                             <th>HS%</th>
@@ -472,7 +472,7 @@
             kd: 14,         // N
             adr: 22,        // V
             hs_pct: 24,     // X
-            rating: 45      // AS
+            rating: 185     // GC
         };
 
         // Fetch data from Google Sheets
@@ -549,6 +549,9 @@
             const tbody = document.getElementById('overview-tbody');
             tbody.innerHTML = '';
 
+            // Sort players by matches (descending)
+            players.sort((a, b) => b.matches - a.matches);
+
             // Calculate summary stats
             let totalGames = 0;
             let totalWinrate = 0;
@@ -571,11 +574,11 @@
                     <td class="stat-value">-</td>
                     <td class="stat-value">-</td>
                     <td class="stat-value">${player.matches}</td>
-                    <td class="stat-value ${player.winrate >= 0.5 ? 'positive' : 'negative'}">${(player.winrate * 100).toFixed(1)}%</td>
-                    <td class="stat-value ${player.kd >= 1.0 ? 'positive' : 'negative'}">${player.kd.toFixed(2)}</td>
+                    <td class="stat-value">${(player.winrate * 100).toFixed(2)}%</td>
+                    <td class="stat-value">${player.kd.toFixed(2)}</td>
                     <td class="stat-value">${player.adr.toFixed(1)}</td>
-                    <td class="stat-value">${(player.hs_pct * 100).toFixed(1)}%</td>
-                    <td class="stat-value ${player.rating >= 1.0 ? 'positive' : 'negative'}">${player.rating.toFixed(2)}</td>
+                    <td class="stat-value">${(player.hs_pct * 100).toFixed(2)}%</td>
+                    <td class="stat-value">${player.rating.toFixed(2)}</td>
                 `;
                 tbody.appendChild(row);
             });
