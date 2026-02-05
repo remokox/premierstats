@@ -1751,7 +1751,8 @@
         const SHEET_ID = '14dRJgt4aZUFMrBCP8KHkZ6_zhNZE2aInBU9U1kTJ3mg';
         const SHEET_GIDS = {
             'sum_stats_maps': '429282545',
-            'maps': '1587882555'
+            'maps': '1587882555',
+            'clutches': '372093401'
         };
 
         // Column mappings (1-indexed)
@@ -1887,6 +1888,73 @@
                 kd: 143,       // EO
                 plusMinus: 145,// EQ
                 rating: 146    // ER
+            }
+        };
+
+        // Column mappings for Clutches tab - each player has different columns in the clutches sheet
+        const CLUTCHES_COLUMNS = {
+            'remokox': {
+                date: 3,       // D
+                map: 5,        // F
+                oneVX: 8,      // I
+                status: 10,    // K
+                round: 11      // L
+            },
+            'Große Cigarette': {
+                date: 13,      // N
+                map: 15,       // P
+                oneVX: 18,     // S
+                status: 20,    // U
+                round: 21      // V
+            },
+            'Badum': {
+                date: 23,      // X
+                map: 25,       // Z
+                oneVX: 28,     // AC
+                status: 30,    // AE
+                round: 31      // AF
+            },
+            'MasnoPro Vulpes Wójcior': {
+                date: 33,      // AH
+                map: 35,       // AJ
+                oneVX: 38,     // AM
+                status: 40,    // AO
+                round: 41      // AP
+            },
+            'MasnoCoach THUNDER': {
+                date: 43,      // AR
+                map: 45,       // AT
+                oneVX: 48,     // AW
+                status: 50,    // AY
+                round: 51      // AZ
+            },
+            'Marnyr': {
+                date: 53,      // BB
+                map: 55,       // BD
+                oneVX: 58,     // BG
+                status: 60,    // BI
+                round: 61      // BJ
+            },
+            'Yao Ming': {
+                date: 63,      // BL
+                map: 65,       // BN
+                oneVX: 68,     // BQ
+                status: 70,    // BS
+                round: 71      // BT
+            },
+            'Torrek': {
+                date: 73,      // BV
+                map: 75,       // BX
+                oneVX: 78,     // CA
+                status: 80,    // CC
+                round: 81      // CD
+            },
+            'monke': {
+                date: 83,      // CF
+                map: 85,       // CH
+                oneVX: 88,     // CK
+                status: 90,    // CM
+                round: 91      // CN
             }
         };
 
@@ -2595,6 +2663,9 @@
             
             // Load matches data for Matches tab
             await loadMatchesData(mapName);
+            
+            // Load clutches data for Clutches tab
+            await loadClutchesData(mapName);
         }
         
         // Get player attribute data from the "All" row
@@ -2738,6 +2809,98 @@
                     <td>${match.kd}</td>
                     <td>${match.plusMinus}</td>
                     <td>${match.rating.toFixed(2)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Load clutches data for Clutches tab
+        async function loadClutchesData(mapName) {
+            if (!currentPlayerName) return;
+            
+            const info = PLAYER_INFO[currentPlayerName];
+            if (!info) return;
+            
+            const data = await fetchSheetData(SHEET_GIDS.clutches);
+            if (!data) {
+                console.error('Failed to load clutches data');
+                return;
+            }
+            
+            // Get column mappings for this player
+            const cols = CLUTCHES_COLUMNS[info.nickname];
+            if (!cols) {
+                console.error('No clutch column mapping for player:', info.nickname);
+                return;
+            }
+            
+            // Find the row with player name + map filter
+            // Format: "PlayerNameMapName" e.g., "remokoxAll", "Große CigaretteAncient"
+            const mapFilter = mapName.charAt(0).toUpperCase() + mapName.slice(1).toLowerCase();
+            const searchString = info.nickname + mapFilter;
+            
+            console.log('Searching for clutches section:', searchString);
+            
+            let startRow = -1;
+            for (let i = 0; i < data.length; i++) {
+                // Check all columns for the search string
+                for (let j = 0; j < data[i].length; j++) {
+                    if (data[i][j] && data[i][j].trim() === searchString) {
+                        startRow = i + 2; // Start from 2 rows below (skip merged empty row)
+                        console.log('Found clutches section at row', i, 'starting from row', startRow);
+                        break;
+                    }
+                }
+                if (startRow !== -1) break;
+            }
+            
+            if (startRow === -1) {
+                console.error('Could not find clutches section for:', searchString);
+                return;
+            }
+            
+            // Collect all clutches from startRow until we hit an empty date cell
+            const clutches = [];
+            for (let i = startRow; i < data.length; i++) {
+                const row = data[i];
+                const date = row[cols.date];
+                
+                // Stop if we hit an empty date or another player section
+                if (!date || date.trim() === '') break;
+                
+                clutches.push({
+                    date: date,
+                    map: row[cols.map] || '-',
+                    oneVX: row[cols.oneVX] || '-',
+                    status: row[cols.status] || '-',
+                    round: row[cols.round] || '-'
+                });
+            }
+            
+            console.log('Found', clutches.length, 'clutches');
+            
+            // Calculate summary stats
+            const wins = clutches.filter(c => c.status.toLowerCase() === 'won').length;
+            const losses = clutches.filter(c => c.status.toLowerCase() === 'lost').length;
+            const difference = wins - losses;
+            
+            // Update summary stats
+            document.getElementById('clutches-wins').textContent = wins;
+            document.getElementById('clutches-losses').textContent = losses;
+            document.getElementById('clutches-difference').textContent = difference;
+            
+            // Populate clutches table
+            const tbody = document.getElementById('clutches-tbody');
+            tbody.innerHTML = '';
+            
+            clutches.forEach(clutch => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${clutch.date}</td>
+                    <td>${clutch.map}</td>
+                    <td>${clutch.oneVX}</td>
+                    <td>${clutch.status}</td>
+                    <td>${clutch.round}</td>
                 `;
                 tbody.appendChild(row);
             });
