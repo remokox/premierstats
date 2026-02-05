@@ -1721,39 +1721,31 @@
         }
 
         // Show player detail page
+        let currentPlayerName = null; // Store current player for map filtering
+
         function showPlayerDetail(playerName) {
             const info = PLAYER_INFO[playerName];
             if (!info) return;
             
-            // Populate player details (using placeholders for now)
+            // Store current player name
+            currentPlayerName = playerName;
+            
+            // Populate player details
             document.getElementById('detail-photo').src = `https://github.com/remokox/premierstats/blob/main/${info.photo}?raw=true`;
             document.getElementById('detail-nickname').textContent = info.nickname;
             document.getElementById('detail-flag').src = `https://github.com/remokox/premierstats/blob/main/${info.flag}?raw=true`;
             document.getElementById('detail-realname').textContent = info.realname;
-            document.getElementById('detail-maps').textContent = '25 maps'; // Placeholder
-            
-            // Set placeholder values
-            document.getElementById('detail-rating').textContent = '0.14';
-            document.getElementById('detail-round-swing').textContent = '29.49%';
-            document.getElementById('detail-dpr').textContent = '104.5';
-            document.getElementById('detail-kast').textContent = '1.04';
-            document.getElementById('detail-multikills').textContent = '23.49';
-            document.getElementById('detail-adr').textContent = '104.5';
-            document.getElementById('detail-kpr').textContent = '1.04';
-            document.getElementById('detail-firepower').textContent = '100/100';
-            document.getElementById('detail-entrying').textContent = '0/100';
-            document.getElementById('detail-trading').textContent = '80/100';
-            document.getElementById('detail-opening').textContent = '80/100';
-            document.getElementById('detail-clutching').textContent = '100/100';
-            document.getElementById('detail-sniping').textContent = '36/100';
-            document.getElementById('detail-utility').textContent = '50/100';
             
             // Show player detail page
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById('player-detail').classList.add('active');
             
-            // Reset to overview tab
+            // Reset to overview tab and "All" map
             switchDetailTab('overview');
+            document.getElementById('map-filter').value = 'all';
+            
+            // Load data for "All" maps
+            loadPlayerDetailData('all');
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -1795,13 +1787,166 @@
         });
 
         // Load player detail data based on selected map
-        function loadPlayerDetailData(mapName) {
-            // This function will load data from Google Sheets based on the selected map
-            // For now, it's a placeholder - we'll implement this after you tell me the data structure
-            console.log('Loading data for map:', mapName);
+        async function loadPlayerDetailData(mapName) {
+            if (!currentPlayerName) return;
             
-            // TODO: Fetch data from Google Sheets for the selected map
-            // and update all the values in the detail page
+            const info = PLAYER_INFO[currentPlayerName];
+            if (!info) return;
+            
+            // Fetch data from Google Sheets
+            const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
+            if (!data) {
+                console.error('Failed to load player detail data');
+                return;
+            }
+            
+            // Map name mapping (convert dropdown value to sheet value)
+            const mapMapping = {
+                'all': 'All',
+                'ancient': 'Ancient',
+                'anubis': 'Anubis',
+                'dust2': 'Dust II',
+                'inferno': 'Inferno',
+                'mirage': 'Mirage',
+                'nuke': 'Nuke',
+                'overpass': 'Overpass'
+            };
+            
+            const targetMap = mapMapping[mapName.toLowerCase()];
+            
+            // Find the row for this player and map
+            let playerRow = null;
+            for (let i = 0; i < data.length; i++) {
+                const row = data[i];
+                const mapCell = row[1]; // Column B (index 1)
+                const nicknameCell = row[2]; // Column C (index 2)
+                
+                if (mapCell === targetMap && nicknameCell === info.nickname) {
+                    playerRow = row;
+                    break;
+                }
+            }
+            
+            if (!playerRow) {
+                console.error(`No data found for ${info.nickname} on ${targetMap}`);
+                return;
+            }
+            
+            // Helper function to format numbers
+            const formatValue = (val, decimals = 2) => {
+                const num = parseFloat(val);
+                return isNaN(num) ? '-' : num.toFixed(decimals);
+            };
+            
+            // Helper function to format percentages (convert from decimal to percentage with 1 decimal)
+            const formatPercentage = (val) => {
+                const num = parseFloat(val);
+                if (isNaN(num)) return '-';
+                // If the value is already a percentage (>1), just format it
+                // If it's a decimal (like 0.288), multiply by 100
+                const percentage = num > 1 ? num : num * 100;
+                return percentage.toFixed(1) + '%';
+            };
+            
+            // Column indices (subtract 1 because arrays are 0-indexed, but Excel columns are 1-indexed)
+            const cols = {
+                killsPerRound: 53,           // BB
+                killsPerRoundWin: 55,        // BD
+                damagePerRound: 56,          // BE
+                rating: 184,                 // GC
+                roundsMultikill: 62,         // BK (percentage)
+                roundsWithKill: 58,          // BG (percentage)
+                tradedDeathsPerRound: 70,    // BS
+                tradedDeathsPercentage: 71,  // BT (percentage)
+                openingDeathsTraded: 75,     // BX (percentage)
+                assistsPerRound: 77,         // BZ
+                supportRounds: 78,           // CA
+                tradeKillsPerRound: 87,      // CJ
+                tradeKillsPercentage: 88,    // CK (percentage)
+                assistedKillsPercentage: 91, // CN (percentage)
+                damagePerKill: 94,           // CQ
+                openingKillsPerRound: 102,   // CY
+                openingDeathsPerRound: 104,  // DA
+                openingAttempts: 106,        // DC (percentage)
+                openingSuccess: 108,         // DE (percentage)
+                winAfterOpeningKill: 113,    // DJ (percentage)
+                clutchPointsPerRound: 132,   // DY
+                lastAlivePercentage: 134,    // EA (percentage)
+                oneOnOneWin: 139,            // EF (percentage)
+                timeAlivePerRound: 137,      // ED
+                savesPerRoundLoss: 142,      // EI
+                sniperKillsPerRound: 150,    // EQ
+                sniperKillsPercentage: 151,  // ER (percentage)
+                sniperMultikillRounds: 154,  // EU
+                sniperOpeningKills: 156,     // EW
+                utilityDamagePerRound: 162,  // FE
+                utilityKillsPer100: 164,     // FG
+                flashAssistsPerRound: 166,   // FI
+                timeOpponentFlashed: 168     // FK
+            };
+            
+            // Update sidebar stats
+            document.getElementById('detail-rating').textContent = formatValue(playerRow[cols.rating]);
+            document.getElementById('detail-round-swing').textContent = '-'; // Not in provided columns
+            document.getElementById('detail-dpr').textContent = formatValue(playerRow[cols.damagePerRound]);
+            document.getElementById('detail-kast').textContent = formatPercentage(playerRow[cols.roundsWithKill]);
+            document.getElementById('detail-multikills').textContent = formatPercentage(playerRow[cols.roundsMultikill]);
+            document.getElementById('detail-adr').textContent = formatValue(playerRow[cols.damagePerRound]);
+            document.getElementById('detail-kpr').textContent = formatValue(playerRow[cols.killsPerRound]);
+            
+            // Update maps count (you might want to calculate this differently)
+            document.getElementById('detail-maps').textContent = mapName === 'all' ? 'All maps' : `${targetMap} only`;
+            
+            // Update Overview tab tables
+            // Firepower section
+            const firepowerRows = document.querySelectorAll('#detail-tab-overview .player-detail-table')[0].querySelectorAll('tbody tr');
+            firepowerRows[0].children[1].textContent = '-'; // Total Kills - not provided
+            firepowerRows[1].children[1].textContent = '-'; // Headshot % - not provided
+            firepowerRows[2].children[1].textContent = '-'; // Total Deaths - not provided
+            firepowerRows[3].children[1].textContent = '-'; // K/D ratio - not provided
+            firepowerRows[4].children[1].textContent = formatValue(playerRow[cols.damagePerRound]);
+            firepowerRows[5].children[1].textContent = '-'; // Damage drop off - not provided
+            
+            // Entrying section
+            const entryingRows = document.querySelectorAll('#detail-tab-overview .player-detail-table')[1].querySelectorAll('tbody tr');
+            entryingRows[0].children[1].textContent = formatValue(playerRow[cols.tradedDeathsPerRound]);
+            entryingRows[1].children[1].textContent = formatPercentage(playerRow[cols.tradedDeathsPercentage]);
+            
+            // Trading section
+            const tradingRows = document.querySelectorAll('#detail-tab-overview .player-detail-table')[2].querySelectorAll('tbody tr');
+            tradingRows[0].children[1].textContent = formatValue(playerRow[cols.tradeKillsPerRound]);
+            tradingRows[1].children[1].textContent = formatPercentage(playerRow[cols.tradeKillsPercentage]);
+            tradingRows[2].children[1].textContent = formatPercentage(playerRow[cols.openingDeathsTraded]);
+            tradingRows[3].children[1].textContent = formatPercentage(playerRow[cols.assistedKillsPercentage]);
+            
+            // Opening section
+            const openingRows = document.querySelectorAll('#detail-tab-overview .player-detail-table')[3].querySelectorAll('tbody tr');
+            openingRows[0].children[1].textContent = formatValue(playerRow[cols.openingKillsPerRound]);
+            openingRows[1].children[1].textContent = formatValue(playerRow[cols.openingDeathsPerRound]);
+            openingRows[2].children[1].textContent = formatPercentage(playerRow[cols.openingAttempts]);
+            openingRows[3].children[1].textContent = formatPercentage(playerRow[cols.openingSuccess]);
+            openingRows[4].children[1].textContent = formatPercentage(playerRow[cols.winAfterOpeningKill]);
+            
+            // Clutching section
+            const clutchingRows = document.querySelectorAll('#detail-tab-overview .player-detail-table')[4].querySelectorAll('tbody tr');
+            clutchingRows[0].children[1].textContent = formatValue(playerRow[cols.clutchPointsPerRound]);
+            clutchingRows[1].children[1].textContent = formatPercentage(playerRow[cols.lastAlivePercentage]);
+            clutchingRows[2].children[1].textContent = formatPercentage(playerRow[cols.oneOnOneWin]);
+            clutchingRows[3].children[1].textContent = formatValue(playerRow[cols.timeAlivePerRound]);
+            
+            // Sniping section
+            const snipingRows = document.querySelectorAll('#detail-tab-overview .player-detail-table')[5].querySelectorAll('tbody tr');
+            snipingRows[0].children[1].textContent = formatValue(playerRow[cols.sniperKillsPerRound]);
+            snipingRows[1].children[1].textContent = formatPercentage(playerRow[cols.sniperKillsPercentage]);
+            snipingRows[2].children[1].textContent = formatValue(playerRow[cols.sniperMultikillRounds]);
+            snipingRows[3].children[1].textContent = formatValue(playerRow[cols.sniperOpeningKills]);
+            
+            // Utility section
+            const utilityRows = document.querySelectorAll('#detail-tab-overview .player-detail-table')[6].querySelectorAll('tbody tr');
+            utilityRows[0].children[1].textContent = formatValue(playerRow[cols.utilityDamagePerRound]);
+            utilityRows[1].children[1].textContent = formatValue(playerRow[cols.utilityKillsPer100]);
+            utilityRows[2].children[1].textContent = formatValue(playerRow[cols.flashAssistsPerRound]);
+            utilityRows[3].children[1].textContent = formatValue(playerRow[cols.timeOpponentFlashed]);
         }
 
         // Go back to players page
