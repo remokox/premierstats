@@ -864,6 +864,30 @@
             border-color: var(--accent-primary);
         }
 
+        /* Individual Stats Grid Layout */
+        .individual-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .individual-stat-section {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .individual-stat-section .player-detail-section-title {
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .individual-stat-section .player-detail-table {
+            margin-bottom: 0;
+        }
+
         @media (max-width: 768px) {
             h1 {
                 font-size: 1.8rem;
@@ -880,6 +904,11 @@
 
             .player-detail-container {
                 grid-template-columns: 1fr;
+            }
+
+            .individual-stats-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
             }
 
             table {
@@ -1165,7 +1194,66 @@
 
                     <!-- Right Content - Individual Tab -->
                     <div class="player-detail-content" id="detail-tab-individual" style="display:none;">
-                        <h3>Individual - Coming Soon</h3>
+                        <div class="individual-stats-grid">
+                            <!-- Overall Stats Table -->
+                            <div class="individual-stat-section">
+                                <div class="player-detail-section-title">Overall stats</div>
+                                <table class="player-detail-table">
+                                    <tbody>
+                                        <tr><td>Kills</td><td id="ind-kills">-</td></tr>
+                                        <tr><td>Deaths</td><td id="ind-deaths">-</td></tr>
+                                        <tr><td>Kill/Death</td><td id="ind-kd">-</td></tr>
+                                        <tr><td>Kill/Round</td><td id="ind-kr">-</td></tr>
+                                        <tr><td>Rounds with kills</td><td id="ind-rounds-kills">-</td></tr>
+                                        <tr><td>Kill - Death difference</td><td id="ind-kd-diff">-</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Round Stats Table -->
+                            <div class="individual-stat-section">
+                                <div class="player-detail-section-title">Round stats</div>
+                                <table class="player-detail-table">
+                                    <tbody>
+                                        <tr><td>0 kill rounds</td><td id="ind-0k-rounds">-</td></tr>
+                                        <tr><td>1 kill rounds</td><td id="ind-1k-rounds">-</td></tr>
+                                        <tr><td>2 kill rounds</td><td id="ind-2k-rounds">-</td></tr>
+                                        <tr><td>3 kill rounds</td><td id="ind-3k-rounds">-</td></tr>
+                                        <tr><td>4 kill rounds</td><td id="ind-4k-rounds">-</td></tr>
+                                        <tr><td>5 kill rounds</td><td id="ind-5k-rounds">-</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Opening Stats Table -->
+                            <div class="individual-stat-section">
+                                <div class="player-detail-section-title">Opening stats</div>
+                                <table class="player-detail-table">
+                                    <tbody>
+                                        <tr><td>Total opening kills</td><td id="ind-opening-kills">-</td></tr>
+                                        <tr><td>Total opening deaths</td><td id="ind-opening-deaths">-</td></tr>
+                                        <tr><td>Opening kill ratio</td><td id="ind-opening-ratio">-</td></tr>
+                                        <tr><td>Team win percent after first kill</td><td id="ind-team-win-firstkill">-</td></tr>
+                                        <tr><td>First kill in won rounds</td><td id="ind-firstkill-wonrounds">-</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Weapon Stats Table -->
+                            <div class="individual-stat-section">
+                                <div class="player-detail-section-title">Weapon stats</div>
+                                <table class="player-detail-table">
+                                    <tbody>
+                                        <tr><td>Rifle kills</td><td id="ind-rifle-kills">-</td></tr>
+                                        <tr><td>Sniper kills</td><td id="ind-sniper-kills">-</td></tr>
+                                        <tr><td>SMG kills</td><td id="ind-smg-kills">-</td></tr>
+                                        <tr><td>Pistol kills</td><td id="ind-pistol-kills">-</td></tr>
+                                        <tr><td>Grenade</td><td id="ind-grenade-kills">-</td></tr>
+                                        <tr><td>Other</td><td id="ind-other-kills">-</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Right Content - Matches Tab -->
