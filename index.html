@@ -651,8 +651,10 @@
 
         .player-detail-photo {
             width: 100%;
+            max-height: none;
             border-radius: 8px;
             margin-bottom: 15px;
+            object-fit: contain;
         }
 
         .player-detail-name {
@@ -790,6 +792,40 @@
             transform: translateX(-5px);
         }
 
+        .detail-nav-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .detail-tab-button {
+            padding: 10px 20px;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .detail-tab-button:hover {
+            background: rgba(255, 107, 53, 0.1);
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        .detail-tab-button.active {
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+            border-color: var(--accent-primary);
+        }
+
         @media (max-width: 768px) {
             h1 {
                 font-size: 1.8rem;
@@ -888,9 +924,16 @@
         <!-- PLAYER DETAIL PAGE -->
         <div id="player-detail" class="page">
             <div class="section">
-                <button class="back-button" onclick="showPlayersPage()">
-                    ← Back to Players
-                </button>
+                <div class="detail-nav-buttons">
+                    <button class="back-button" onclick="showPlayersPage()">
+                        ← Back to Players
+                    </button>
+                    <button class="detail-tab-button active" data-tab="overview">Overview</button>
+                    <button class="detail-tab-button" data-tab="individual">Individual</button>
+                    <button class="detail-tab-button" data-tab="matches">Matches</button>
+                    <button class="detail-tab-button" data-tab="weapons">Weapons</button>
+                    <button class="detail-tab-button" data-tab="clutches">Clutches</button>
+                </div>
                 
                 <div class="player-detail-container">
                     <!-- Left Sidebar -->
@@ -964,118 +1007,105 @@
                         </div>
                     </div>
                     
-                    <!-- Right Content -->
-                    <div class="player-detail-content">
+                    <!-- Right Content - Overview Tab -->
+                    <div class="player-detail-content" id="detail-tab-overview">
                         <!-- Firepower Section -->
                         <div class="player-detail-section-title">Firepower</div>
                         <table class="player-detail-table">
-                            <thead>
-                                <tr>
-                                    <th>Statistic</th>
-                                    <th>Value</th>
-                                    <th>Per Round</th>
-                                    <th>Rating 3.0</th>
-                                </tr>
-                            </thead>
                             <tbody>
-                                <tr><td>Total Kills</td><td>516</td><td>-</td><td>0.14</td></tr>
-                                <tr><td>Headshot %</td><td>47%</td><td>-</td><td>1.04</td></tr>
-                                <tr><td>Total Deaths</td><td>432</td><td>-</td><td>0.19</td></tr>
-                                <tr><td>K/D ratio</td><td>1.62</td><td>-</td><td>0.64</td></tr>
-                                <tr><td>Damage/round</td><td>104.5</td><td>-</td><td>23</td></tr>
-                                <tr><td>Damage drop off/round</td><td>3.07</td><td>-</td><td>-</td></tr>
+                                <tr><td>Total Kills</td><td>516</td></tr>
+                                <tr><td>Headshot %</td><td>47%</td></tr>
+                                <tr><td>Total Deaths</td><td>432</td></tr>
+                                <tr><td>K/D ratio</td><td>1.62</td></tr>
+                                <tr><td>Damage/round</td><td>104.5</td></tr>
+                                <tr><td>Damage drop off/round</td><td>3.07</td></tr>
                             </tbody>
                         </table>
 
                         <!-- Entrying Section -->
                         <div class="player-detail-section-title">Entrying</div>
                         <table class="player-detail-table">
-                            <thead>
-                                <tr>
-                                    <th>Statistic</th>
-                                    <th>Value</th>
-                                    <th>Per Round</th>
-                                    <th>Rating 3.0</th>
-                                </tr>
-                            </thead>
                             <tbody>
-                                <tr><td>Traded rounds per round</td><td>0.20</td><td>-</td><td>6.15</td></tr>
-                                <tr><td>Traded deaths percentage</td><td>12.2%</td><td>-</td><td>-</td></tr>
+                                <tr><td>Traded rounds per round</td><td>0.20</td></tr>
+                                <tr><td>Traded deaths percentage</td><td>12.2%</td></tr>
                             </tbody>
                         </table>
 
                         <!-- Trading Section -->
                         <div class="player-detail-section-title">Trading</div>
                         <table class="player-detail-table">
-                            <thead>
-                                <tr>
-                                    <th>Statistic</th><th>Value</th><th>Per Round</th><th>Rating 3.0</th>
-                                </tr>
-                            </thead>
                             <tbody>
-                                <tr><td>Trade kills per round</td><td>-</td><td>6.15</td><td>-</td></tr>
-                                <tr><td>Trade kills percentage</td><td>-</td><td>17.0%</td><td>-</td></tr>
-                                <tr><td>Opening deaths traded percentage</td><td>21.5%</td><td>-</td><td>-</td></tr>
-                                <tr><td>Assisted kills percentage</td><td>-</td><td>26.4%</td><td>-</td></tr>
+                                <tr><td>Trade kills per round</td><td>6.15</td></tr>
+                                <tr><td>Trade kills percentage</td><td>17.0%</td></tr>
+                                <tr><td>Opening deaths traded percentage</td><td>21.5%</td></tr>
+                                <tr><td>Assisted kills percentage</td><td>26.4%</td></tr>
                             </tbody>
                         </table>
 
                         <!-- Opening Section -->
                         <div class="player-detail-section-title">Opening</div>
                         <table class="player-detail-table">
-                            <thead>
-                                <tr><th>Statistic</th><th>Value</th><th>Per Round</th><th>Rating 3.0</th></tr>
-                            </thead>
                             <tbody>
-                                <tr><td>Opening kills per round</td><td>-</td><td>0.14</td><td>-</td></tr>
-                                <tr><td>Opening deaths per round</td><td>-</td><td>0.07</td><td>-</td></tr>
-                                <tr><td>Opening attempts</td><td>-</td><td>20.8%</td><td>-</td></tr>
-                                <tr><td>Opening success</td><td>-</td><td>65.0%</td><td>-</td></tr>
-                                <tr><td>W rate after opening kill</td><td>66.7%</td><td>-</td><td>-</td></tr>
+                                <tr><td>Opening kills per round</td><td>0.14</td></tr>
+                                <tr><td>Opening deaths per round</td><td>0.07</td></tr>
+                                <tr><td>Opening attempts</td><td>20.8%</td></tr>
+                                <tr><td>Opening success</td><td>65.0%</td></tr>
+                                <tr><td>W rate after opening kill</td><td>66.7%</td></tr>
                             </tbody>
                         </table>
 
                         <!-- Clutching Section -->
                         <div class="player-detail-section-title">Clutching</div>
                         <table class="player-detail-table">
-                            <thead>
-                                <tr><th>Statistic</th><th>Value</th><th>Per Round</th><th>Rating 3.0</th></tr>
-                            </thead>
                             <tbody>
-                                <tr><td>Clutch bonus per round</td><td>-</td><td>0.14</td><td>9.62</td></tr>
-                                <tr><td>Last alive percentage</td><td>-</td><td>9.4%</td><td>-</td></tr>
-                                <tr><td>1on1 win percentage</td><td>-</td><td>61.8%</td><td>-</td></tr>
-                                <tr><td>Time alive per round (s)</td><td>-</td><td>70</td><td>-</td></tr>
+                                <tr><td>Clutch bonus per round</td><td>0.14</td></tr>
+                                <tr><td>Last alive percentage</td><td>9.4%</td></tr>
+                                <tr><td>1on1 win percentage</td><td>61.8%</td></tr>
+                                <tr><td>Time alive per round (s)</td><td>70</td></tr>
                             </tbody>
                         </table>
 
                         <!-- Sniping Section -->
                         <div class="player-detail-section-title">Sniping</div>
                         <table class="player-detail-table">
-                            <thead>
-                                <tr><th>Statistic</th><th>Value</th><th>Per Round</th><th>Rating 3.0</th></tr>
-                            </thead>
                             <tbody>
-                                <tr><td>Sniper kills per round</td><td>-</td><td>0.09</td><td>3.07</td></tr>
-                                <tr><td>Sniper kills percentage</td><td>-</td><td>8.5%</td><td>-</td></tr>
-                                <tr><td>Sniper multi-kills round</td><td>-</td><td>0.02</td><td>-</td></tr>
-                                <tr><td>Sniper opening kills per round</td><td>-</td><td>0.02</td><td>-</td></tr>
+                                <tr><td>Sniper kills per round</td><td>0.09</td></tr>
+                                <tr><td>Sniper kills percentage</td><td>8.5%</td></tr>
+                                <tr><td>Sniper multi-kills round</td><td>0.02</td></tr>
+                                <tr><td>Sniper opening kills per round</td><td>0.02</td></tr>
                             </tbody>
                         </table>
 
                         <!-- Utility Section -->
                         <div class="player-detail-section-title">Utility</div>
                         <table class="player-detail-table">
-                            <thead>
-                                <tr><th>Statistic</th><th>Value</th><th>Per Round</th><th>Rating 3.0</th></tr>
-                            </thead>
                             <tbody>
-                                <tr><td>Utility damage per round</td><td>-</td><td>3.07</td><td>-</td></tr>
-                                <tr><td>Utility kills per 100 rounds</td><td>-</td><td>0.40</td><td>-</td></tr>
-                                <tr><td>Flash assists per round</td><td>-</td><td>0.08</td><td>-</td></tr>
-                                <tr><td>Time opponent flashed per round (s)</td><td>-</td><td>1.70</td><td>-</td></tr>
+                                <tr><td>Utility damage per round</td><td>3.07</td></tr>
+                                <tr><td>Utility kills per 100 rounds</td><td>0.40</td></tr>
+                                <tr><td>Flash assists per round</td><td>0.08</td></tr>
+                                <tr><td>Time opponent flashed per round (s)</td><td>1.70</td></tr>
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- Right Content - Individual Tab -->
+                    <div class="player-detail-content" id="detail-tab-individual" style="display:none;">
+                        <h3>Individual - Coming Soon</h3>
+                    </div>
+
+                    <!-- Right Content - Matches Tab -->
+                    <div class="player-detail-content" id="detail-tab-matches" style="display:none;">
+                        <h3>Matches - Coming Soon</h3>
+                    </div>
+
+                    <!-- Right Content - Weapons Tab -->
+                    <div class="player-detail-content" id="detail-tab-weapons" style="display:none;">
+                        <h3>Weapons - Coming Soon</h3>
+                    </div>
+
+                    <!-- Right Content - Clutches Tab -->
+                    <div class="player-detail-content" id="detail-tab-clutches" style="display:none;">
+                        <h3>Clutches - Coming Soon</h3>
                     </div>
                 </div>
             </div>
@@ -1669,8 +1699,39 @@
             // Show player detail page
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById('player-detail').classList.add('active');
+            
+            // Reset to overview tab
+            switchDetailTab('overview');
+            
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+
+        // Switch detail page tabs
+        function switchDetailTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('[id^="detail-tab-"]').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // Show selected tab
+            document.getElementById(`detail-tab-${tabName}`).style.display = 'block';
+            
+            // Update button states
+            document.querySelectorAll('.detail-tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.detail-tab-button[data-tab="${tabName}"]`).classList.add('active');
+        }
+
+        // Add event listeners for detail tab buttons
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.detail-tab-button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tabName = btn.getAttribute('data-tab');
+                    switchDetailTab(tabName);
+                });
+            });
+        });
 
         // Go back to players page
         function showPlayersPage() {
