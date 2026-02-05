@@ -196,6 +196,153 @@
             box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
         }
 
+        /* Player Detail Page Styles */
+        .player-detail-header {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            margin-bottom: 40px;
+            background: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .player-detail-photo {
+            width: 150px;
+            height: 150px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 3px solid var(--accent-primary);
+        }
+
+        .player-detail-info h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: var(--accent-primary);
+        }
+
+        .player-detail-identity {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .player-detail-flag {
+            width: 32px;
+            height: 21px;
+            object-fit: cover;
+            border-radius: 2px;
+        }
+
+        .player-detail-realname {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+
+        .player-detail-maps {
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border: 2px solid var(--border);
+        }
+
+        .back-button:hover {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            transform: translateX(-5px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .stat-category {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            border-top: 3px solid var(--accent-primary);
+        }
+
+        .stat-category h3 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: var(--accent-secondary);
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-category table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .stat-category td {
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .stat-category td:first-child {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .stat-category td:last-child {
+            text-align: right;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-category tr:last-child td {
+            border-bottom: none;
+        }
+
+        .rating-display {
+            background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 30px;
+            border: 2px solid var(--accent-primary);
+        }
+
+        .rating-display h3 {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .rating-display .rating-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        nav a.active {
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+        }
+
         .page {
             display: none;
             animation: pageSlide 0.4s ease-out;
@@ -487,6 +634,162 @@
             transform: scale(1.05);
         }
 
+        /* PLAYER DETAIL PAGE */
+        .player-detail-container {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .player-detail-sidebar {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px var(--shadow);
+        }
+
+        .player-detail-photo {
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .player-detail-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 10px;
+            color: var(--accent-primary);
+        }
+
+        .player-detail-identity {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            padding: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+        }
+
+        .player-detail-flag {
+            width: 24px;
+            height: 16px;
+            object-fit: cover;
+            border-radius: 2px;
+        }
+
+        .player-detail-realname {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .player-detail-maps {
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .player-detail-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .player-detail-stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+        }
+
+        .player-detail-stat-row.highlight {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.2) 0%, rgba(247, 147, 30, 0.2) 100%);
+            border-left: 3px solid var(--accent-primary);
+        }
+
+        .player-detail-stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .player-detail-stat-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .player-detail-content {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 15px var(--shadow);
+        }
+
+        .player-detail-section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .player-detail-table {
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .player-detail-table th {
+            text-align: left;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .player-detail-table td {
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .player-detail-table tr:hover {
+            background: rgba(255, 107, 53, 0.05);
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            text-decoration: none;
+        }
+
+        .back-button:hover {
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+            transform: translateX(-5px);
+        }
+
         @media (max-width: 768px) {
             h1 {
                 font-size: 1.8rem;
@@ -499,6 +802,10 @@
 
             .header-stats {
                 justify-content: center;
+            }
+
+            .player-detail-container {
+                grid-template-columns: 1fr;
             }
 
             table {
@@ -578,6 +885,202 @@
             </div>
         </div>
 
+        <!-- PLAYER DETAIL PAGE -->
+        <div id="player-detail" class="page">
+            <div class="section">
+                <button class="back-button" onclick="showPlayersPage()">
+                    ← Back to Players
+                </button>
+                
+                <div class="player-detail-container">
+                    <!-- Left Sidebar -->
+                    <div class="player-detail-sidebar">
+                        <img src="" id="detail-photo" class="player-detail-photo" alt="Player Photo">
+                        <div class="player-detail-name" id="detail-nickname"></div>
+                        <div class="player-detail-identity">
+                            <img src="" id="detail-flag" class="player-detail-flag" alt="flag">
+                            <span class="player-detail-realname" id="detail-realname"></span>
+                        </div>
+                        <div class="player-detail-maps" id="detail-maps"></div>
+                        
+                        <div class="player-detail-stats">
+                            <div class="player-detail-stat-row highlight">
+                                <span class="player-detail-stat-label">Rating 3.0</span>
+                                <span class="player-detail-stat-value" id="detail-rating">0.00</span>
+                            </div>
+                            <div class="player-detail-stat-row">
+                                <span class="player-detail-stat-label">Round Swing</span>
+                                <span class="player-detail-stat-value" id="detail-round-swing">0.00%</span>
+                            </div>
+                            <div class="player-detail-stat-row">
+                                <span class="player-detail-stat-label">DPR</span>
+                                <span class="player-detail-stat-value" id="detail-dpr">0.00</span>
+                            </div>
+                            <div class="player-detail-stat-row">
+                                <span class="player-detail-stat-label">KAST</span>
+                                <span class="player-detail-stat-value" id="detail-kast">0.00%</span>
+                            </div>
+                            <div class="player-detail-stat-row">
+                                <span class="player-detail-stat-label">Multikills</span>
+                                <span class="player-detail-stat-value" id="detail-multikills">0.00</span>
+                            </div>
+                            <div class="player-detail-stat-row">
+                                <span class="player-detail-stat-label">ADR</span>
+                                <span class="player-detail-stat-value" id="detail-adr">0.00</span>
+                            </div>
+                            <div class="player-detail-stat-row">
+                                <span class="player-detail-stat-label">KPR</span>
+                                <span class="player-detail-stat-value" id="detail-kpr">0.00</span>
+                            </div>
+                            
+                            <div class="player-detail-stat-row highlight">
+                                <span class="player-detail-stat-label">Firepower</span>
+                                <span class="player-detail-stat-value" id="detail-firepower">0/100</span>
+                            </div>
+                            <div class="player-detail-stat-row highlight">
+                                <span class="player-detail-stat-label">Entrying</span>
+                                <span class="player-detail-stat-value" id="detail-entrying">0/100</span>
+                            </div>
+                            <div class="player-detail-stat-row highlight">
+                                <span class="player-detail-stat-label">Trading</span>
+                                <span class="player-detail-stat-value" id="detail-trading">0/100</span>
+                            </div>
+                            <div class="player-detail-stat-row highlight">
+                                <span class="player-detail-stat-label">Opening</span>
+                                <span class="player-detail-stat-value" id="detail-opening">0/100</span>
+                            </div>
+                            <div class="player-detail-stat-row highlight">
+                                <span class="player-detail-stat-label">Clutching</span>
+                                <span class="player-detail-stat-value" id="detail-clutching">0/100</span>
+                            </div>
+                            <div class="player-detail-stat-row highlight">
+                                <span class="player-detail-stat-label">Sniping</span>
+                                <span class="player-detail-stat-value" id="detail-sniping">0/100</span>
+                            </div>
+                            <div class="player-detail-stat-row highlight">
+                                <span class="player-detail-stat-label">Utility</span>
+                                <span class="player-detail-stat-value" id="detail-utility">0/100</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Content -->
+                    <div class="player-detail-content">
+                        <!-- Firepower Section -->
+                        <div class="player-detail-section-title">Firepower</div>
+                        <table class="player-detail-table">
+                            <thead>
+                                <tr>
+                                    <th>Statistic</th>
+                                    <th>Value</th>
+                                    <th>Per Round</th>
+                                    <th>Rating 3.0</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Total Kills</td><td>516</td><td>-</td><td>0.14</td></tr>
+                                <tr><td>Headshot %</td><td>47%</td><td>-</td><td>1.04</td></tr>
+                                <tr><td>Total Deaths</td><td>432</td><td>-</td><td>0.19</td></tr>
+                                <tr><td>K/D ratio</td><td>1.62</td><td>-</td><td>0.64</td></tr>
+                                <tr><td>Damage/round</td><td>104.5</td><td>-</td><td>23</td></tr>
+                                <tr><td>Damage drop off/round</td><td>3.07</td><td>-</td><td>-</td></tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Entrying Section -->
+                        <div class="player-detail-section-title">Entrying</div>
+                        <table class="player-detail-table">
+                            <thead>
+                                <tr>
+                                    <th>Statistic</th>
+                                    <th>Value</th>
+                                    <th>Per Round</th>
+                                    <th>Rating 3.0</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Traded rounds per round</td><td>0.20</td><td>-</td><td>6.15</td></tr>
+                                <tr><td>Traded deaths percentage</td><td>12.2%</td><td>-</td><td>-</td></tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Trading Section -->
+                        <div class="player-detail-section-title">Trading</div>
+                        <table class="player-detail-table">
+                            <thead>
+                                <tr>
+                                    <th>Statistic</th><th>Value</th><th>Per Round</th><th>Rating 3.0</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Trade kills per round</td><td>-</td><td>6.15</td><td>-</td></tr>
+                                <tr><td>Trade kills percentage</td><td>-</td><td>17.0%</td><td>-</td></tr>
+                                <tr><td>Opening deaths traded percentage</td><td>21.5%</td><td>-</td><td>-</td></tr>
+                                <tr><td>Assisted kills percentage</td><td>-</td><td>26.4%</td><td>-</td></tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Opening Section -->
+                        <div class="player-detail-section-title">Opening</div>
+                        <table class="player-detail-table">
+                            <thead>
+                                <tr><th>Statistic</th><th>Value</th><th>Per Round</th><th>Rating 3.0</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Opening kills per round</td><td>-</td><td>0.14</td><td>-</td></tr>
+                                <tr><td>Opening deaths per round</td><td>-</td><td>0.07</td><td>-</td></tr>
+                                <tr><td>Opening attempts</td><td>-</td><td>20.8%</td><td>-</td></tr>
+                                <tr><td>Opening success</td><td>-</td><td>65.0%</td><td>-</td></tr>
+                                <tr><td>W rate after opening kill</td><td>66.7%</td><td>-</td><td>-</td></tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Clutching Section -->
+                        <div class="player-detail-section-title">Clutching</div>
+                        <table class="player-detail-table">
+                            <thead>
+                                <tr><th>Statistic</th><th>Value</th><th>Per Round</th><th>Rating 3.0</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Clutch bonus per round</td><td>-</td><td>0.14</td><td>9.62</td></tr>
+                                <tr><td>Last alive percentage</td><td>-</td><td>9.4%</td><td>-</td></tr>
+                                <tr><td>1on1 win percentage</td><td>-</td><td>61.8%</td><td>-</td></tr>
+                                <tr><td>Time alive per round (s)</td><td>-</td><td>70</td><td>-</td></tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Sniping Section -->
+                        <div class="player-detail-section-title">Sniping</div>
+                        <table class="player-detail-table">
+                            <thead>
+                                <tr><th>Statistic</th><th>Value</th><th>Per Round</th><th>Rating 3.0</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Sniper kills per round</td><td>-</td><td>0.09</td><td>3.07</td></tr>
+                                <tr><td>Sniper kills percentage</td><td>-</td><td>8.5%</td><td>-</td></tr>
+                                <tr><td>Sniper multi-kills round</td><td>-</td><td>0.02</td><td>-</td></tr>
+                                <tr><td>Sniper opening kills per round</td><td>-</td><td>0.02</td><td>-</td></tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Utility Section -->
+                        <div class="player-detail-section-title">Utility</div>
+                        <table class="player-detail-table">
+                            <thead>
+                                <tr><th>Statistic</th><th>Value</th><th>Per Round</th><th>Rating 3.0</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Utility damage per round</td><td>-</td><td>3.07</td><td>-</td></tr>
+                                <tr><td>Utility kills per 100 rounds</td><td>-</td><td>0.40</td><td>-</td></tr>
+                                <tr><td>Flash assists per round</td><td>-</td><td>0.08</td><td>-</td></tr>
+                                <tr><td>Time opponent flashed per round (s)</td><td>-</td><td>1.70</td><td>-</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- MAPS PAGE -->
         <div id="maps" class="page">
             <div class="section">
@@ -607,6 +1110,207 @@
             <div class="section">
                 <h2 class="section-header">Proplayer Comps - Coming Soon</h2>
                 <p style="color: var(--text-secondary);">Pro player comparisons will be displayed here.</p>
+            </div>
+        </div>
+
+        <!-- PLAYER DETAIL PAGE -->
+        <div id="player-detail" class="page">
+            <a href="#" class="back-button" id="back-to-players">← Back to Players</a>
+            
+            <div class="player-detail-header">
+                <img src="" id="detail-photo" class="player-detail-photo" alt="Player">
+                <div class="player-detail-info">
+                    <h2 id="detail-nickname"></h2>
+                    <div class="player-detail-identity">
+                        <img src="" id="detail-flag" class="player-detail-flag" alt="flag">
+                        <span id="detail-realname" class="player-detail-realname"></span>
+                    </div>
+                    <div id="detail-maps" class="player-detail-maps"></div>
+                </div>
+            </div>
+
+            <div class="rating-display">
+                <h3>Rating 3.0</h3>
+                <div id="detail-rating" class="rating-value">0.00</div>
+            </div>
+
+            <div class="stats-grid">
+                <!-- Firepower Stats -->
+                <div class="stat-category">
+                    <h3>Firepower - <span id="firepower-rating">100/100</span></h3>
+                    <table>
+                        <tr>
+                            <td>Kills per round</td>
+                            <td id="stat-kpr">0.00</td>
+                        </tr>
+                        <tr>
+                            <td>Kills per round win</td>
+                            <td id="stat-kprw">0.00</td>
+                        </tr>
+                        <tr>
+                            <td>Damage per round</td>
+                            <td id="stat-dpr">0.00</td>
+                        </tr>
+                        <tr>
+                            <td>Rounds with a kill</td>
+                            <td id="stat-rwk">0.00%</td>
+                        </tr>
+                        <tr>
+                            <td>Rounds with a 3k</td>
+                            <td id="stat-rw3k">0.00%</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Entrying Stats -->
+                <div class="stat-category">
+                    <h3>Entrying - <span id="entrying-rating">0/100</span></h3>
+                    <table>
+                        <tr>
+                            <td>Traded rounds per round</td>
+                            <td id="stat-trpr">0.00</td>
+                        </tr>
+                        <tr>
+                            <td>Traded deaths percentage</td>
+                            <td id="stat-tdp">0.00%</td>
+                        </tr>
+                        <tr>
+                            <td>Opening: rounds traded per round</td>
+                            <td id="stat-ortrpr">0.00</td>
+                        </tr>
+                        <tr>
+                            <td>Assisted per round</td>
+                            <td id="stat-apr">0.00</td>
+                        </tr>
+                        <tr>
+                            <td>Support rounds</td>
+                            <td id="stat-sr">0.00%</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Trading Stats -->
+                <div class="stat-category">
+                    <h3>Trading - <span id="trading-rating">80/100</span></h3>
+                    <table>
+                        <tr>
+                            <td>Trade kills per round</td>
+                            <td id="stat-tkpr">0.00</td>
+                        </tr>
+                        <tr>
+                            <td>Trade kills percentage</td>
+                            <td id="stat-tkp">0.00%</td>
+                        </tr>
+                        <tr>
+                            <td>Assisted kills percentage</td>
+                            <td id="stat-akp">0.00%</td>
+                        </tr>
+                        <tr>
+                            <td>Damage per kill</td>
+                            <td id="stat-dpk">0</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Opening Stats -->
+                <div class="stat-category">
+                    <h3>Opening - <span id="opening-rating">80/100</span></h3>
+                    <table>
+                        <tr>
+                            <td>Opening kills per round</td>
+                            <td id="stat-okpr">0.00</td>
+                        </tr>
+                        <tr>
+                            <td>Opening deaths per round</td>
+                            <td id="stat-odpr">0.00</td>
+                        </tr>
+                        <tr>
+                            <td>Opening attempts</td>
+                            <td id="stat-oa">0.00%</td>
+                        </tr>
+                        <tr>
+                            <td>Opening success</td>
+                            <td id="stat-os">0.00%</td>
+                        </tr>
+                        <tr>
+                            <td>Wins after opening kill</td>
+                            <td id="stat-waok">0.00%</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Clutching Stats -->
+                <div class="stat-category">
+                    <h3>Clutching - <span id="clutching-rating">100/100</span></h3>
+                    <table>
+                        <tr>
+                            <td>Clutch rounds per round (v)</td>
+                            <td id="stat-crpr">0.00</td>
+                        </tr>
+                        <tr>
+                            <td>Last alive percentage</td>
+                            <td id="stat-lap">0.00%</td>
+                        </tr>
+                        <tr>
+                            <td>1on1 win percentage</td>
+                            <td id="stat-1v1">0.00%</td>
+                        </tr>
+                        <tr>
+                            <td>Time alive per round (s)</td>
+                            <td id="stat-tapr">0s</td>
+                        </tr>
+                        <tr>
+                            <td>Saves per round loss</td>
+                            <td id="stat-sprl">0.00</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Sniping Stats -->
+                <div class="stat-category">
+                    <h3>Sniping - <span id="sniping-rating">36/100</span></h3>
+                    <table>
+                        <tr>
+                            <td>Sniper kills per round</td>
+                            <td id="stat-skpr">0.00</td>
+                        </tr>
+                        <tr>
+                            <td>Sniper kills percentage</td>
+                            <td id="stat-skp">0.00%</td>
+                        </tr>
+                        <tr>
+                            <td>Sniper multi-kill rounds</td>
+                            <td id="stat-smkr">0.00</td>
+                        </tr>
+                        <tr>
+                            <td>Sniper opening kills per round</td>
+                            <td id="stat-sokpr">0.00</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Utility Stats -->
+                <div class="stat-category">
+                    <h3>Utility - <span id="utility-rating">50/100</span></h3>
+                    <table>
+                        <tr>
+                            <td>Utility damage per round</td>
+                            <td id="stat-udpr">0.00</td>
+                        </tr>
+                        <tr>
+                            <td>Utility kills per 100 rounds</td>
+                            <td id="stat-ukpr">0.00</td>
+                        </tr>
+                        <tr>
+                            <td>Flash assists per round</td>
+                            <td id="stat-fapr">0.00</td>
+                        </tr>
+                        <tr>
+                            <td>Time opponent flashed per round (s)</td>
+                            <td id="stat-tofpr">0.00s</td>
+                        </tr>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -914,7 +1618,7 @@
                             <span class="player-attribute-label">Utility</span>
                             <span class="player-attribute-value">${player.utility}</span>
                         </div>
-                        <a href="#wip" class="player-complete-stats">Complete statistics for ${info.nickname}</a>
+                        <a href="#" class="player-complete-stats" data-player-name="${player.name}">Complete statistics for ${info.nickname}</a>
                     </div>
                 `;
                 container.appendChild(card);
@@ -923,6 +1627,56 @@
             // Hide loading, show container
             document.getElementById('players-loading').style.display = 'none';
             document.getElementById('players-container').style.display = 'flex';
+            
+            // Add event listeners to complete stats links
+            document.querySelectorAll('.player-complete-stats').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const playerName = link.getAttribute('data-player-name');
+                    showPlayerDetail(playerName);
+                });
+            });
+        }
+
+        // Show player detail page
+        function showPlayerDetail(playerName) {
+            const info = PLAYER_INFO[playerName];
+            if (!info) return;
+            
+            // Populate player details (using placeholders for now)
+            document.getElementById('detail-photo').src = `https://github.com/remokox/premierstats/blob/main/${info.photo}?raw=true`;
+            document.getElementById('detail-nickname').textContent = info.nickname;
+            document.getElementById('detail-flag').src = `https://github.com/remokox/premierstats/blob/main/${info.flag}?raw=true`;
+            document.getElementById('detail-realname').textContent = info.realname;
+            document.getElementById('detail-maps').textContent = '25 maps'; // Placeholder
+            
+            // Set placeholder values
+            document.getElementById('detail-rating').textContent = '0.14';
+            document.getElementById('detail-round-swing').textContent = '29.49%';
+            document.getElementById('detail-dpr').textContent = '104.5';
+            document.getElementById('detail-kast').textContent = '1.04';
+            document.getElementById('detail-multikills').textContent = '23.49';
+            document.getElementById('detail-adr').textContent = '104.5';
+            document.getElementById('detail-kpr').textContent = '1.04';
+            document.getElementById('detail-firepower').textContent = '100/100';
+            document.getElementById('detail-entrying').textContent = '0/100';
+            document.getElementById('detail-trading').textContent = '80/100';
+            document.getElementById('detail-opening').textContent = '80/100';
+            document.getElementById('detail-clutching').textContent = '100/100';
+            document.getElementById('detail-sniping').textContent = '36/100';
+            document.getElementById('detail-utility').textContent = '50/100';
+            
+            // Show player detail page
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('player-detail').classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Go back to players page
+        function showPlayersPage() {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('players').classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         // Navigation functionality
@@ -948,6 +1702,114 @@
                 
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
+        });
+
+        // Player detail page navigation
+        function showPlayerDetail(playerName) {
+            const info = PLAYER_INFO[playerName];
+            if (!info) return;
+
+            // Get player data (for now use placeholder, we'll add real data later)
+            const photoUrl = info.photo 
+                ? `https://github.com/remokox/premierstats/blob/main/${info.photo}?raw=true`
+                : '';
+            const flagUrl = info.flag 
+                ? `https://github.com/remokox/premierstats/blob/main/${info.flag}?raw=true`
+                : '';
+
+            // Populate header
+            document.getElementById('detail-photo').src = photoUrl;
+            document.getElementById('detail-flag').src = flagUrl;
+            document.getElementById('detail-nickname').textContent = info.nickname;
+            document.getElementById('detail-realname').textContent = info.realname;
+            document.getElementById('detail-maps').textContent = '25 maps'; // Placeholder
+            document.getElementById('detail-rating').textContent = '0.14'; // Placeholder
+
+            // Populate stat ratings (placeholders)
+            document.getElementById('firepower-rating').textContent = '100/100';
+            document.getElementById('entrying-rating').textContent = '0/100';
+            document.getElementById('trading-rating').textContent = '80/100';
+            document.getElementById('opening-rating').textContent = '80/100';
+            document.getElementById('clutching-rating').textContent = '100/100';
+            document.getElementById('sniping-rating').textContent = '36/100';
+            document.getElementById('utility-rating').textContent = '50/100';
+
+            // All stat values use placeholders for now
+            // Firepower
+            document.getElementById('stat-kpr').textContent = '1.04';
+            document.getElementById('stat-kprw').textContent = '1.44';
+            document.getElementById('stat-dpr').textContent = '104.5';
+            document.getElementById('stat-rwk').textContent = '77.8%';
+            document.getElementById('stat-rw3k').textContent = '20.8%';
+
+            // Entrying
+            document.getElementById('stat-trpr').textContent = '0.20';
+            document.getElementById('stat-tdp').textContent = '12.2%';
+            document.getElementById('stat-ortrpr').textContent = '21.2%';
+            document.getElementById('stat-apr').textContent = '0.18';
+            document.getElementById('stat-sr').textContent = '17.8%';
+
+            // Trading
+            document.getElementById('stat-tkpr').textContent = '0.12';
+            document.getElementById('stat-tkp').textContent = '17.8%';
+            document.getElementById('stat-akp').textContent = '29.2%';
+            document.getElementById('stat-dpk').textContent = '100';
+
+            // Opening
+            document.getElementById('stat-okpr').textContent = '0.14';
+            document.getElementById('stat-odpr').textContent = '0.07';
+            document.getElementById('stat-oa').textContent = '20.8%';
+            document.getElementById('stat-os').textContent = '68.0%';
+            document.getElementById('stat-waok').textContent = '66.7%';
+
+            // Clutching
+            document.getElementById('stat-crpr').textContent = '0.14';
+            document.getElementById('stat-lap').textContent = '9.4%';
+            document.getElementById('stat-1v1').textContent = '61.8%';
+            document.getElementById('stat-tapr').textContent = '70s';
+            document.getElementById('stat-sprl').textContent = '6.6%';
+
+            // Sniping
+            document.getElementById('stat-skpr').textContent = '0.09';
+            document.getElementById('stat-skp').textContent = '8.9%';
+            document.getElementById('stat-smkr').textContent = '0.02';
+            document.getElementById('stat-sokpr').textContent = '0.02';
+
+            // Utility
+            document.getElementById('stat-udpr').textContent = '3.07';
+            document.getElementById('stat-ukpr').textContent = '0.40';
+            document.getElementById('stat-fapr').textContent = '0.08';
+            document.getElementById('stat-tofpr').textContent = '1.79s';
+
+            // Hide all pages and nav
+            pages.forEach(p => p.classList.remove('active'));
+            navLinks.forEach(l => l.classList.remove('active'));
+
+            // Show player detail page
+            document.getElementById('player-detail').classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Back to players button
+        document.getElementById('back-to-players').addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            pages.forEach(p => p.classList.remove('active'));
+            navLinks.forEach(l => l.classList.remove('active'));
+            
+            document.getElementById('players').classList.add('active');
+            document.querySelector('[data-page="players"]').classList.add('active');
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // Handle complete statistics link clicks
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('player-complete-stats')) {
+                e.preventDefault();
+                const playerName = e.target.getAttribute('data-player-name');
+                showPlayerDetail(playerName);
+            }
         });
 
         // Load data on page load
