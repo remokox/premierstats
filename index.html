@@ -2078,6 +2078,48 @@
             }
         };
 
+        // Column mappings for Weapons tab - in sum_stats_maps sheet
+        const WEAPONS_COLUMNS = {
+            'AK-47': 188,           // GO
+            'M4A1-S': 189,          // GP
+            'AWP': 190,             // GQ
+            'USP-S': 194,           // GU
+            'MAC-10': 195,          // GV
+            'MP9': 196,             // GW
+            'Glock-18': 193,        // GT
+            'M4A4': 192,            // GS
+            'Desert Eagle': 191,    // GR
+            'Galil AR': 197,        // GX
+            'PP-Bizon': 211,        // HD
+            'FAMAS': 208,           // HA
+            'Dual Berettas': 199,   // GZ
+            'Tec-9': 209,           // HB
+            'Five-SeveN': 198,      // GY
+            'HE grenade': 213,      // HF
+            'AUG': 219,             // HL
+            'P250': 212,            // HE
+            'P90': 216,             // HI
+            'P2000': 220,           // HM
+            'SSG 08': 210,          // HC
+            'SG 553': 217,          // HJ
+            'R8 Revolver': 214,     // HG
+            'XM1014': 215,          // HH
+            'knife': 218,           // HK
+            'Sawed-Off': 225,       // HR
+            'Nova': 224,            // HQ
+            'CZ75-Auto': 222,       // HO
+            'M249': 226,            // HS
+            'SCAR-20': 227,         // HT
+            'MP7': 231,             // HX
+            'MP5-SD': 232,          // HY
+            'Molotov/Incendiary': 221, // HN
+            'MAG-7': 223,           // HP
+            'G3SG1': 228,           // HU
+            'UMP-45': 229,          // HV
+            'Negev': 230,           // HW
+            'Zeus x27': 233         // HZ
+        };
+
         // Player data mapping
         const PLAYER_INFO = {
             'remokox': {
@@ -2786,6 +2828,9 @@
             
             // Load clutches data for Clutches tab
             await loadClutchesData(mapName);
+            
+            // Load weapons data for Weapons tab
+            await loadWeaponsData(mapName);
         }
         
         // Get player attribute data from the "All" row
@@ -3021,6 +3066,90 @@
                     <td>${clutch.oneVX}</td>
                     <td>${clutch.status}</td>
                     <td>${clutch.round}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Load weapons data for Weapons tab
+        async function loadWeaponsData(mapName) {
+            if (!currentPlayerName) return;
+            
+            const info = PLAYER_INFO[currentPlayerName];
+            if (!info) return;
+            
+            const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
+            if (!data) {
+                console.error('Failed to load weapons data');
+                return;
+            }
+            
+            // Use same row finding logic as loadPlayerDetailData
+            const mapRowRanges = {
+                'all': [7, 15],        // rows 8-16
+                'ancient': [18, 26],   // rows 19-27
+                'anubis': [29, 37],    // rows 30-38
+                'dust2': [40, 48],     // rows 41-49
+                'inferno': [51, 59],   // rows 52-60
+                'mirage': [62, 70],    // rows 63-71
+                'nuke': [73, 81],      // rows 74-82
+                'overpass': [84, 92]   // rows 85-93
+            };
+            
+            const [startRow, endRow] = mapRowRanges[mapName.toLowerCase()];
+            
+            // Find the row for this player within the specified range
+            let playerRow = null;
+            for (let i = startRow; i <= endRow; i++) {
+                if (i >= data.length) break;
+                
+                const row = data[i];
+                const nicknameCell = row[2]; // Column C (index 2)
+                
+                if (nicknameCell === info.nickname) {
+                    playerRow = row;
+                    console.log('Found player row for weapons data at index:', i);
+                    break;
+                }
+            }
+            
+            if (!playerRow) {
+                console.error(`No weapons data found for ${info.nickname}`);
+                return;
+            }
+            
+            // Extract weapon kills and create array
+            const weapons = [];
+            let totalKills = 0;
+            
+            for (const [weaponName, columnIndex] of Object.entries(WEAPONS_COLUMNS)) {
+                const kills = parseInt(playerRow[columnIndex]) || 0;
+                totalKills += kills;
+                weapons.push({
+                    name: weaponName,
+                    kills: kills
+                });
+            }
+            
+            // Calculate percentages and sort by kills descending
+            weapons.forEach(weapon => {
+                weapon.killsPercent = totalKills > 0 ? (weapon.kills / totalKills * 100) : 0;
+            });
+            
+            weapons.sort((a, b) => b.kills - a.kills);
+            
+            console.log('Loaded', weapons.length, 'weapons, total kills:', totalKills);
+            
+            // Populate weapons table
+            const tbody = document.getElementById('weapons-tbody');
+            tbody.innerHTML = '';
+            
+            weapons.forEach(weapon => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${weapon.name}</td>
+                    <td>${weapon.kills}</td>
+                    <td>${weapon.killsPercent.toFixed(1)}%</td>
                 `;
                 tbody.appendChild(row);
             });
