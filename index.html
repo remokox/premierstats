@@ -1902,13 +1902,18 @@
                 return isNaN(num) ? '-' : num.toFixed(2);
             };
             
+            // Helper function to format damage values (1 decimal place)
+            const formatDamage = (val) => {
+                const num = parseFloat(val);
+                return isNaN(num) ? '-' : num.toFixed(1);
+            };
+            
             // Helper function to format percentages (1 decimal place)
-            // Assumes data in sheet is stored as decimal (0.288 = 28.8%)
+            // Data in sheet is already a percentage (like 49.28 for 49.28%)
             const formatPercentage = (val) => {
                 const num = parseFloat(val);
                 if (isNaN(num)) return '-';
-                const percentage = num * 100;
-                return percentage.toFixed(1) + '%';
+                return num.toFixed(1) + '%';
             };
             
             // Column indices (0-based, so subtract 1 from Excel column number)
@@ -1983,10 +1988,10 @@
             // Update sidebar stats
             document.getElementById('detail-rating').textContent = formatValue(playerRow[cols.rating]);
             document.getElementById('detail-round-swing').textContent = '-'; // Not provided
-            document.getElementById('detail-dpr').textContent = formatValue(playerRow[cols.damagePerRound]);
+            document.getElementById('detail-dpr').textContent = formatDamage(playerRow[cols.damagePerRound]);
             document.getElementById('detail-kast').textContent = formatPercentage(playerRow[cols.roundsWithKill]);
             document.getElementById('detail-multikills').textContent = formatPercentage(playerRow[cols.roundsMultikill]);
-            document.getElementById('detail-adr').textContent = formatValue(playerRow[cols.damagePerRound]);
+            document.getElementById('detail-adr').textContent = formatDamage(playerRow[cols.damagePerRound]);
             document.getElementById('detail-kpr').textContent = formatValue(playerRow[cols.killsPerRound]);
             
             // Update maps count
@@ -2001,8 +2006,8 @@
             statsRows[1].children[1].textContent = formatPercentage(playerRow[cols.headshotPct]);
             statsRows[2].children[1].textContent = formatValue(playerRow[cols.totalDeaths]);
             statsRows[3].children[1].textContent = formatValue(playerRow[cols.kdRatio]);
-            statsRows[4].children[1].textContent = formatValue(playerRow[cols.damagePerRound]);
-            statsRows[5].children[1].textContent = formatValue(playerRow[cols.grenadeDmgPerRound]);
+            statsRows[4].children[1].textContent = formatDamage(playerRow[cols.damagePerRound]);
+            statsRows[5].children[1].textContent = formatDamage(playerRow[cols.grenadeDmgPerRound]);
             statsRows[6].children[1].textContent = formatValue(playerRow[cols.roundsPlayed]);
             statsRows[7].children[1].textContent = formatValue(playerRow[cols.killsPerRound]);
             statsRows[8].children[1].textContent = formatValue(playerRow[cols.assistsPerRound]);
@@ -2014,7 +2019,7 @@
             const firepowerRows = document.querySelectorAll('#detail-tab-overview .player-detail-table')[1].querySelectorAll('tbody tr');
             firepowerRows[0].children[1].textContent = formatValue(playerRow[cols.killsPerRound]);
             firepowerRows[1].children[1].textContent = formatValue(playerRow[cols.killsPerRoundWin]);
-            firepowerRows[2].children[1].textContent = formatValue(playerRow[cols.damagePerRound]);
+            firepowerRows[2].children[1].textContent = formatDamage(playerRow[cols.damagePerRound]);
             firepowerRows[3].children[1].textContent = formatValue(playerRow[cols.rating]);
             firepowerRows[4].children[1].textContent = formatPercentage(playerRow[cols.roundsMultikill]);
             firepowerRows[5].children[1].textContent = formatPercentage(playerRow[cols.roundsWithKill]);
@@ -2032,7 +2037,7 @@
             tradingRows[0].children[1].textContent = formatValue(playerRow[cols.tradeKillsPerRound]);
             tradingRows[1].children[1].textContent = formatPercentage(playerRow[cols.tradeKillsPct]);
             tradingRows[2].children[1].textContent = formatPercentage(playerRow[cols.assistedKillsPct]);
-            tradingRows[3].children[1].textContent = formatValue(playerRow[cols.damagePerKill]);
+            tradingRows[3].children[1].textContent = parseInt(playerRow[cols.damagePerKill]) || '-';
             
             // Update Overview tab - Opening section
             const openingRows = document.querySelectorAll('#detail-tab-overview .player-detail-table')[4].querySelectorAll('tbody tr');
