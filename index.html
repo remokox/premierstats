@@ -2079,45 +2079,54 @@
         };
 
         // Column mappings for Weapons tab - in sum_stats_maps sheet
+        // Helper function to convert column letters to index
+        const colToIndex = (col) => {
+            let index = 0;
+            for (let i = 0; i < col.length; i++) {
+                index = index * 26 + (col.charCodeAt(i) - 64);
+            }
+            return index - 1;
+        };
+
         const WEAPONS_COLUMNS = {
-            'AK-47': 188,           // GO
-            'M4A1-S': 189,          // GP
-            'AWP': 190,             // GQ
-            'USP-S': 194,           // GU
-            'MAC-10': 195,          // GV
-            'MP9': 196,             // GW
-            'Glock-18': 193,        // GT
-            'M4A4': 192,            // GS
-            'Desert Eagle': 191,    // GR
-            'Galil AR': 197,        // GX
-            'PP-Bizon': 211,        // HD
-            'FAMAS': 208,           // HA
-            'Dual Berettas': 199,   // GZ
-            'Tec-9': 209,           // HB
-            'Five-SeveN': 198,      // GY
-            'HE grenade': 213,      // HF
-            'AUG': 219,             // HL
-            'P250': 212,            // HE
-            'P90': 216,             // HI
-            'P2000': 220,           // HM
-            'SSG 08': 210,          // HC
-            'SG 553': 217,          // HJ
-            'R8 Revolver': 214,     // HG
-            'XM1014': 215,          // HH
-            'knife': 218,           // HK
-            'Sawed-Off': 225,       // HR
-            'Nova': 224,            // HQ
-            'CZ75-Auto': 222,       // HO
-            'M249': 226,            // HS
-            'SCAR-20': 227,         // HT
-            'MP7': 231,             // HX
-            'MP5-SD': 232,          // HY
-            'Molotov/Incendiary': 221, // HN
-            'MAG-7': 223,           // HP
-            'G3SG1': 228,           // HU
-            'UMP-45': 229,          // HV
-            'Negev': 230,           // HW
-            'Zeus x27': 233         // HZ
+            'AK-47': colToIndex('GO'),
+            'M4A1-S': colToIndex('GP'),
+            'AWP': colToIndex('GQ'),
+            'USP-S': colToIndex('GU'),
+            'MAC-10': colToIndex('GV'),
+            'MP9': colToIndex('GW'),
+            'Glock-18': colToIndex('GT'),
+            'M4A4': colToIndex('GS'),
+            'Desert Eagle': colToIndex('GR'),
+            'Galil AR': colToIndex('GX'),
+            'PP-Bizon': colToIndex('HD'),
+            'FAMAS': colToIndex('HA'),
+            'Dual Berettas': colToIndex('GZ'),
+            'Tec-9': colToIndex('HB'),
+            'Five-SeveN': colToIndex('GY'),
+            'HE grenade': colToIndex('HF'),
+            'AUG': colToIndex('HL'),
+            'P250': colToIndex('HE'),
+            'P90': colToIndex('HI'),
+            'P2000': colToIndex('HM'),
+            'SSG 08': colToIndex('HC'),
+            'SG 553': colToIndex('HJ'),
+            'R8 Revolver': colToIndex('HG'),
+            'XM1014': colToIndex('HH'),
+            'knife': colToIndex('HK'),
+            'Sawed-Off': colToIndex('HR'),
+            'Nova': colToIndex('HQ'),
+            'CZ75-Auto': colToIndex('HO'),
+            'M249': colToIndex('HS'),
+            'SCAR-20': colToIndex('HT'),
+            'MP7': colToIndex('HX'),
+            'MP5-SD': colToIndex('HY'),
+            'Molotov/Incendiary': colToIndex('HN'),
+            'MAG-7': colToIndex('HP'),
+            'G3SG1': colToIndex('HU'),
+            'UMP-45': colToIndex('HV'),
+            'Negev': colToIndex('HW'),
+            'Zeus x27': colToIndex('HZ')
         };
 
         // Player data mapping
