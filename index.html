@@ -303,126 +303,26 @@
             color: var(--danger);
         }
 
-        .match-card {
-            background: var(--bg-tertiary);
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border-left: 4px solid var(--accent-primary);
-            transition: all 0.3s ease;
-        }
-
-        .match-card:hover {
-            transform: translateX(5px);
-            box-shadow: 0 4px 20px var(--shadow);
-        }
-
-        .match-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .match-date {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .match-score {
-            font-size: 2rem;
-            font-weight: 700;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .match-map {
-            color: var(--accent-secondary);
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .stats-card {
-            background: var(--bg-tertiary);
-            padding: 20px;
-            border-radius: 10px;
-            border-top: 3px solid var(--accent-primary);
+        .loading {
             text-align: center;
-        }
-
-        .stats-card .big-number {
-            font-size: 3rem;
-            font-weight: 700;
-            font-family: 'JetBrains Mono', monospace;
-            color: var(--accent-primary);
-            margin: 10px 0;
-        }
-
-        .stats-card .label {
+            padding: 40px;
             color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-size: 0.9rem;
+            font-size: 1.2rem;
         }
 
-        .win-badge {
-            background: var(--success);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            text-transform: uppercase;
+        .loading-spinner {
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--accent-primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
         }
 
-        .loss-badge {
-            background: var(--danger);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-        .map-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-
-        .map-card {
-            background: var(--bg-tertiary);
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            border: 2px solid var(--border);
-            transition: all 0.3s ease;
-        }
-
-        .map-card:hover {
-            border-color: var(--accent-primary);
-            transform: scale(1.05);
-        }
-
-        .map-name {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--accent-primary);
-            margin-bottom: 10px;
-        }
-
-        .map-winrate {
-            font-size: 2rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 700;
-            margin: 10px 0;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         @media (max-width: 768px) {
@@ -459,15 +359,15 @@
                 <div class="header-stats">
                     <div class="stat-pill">
                         <div class="label">Total Games</div>
-                        <div class="value">47</div>
+                        <div class="value" id="total-games">-</div>
                     </div>
                     <div class="stat-pill">
                         <div class="label">Win Rate</div>
-                        <div class="value">58%</div>
+                        <div class="value" id="win-rate">-</div>
                     </div>
                     <div class="stat-pill">
                         <div class="label">Avg Rating</div>
-                        <div class="value">1.12</div>
+                        <div class="value" id="avg-rating">-</div>
                     </div>
                 </div>
             </div>
@@ -489,117 +389,28 @@
         <!-- OVERVIEW PAGE -->
         <div id="overview" class="page active">
             <div class="section">
-                <h2 class="section-header">Recent Matches</h2>
-                <div class="match-card">
-                    <div class="match-header">
-                        <span class="match-date">Feb 4, 2026 • 21:34</span>
-                        <span class="win-badge">Victory</span>
-                    </div>
-                    <div class="match-score">
-                        <span class="positive">13</span> - <span>10</span>
-                    </div>
-                    <div class="match-map">de_mirage</div>
+                <h2 class="section-header">Season 4 Premier CS2 Summary</h2>
+                <div class="loading" id="overview-loading">
+                    <div class="loading-spinner"></div>
+                    Loading data from Google Sheets...
                 </div>
-
-                <div class="match-card">
-                    <div class="match-header">
-                        <span class="match-date">Feb 3, 2026 • 19:12</span>
-                        <span class="loss-badge">Defeat</span>
-                    </div>
-                    <div class="match-score">
-                        <span>9</span> - <span class="negative">13</span>
-                    </div>
-                    <div class="match-map">de_ancient</div>
-                </div>
-
-                <div class="match-card">
-                    <div class="match-header">
-                        <span class="match-date">Feb 2, 2026 • 20:45</span>
-                        <span class="win-badge">Victory</span>
-                    </div>
-                    <div class="match-score">
-                        <span class="positive">13</span> - <span>7</span>
-                    </div>
-                    <div class="match-map">de_dust2</div>
-                </div>
-            </div>
-
-            <div class="section">
-                <h2 class="section-header">Team Performance</h2>
-                <div class="grid-2">
-                    <div class="stats-card">
-                        <div class="label">Total Wins</div>
-                        <div class="big-number">27</div>
-                    </div>
-                    <div class="stats-card">
-                        <div class="label">Total Losses</div>
-                        <div class="big-number">20</div>
-                    </div>
-                    <div class="stats-card">
-                        <div class="label">Avg K/D</div>
-                        <div class="big-number">1.08</div>
-                    </div>
-                    <div class="stats-card">
-                        <div class="label">Longest Win Streak</div>
-                        <div class="big-number">7</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="section">
-                <h2 class="section-header">Top Performers (Last 10 Games)</h2>
-                <table>
+                <table id="overview-table" style="display:none;">
                     <thead>
                         <tr>
-                            <th>Rank</th>
                             <th>Player</th>
-                            <th>Kills</th>
-                            <th>Deaths</th>
+                            <th>End Rank</th>
+                            <th>Avg Opponent</th>
+                            <th>Peak</th>
+                            <th>Rank Change</th>
+                            <th>Matches</th>
+                            <th>Win Rate</th>
                             <th>K/D</th>
-                            <th>Rating</th>
+                            <th>ADR</th>
+                            <th>HS%</th>
+                            <th>Rating 3.0</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td><span class="rank">#1</span></td>
-                            <td class="player-name">Player1</td>
-                            <td class="stat-value positive">187</td>
-                            <td class="stat-value">154</td>
-                            <td class="stat-value positive">1.21</td>
-                            <td class="stat-value positive">1.18</td>
-                        </tr>
-                        <tr>
-                            <td><span class="rank">#2</span></td>
-                            <td class="player-name">Player2</td>
-                            <td class="stat-value positive">172</td>
-                            <td class="stat-value">161</td>
-                            <td class="stat-value">1.07</td>
-                            <td class="stat-value">1.09</td>
-                        </tr>
-                        <tr>
-                            <td><span class="rank">#3</span></td>
-                            <td class="player-name">Player3</td>
-                            <td class="stat-value">165</td>
-                            <td class="stat-value">168</td>
-                            <td class="stat-value negative">0.98</td>
-                            <td class="stat-value">1.02</td>
-                        </tr>
-                        <tr>
-                            <td><span class="rank">#4</span></td>
-                            <td class="player-name">Player4</td>
-                            <td class="stat-value">158</td>
-                            <td class="stat-value">172</td>
-                            <td class="stat-value negative">0.92</td>
-                            <td class="stat-value">0.97</td>
-                        </tr>
-                        <tr>
-                            <td><span class="rank">#5</span></td>
-                            <td class="player-name">Player5</td>
-                            <td class="stat-value">149</td>
-                            <td class="stat-value">178</td>
-                            <td class="stat-value negative">0.84</td>
-                            <td class="stat-value negative">0.89</td>
-                        </tr>
+                    <tbody id="overview-tbody">
                     </tbody>
                 </table>
             </div>
@@ -608,674 +419,177 @@
         <!-- PLAYERS PAGE -->
         <div id="players" class="page">
             <div class="section">
-                <h2 class="section-header">Player Statistics (All Time)</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>Player</th>
-                            <th>Games</th>
-                            <th>Kills</th>
-                            <th>Deaths</th>
-                            <th>Assists</th>
-                            <th>K/D</th>
-                            <th>HS%</th>
-                            <th>ADR</th>
-                            <th>Rating</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><span class="rank">#1</span></td>
-                            <td class="player-name">Player1</td>
-                            <td class="stat-value">47</td>
-                            <td class="stat-value positive">892</td>
-                            <td class="stat-value">731</td>
-                            <td class="stat-value">203</td>
-                            <td class="stat-value positive">1.22</td>
-                            <td class="stat-value">48.3%</td>
-                            <td class="stat-value">82.4</td>
-                            <td class="stat-value positive">1.17</td>
-                        </tr>
-                        <tr>
-                            <td><span class="rank">#2</span></td>
-                            <td class="player-name">Player2</td>
-                            <td class="stat-value">47</td>
-                            <td class="stat-value">847</td>
-                            <td class="stat-value">765</td>
-                            <td class="stat-value">187</td>
-                            <td class="stat-value">1.11</td>
-                            <td class="stat-value">44.1%</td>
-                            <td class="stat-value">78.9</td>
-                            <td class="stat-value">1.11</td>
-                        </tr>
-                        <tr>
-                            <td><span class="rank">#3</span></td>
-                            <td class="player-name">Player3</td>
-                            <td class="stat-value">44</td>
-                            <td class="stat-value">786</td>
-                            <td class="stat-value">789</td>
-                            <td class="stat-value">165</td>
-                            <td class="stat-value negative">0.99</td>
-                            <td class="stat-value">41.7%</td>
-                            <td class="stat-value">74.2</td>
-                            <td class="stat-value">1.04</td>
-                        </tr>
-                        <tr>
-                            <td><span class="rank">#4</span></td>
-                            <td class="player-name">Player4</td>
-                            <td class="stat-value">45</td>
-                            <td class="stat-value">751</td>
-                            <td class="stat-value">812</td>
-                            <td class="stat-value">158</td>
-                            <td class="stat-value negative">0.92</td>
-                            <td class="stat-value">39.2%</td>
-                            <td class="stat-value">69.8</td>
-                            <td class="stat-value">0.98</td>
-                        </tr>
-                        <tr>
-                            <td><span class="rank">#5</span></td>
-                            <td class="player-name">Player5</td>
-                            <td class="stat-value">43</td>
-                            <td class="stat-value">698</td>
-                            <td class="stat-value">834</td>
-                            <td class="stat-value">142</td>
-                            <td class="stat-value negative">0.84</td>
-                            <td class="stat-value">37.5%</td>
-                            <td class="stat-value">65.3</td>
-                            <td class="stat-value negative">0.91</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="section">
-                <h2 class="section-header">Player Win Rates</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Player</th>
-                            <th>Games Won</th>
-                            <th>Games Lost</th>
-                            <th>Win Rate</th>
-                            <th>Impact Rating</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="player-name">Player1</td>
-                            <td class="stat-value positive">29</td>
-                            <td class="stat-value">18</td>
-                            <td class="stat-value positive">61.7%</td>
-                            <td class="stat-value positive">1.24</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Player2</td>
-                            <td class="stat-value positive">28</td>
-                            <td class="stat-value">19</td>
-                            <td class="stat-value">59.6%</td>
-                            <td class="stat-value">1.15</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Player3</td>
-                            <td class="stat-value">25</td>
-                            <td class="stat-value">19</td>
-                            <td class="stat-value">56.8%</td>
-                            <td class="stat-value">1.08</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Player4</td>
-                            <td class="stat-value">24</td>
-                            <td class="stat-value">21</td>
-                            <td class="stat-value">53.3%</td>
-                            <td class="stat-value">1.02</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Player5</td>
-                            <td class="stat-value">22</td>
-                            <td class="stat-value">21</td>
-                            <td class="stat-value negative">51.2%</td>
-                            <td class="stat-value negative">0.94</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <h2 class="section-header">Player Cards - Coming Soon</h2>
+                <p style="color: var(--text-secondary);">Player cards with attributes will be displayed here.</p>
             </div>
         </div>
 
         <!-- MAPS PAGE -->
         <div id="maps" class="page">
             <div class="section">
-                <h2 class="section-header">Map Performance</h2>
-                <div class="map-stats">
-                    <div class="map-card">
-                        <div class="map-name">de_mirage</div>
-                        <div class="map-winrate positive">68%</div>
-                        <div style="color: var(--text-secondary); font-size: 0.9rem;">13W - 6L</div>
-                    </div>
-                    <div class="map-card">
-                        <div class="map-name">de_dust2</div>
-                        <div class="map-winrate positive">62%</div>
-                        <div style="color: var(--text-secondary); font-size: 0.9rem;">8W - 5L</div>
-                    </div>
-                    <div class="map-card">
-                        <div class="map-name">de_inferno</div>
-                        <div class="map-winrate">57%</div>
-                        <div style="color: var(--text-secondary); font-size: 0.9rem;">4W - 3L</div>
-                    </div>
-                    <div class="map-card">
-                        <div class="map-name">de_ancient</div>
-                        <div class="map-winrate negative">44%</div>
-                        <div style="color: var(--text-secondary); font-size: 0.9rem;">4W - 5L</div>
-                    </div>
-                    <div class="map-card">
-                        <div class="map-name">de_anubis</div>
-                        <div class="map-winrate negative">40%</div>
-                        <div style="color: var(--text-secondary); font-size: 0.9rem;">2W - 3L</div>
-                    </div>
-                    <div class="map-card">
-                        <div class="map-name">de_nuke</div>
-                        <div class="map-winrate negative">33%</div>
-                        <div style="color: var(--text-secondary); font-size: 0.9rem;">1W - 2L</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="section">
-                <h2 class="section-header">Detailed Map Statistics</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Map</th>
-                            <th>Games</th>
-                            <th>Wins</th>
-                            <th>Losses</th>
-                            <th>Win Rate</th>
-                            <th>Avg Rounds</th>
-                            <th>T Side Win%</th>
-                            <th>CT Side Win%</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="player-name">de_mirage</td>
-                            <td class="stat-value">19</td>
-                            <td class="stat-value positive">13</td>
-                            <td class="stat-value">6</td>
-                            <td class="stat-value positive">68.4%</td>
-                            <td class="stat-value">24.2</td>
-                            <td class="stat-value">52%</td>
-                            <td class="stat-value positive">65%</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">de_dust2</td>
-                            <td class="stat-value">13</td>
-                            <td class="stat-value positive">8</td>
-                            <td class="stat-value">5</td>
-                            <td class="stat-value positive">61.5%</td>
-                            <td class="stat-value">23.8</td>
-                            <td class="stat-value positive">58%</td>
-                            <td class="stat-value">54%</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">de_inferno</td>
-                            <td class="stat-value">7</td>
-                            <td class="stat-value">4</td>
-                            <td class="stat-value">3</td>
-                            <td class="stat-value">57.1%</td>
-                            <td class="stat-value">25.1</td>
-                            <td class="stat-value">49%</td>
-                            <td class="stat-value positive">61%</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">de_ancient</td>
-                            <td class="stat-value">9</td>
-                            <td class="stat-value">4</td>
-                            <td class="stat-value">5</td>
-                            <td class="stat-value negative">44.4%</td>
-                            <td class="stat-value">26.3</td>
-                            <td class="stat-value negative">41%</td>
-                            <td class="stat-value">48%</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">de_anubis</td>
-                            <td class="stat-value">5</td>
-                            <td class="stat-value">2</td>
-                            <td class="stat-value">3</td>
-                            <td class="stat-value negative">40.0%</td>
-                            <td class="stat-value">22.4</td>
-                            <td class="stat-value negative">38%</td>
-                            <td class="stat-value">45%</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">de_nuke</td>
-                            <td class="stat-value">3</td>
-                            <td class="stat-value">1</td>
-                            <td class="stat-value">2</td>
-                            <td class="stat-value negative">33.3%</td>
-                            <td class="stat-value">21.7</td>
-                            <td class="stat-value negative">35%</td>
-                            <td class="stat-value negative">39%</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <h2 class="section-header">Maps - Coming Soon</h2>
+                <p style="color: var(--text-secondary);">Map statistics will be displayed here.</p>
             </div>
         </div>
 
         <!-- ECOHUNTERS PAGE -->
         <div id="ecohunters" class="page">
             <div class="section">
-                <h2 class="section-header">Eco Round Performance</h2>
-                <p style="color: var(--text-secondary); margin-bottom: 20px;">Players who excel in clutch low-money situations</p>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>Player</th>
-                            <th>Eco Rounds Played</th>
-                            <th>Kills in Eco</th>
-                            <th>Eco Round Wins</th>
-                            <th>Eco Win %</th>
-                            <th>Eco K/D</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><span class="rank">#1</span></td>
-                            <td class="player-name">Player1</td>
-                            <td class="stat-value">127</td>
-                            <td class="stat-value positive">94</td>
-                            <td class="stat-value positive">23</td>
-                            <td class="stat-value positive">18.1%</td>
-                            <td class="stat-value positive">0.74</td>
-                        </tr>
-                        <tr>
-                            <td><span class="rank">#2</span></td>
-                            <td class="player-name">Player3</td>
-                            <td class="stat-value">118</td>
-                            <td class="stat-value">82</td>
-                            <td class="stat-value">19</td>
-                            <td class="stat-value">16.1%</td>
-                            <td class="stat-value">0.69</td>
-                        </tr>
-                        <tr>
-                            <td><span class="rank">#3</span></td>
-                            <td class="player-name">Player2</td>
-                            <td class="stat-value">123</td>
-                            <td class="stat-value">79</td>
-                            <td class="stat-value">21</td>
-                            <td class="stat-value">17.1%</td>
-                            <td class="stat-value">0.64</td>
-                        </tr>
-                        <tr>
-                            <td><span class="rank">#4</span></td>
-                            <td class="player-name">Player4</td>
-                            <td class="stat-value">115</td>
-                            <td class="stat-value">67</td>
-                            <td class="stat-value">17</td>
-                            <td class="stat-value">14.8%</td>
-                            <td class="stat-value">0.58</td>
-                        </tr>
-                        <tr>
-                            <td><span class="rank">#5</span></td>
-                            <td class="player-name">Player5</td>
-                            <td class="stat-value">109</td>
-                            <td class="stat-value">58</td>
-                            <td class="stat-value">14</td>
-                            <td class="stat-value negative">12.8%</td>
-                            <td class="stat-value negative">0.53</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="section">
-                <h2 class="section-header">Pistol Round Masters</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Player</th>
-                            <th>Pistol Rounds</th>
-                            <th>Kills</th>
-                            <th>K/D</th>
-                            <th>Pistol Win %</th>
-                            <th>First Kills</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="player-name">Player2</td>
-                            <td class="stat-value">94</td>
-                            <td class="stat-value positive">112</td>
-                            <td class="stat-value positive">1.19</td>
-                            <td class="stat-value positive">61.7%</td>
-                            <td class="stat-value positive">18</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Player1</td>
-                            <td class="stat-value">94</td>
-                            <td class="stat-value positive">107</td>
-                            <td class="stat-value positive">1.14</td>
-                            <td class="stat-value">59.6%</td>
-                            <td class="stat-value">15</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Player3</td>
-                            <td class="stat-value">88</td>
-                            <td class="stat-value">91</td>
-                            <td class="stat-value">1.03</td>
-                            <td class="stat-value">56.8%</td>
-                            <td class="stat-value">12</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Player4</td>
-                            <td class="stat-value">90</td>
-                            <td class="stat-value">84</td>
-                            <td class="stat-value negative">0.93</td>
-                            <td class="stat-value">52.2%</td>
-                            <td class="stat-value">9</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Player5</td>
-                            <td class="stat-value">86</td>
-                            <td class="stat-value">76</td>
-                            <td class="stat-value negative">0.88</td>
-                            <td class="stat-value negative">50.0%</td>
-                            <td class="stat-value">7</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <h2 class="section-header">Ecohunters - Coming Soon</h2>
+                <p style="color: var(--text-secondary);">Eco round performance will be displayed here.</p>
             </div>
         </div>
 
         <!-- GAME RECORDS PAGE -->
         <div id="records" class="page">
             <div class="section">
-                <h2 class="section-header">Individual Game Records</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Record</th>
-                            <th>Player</th>
-                            <th>Value</th>
-                            <th>Map</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="player-name">Most Kills</td>
-                            <td class="stat-value">Player1</td>
-                            <td class="stat-value positive">38</td>
-                            <td class="stat-value">de_mirage</td>
-                            <td class="stat-value">Jan 15, 2026</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Highest K/D</td>
-                            <td class="stat-value">Player2</td>
-                            <td class="stat-value positive">3.12</td>
-                            <td class="stat-value">de_dust2</td>
-                            <td class="stat-value">Jan 22, 2026</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Most ADR</td>
-                            <td class="stat-value">Player1</td>
-                            <td class="stat-value positive">124.8</td>
-                            <td class="stat-value">de_inferno</td>
-                            <td class="stat-value">Jan 28, 2026</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Most Assists</td>
-                            <td class="stat-value">Player3</td>
-                            <td class="stat-value positive">12</td>
-                            <td class="stat-value">de_ancient</td>
-                            <td class="stat-value">Feb 1, 2026</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Most Headshots</td>
-                            <td class="stat-value">Player1</td>
-                            <td class="stat-value positive">28</td>
-                            <td class="stat-value">de_mirage</td>
-                            <td class="stat-value">Jan 15, 2026</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Most MVPs</td>
-                            <td class="stat-value">Player2</td>
-                            <td class="stat-value positive">9</td>
-                            <td class="stat-value">de_dust2</td>
-                            <td class="stat-value">Jan 22, 2026</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="section">
-                <h2 class="section-header">Clutch Kings</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Player</th>
-                            <th>1v1 Clutches</th>
-                            <th>1v2 Clutches</th>
-                            <th>1v3 Clutches</th>
-                            <th>1v4+ Clutches</th>
-                            <th>Total Clutch %</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="player-name">Player1</td>
-                            <td class="stat-value positive">18/31</td>
-                            <td class="stat-value">7/19</td>
-                            <td class="stat-value positive">3/8</td>
-                            <td class="stat-value">1/3</td>
-                            <td class="stat-value positive">47.5%</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Player2</td>
-                            <td class="stat-value">15/28</td>
-                            <td class="stat-value positive">8/17</td>
-                            <td class="stat-value">2/6</td>
-                            <td class="stat-value">0/2</td>
-                            <td class="stat-value positive">47.2%</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Player3</td>
-                            <td class="stat-value">12/26</td>
-                            <td class="stat-value">5/15</td>
-                            <td class="stat-value">1/5</td>
-                            <td class="stat-value">0/1</td>
-                            <td class="stat-value">38.3%</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Player4</td>
-                            <td class="stat-value">11/24</td>
-                            <td class="stat-value">4/14</td>
-                            <td class="stat-value">1/7</td>
-                            <td class="stat-value">0/2</td>
-                            <td class="stat-value">34.0%</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Player5</td>
-                            <td class="stat-value">9/23</td>
-                            <td class="stat-value">3/13</td>
-                            <td class="stat-value">0/6</td>
-                            <td class="stat-value">0/1</td>
-                            <td class="stat-value negative">27.9%</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="section">
-                <h2 class="section-header">Team Records</h2>
-                <div class="grid-2">
-                    <div class="stats-card">
-                        <div class="label">Longest Win Streak</div>
-                        <div class="big-number">7</div>
-                        <div style="color: var(--text-muted); font-size: 0.9rem;">Jan 10-18, 2026</div>
-                    </div>
-                    <div class="stats-card">
-                        <div class="label">Most Rounds Won</div>
-                        <div class="big-number">13</div>
-                        <div style="color: var(--text-muted); font-size: 0.9rem;">5 times</div>
-                    </div>
-                    <div class="stats-card">
-                        <div class="label">Biggest Comeback</div>
-                        <div class="big-number">2-11</div>
-                        <div style="color: var(--text-muted); font-size: 0.9rem;">de_dust2, Jan 29</div>
-                    </div>
-                    <div class="stats-card">
-                        <div class="label">Perfect Match (13-0)</div>
-                        <div class="big-number">1</div>
-                        <div style="color: var(--text-muted); font-size: 0.9rem;">de_mirage, Jan 8</div>
-                    </div>
-                </div>
+                <h2 class="section-header">Game Records - Coming Soon</h2>
+                <p style="color: var(--text-secondary);">Game records will be displayed here.</p>
             </div>
         </div>
 
         <!-- PROPLAYER COMPS PAGE -->
         <div id="proplayer" class="page">
             <div class="section">
-                <h2 class="section-header">Pro Player Comparisons</h2>
-                <p style="color: var(--text-secondary); margin-bottom: 20px;">How your squad stacks up against professional players based on playstyle and statistics</p>
-                
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Your Player</th>
-                            <th>Similar Pro</th>
-                            <th>K/D Comp</th>
-                            <th>HS% Comp</th>
-                            <th>Style Match</th>
-                            <th>Notes</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="player-name">Player1</td>
-                            <td class="stat-value" style="color: var(--accent-tertiary);">ZywOo</td>
-                            <td class="stat-value">1.22 vs 1.35</td>
-                            <td class="stat-value">48% vs 51%</td>
-                            <td class="stat-value positive">87%</td>
-                            <td style="color: var(--text-secondary); font-size: 0.9rem;">Aggressive AWPer, high impact</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Player2</td>
-                            <td class="stat-value" style="color: var(--accent-tertiary);">NiKo</td>
-                            <td class="stat-value">1.11 vs 1.28</td>
-                            <td class="stat-value">44% vs 49%</td>
-                            <td class="stat-value positive">82%</td>
-                            <td style="color: var(--text-secondary); font-size: 0.9rem;">Entry fragger, consistent rifler</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Player3</td>
-                            <td class="stat-value" style="color: var(--accent-tertiary);">Xyp9x</td>
-                            <td class="stat-value">0.99 vs 1.05</td>
-                            <td class="stat-value">42% vs 44%</td>
-                            <td class="stat-value positive">79%</td>
-                            <td style="color: var(--text-secondary); font-size: 0.9rem;">Clutch master, support player</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Player4</td>
-                            <td class="stat-value" style="color: var(--accent-tertiary);">karrigan</td>
-                            <td class="stat-value">0.92 vs 0.98</td>
-                            <td class="stat-value">39% vs 42%</td>
-                            <td class="stat-value">76%</td>
-                            <td style="color: var(--text-secondary); font-size: 0.9rem;">IGL, tactical approach</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Player5</td>
-                            <td class="stat-value" style="color: var(--accent-tertiary);">JW</td>
-                            <td class="stat-value">0.84 vs 1.09</td>
-                            <td class="stat-value">38% vs 43%</td>
-                            <td class="stat-value">71%</td>
-                            <td style="color: var(--text-secondary); font-size: 0.9rem;">Aggressive, unpredictable style</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="section">
-                <h2 class="section-header">Role Distribution</h2>
-                <div class="grid-2">
-                    <div class="stats-card">
-                        <div class="label">Primary AWPer</div>
-                        <div class="big-number">Player1</div>
-                        <div style="color: var(--text-muted); font-size: 0.9rem;">62% AWP rounds</div>
-                    </div>
-                    <div class="stats-card">
-                        <div class="label">Entry Fragger</div>
-                        <div class="big-number">Player2</div>
-                        <div style="color: var(--text-muted); font-size: 0.9rem;">34% opening duels</div>
-                    </div>
-                    <div class="stats-card">
-                        <div class="label">Support Player</div>
-                        <div class="big-number">Player3</div>
-                        <div style="color: var(--text-muted); font-size: 0.9rem;">Highest utility damage</div>
-                    </div>
-                    <div class="stats-card">
-                        <div class="label">Lurker</div>
-                        <div class="big-number">Player5</div>
-                        <div style="color: var(--text-muted); font-size: 0.9rem;">28% isolated kills</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="section">
-                <h2 class="section-header">Weapon Preferences</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Player</th>
-                            <th>Primary Weapon</th>
-                            <th>Kills</th>
-                            <th>Accuracy</th>
-                            <th>Headshot %</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="player-name">Player1</td>
-                            <td class="stat-value">AWP</td>
-                            <td class="stat-value positive">387</td>
-                            <td class="stat-value positive">78.4%</td>
-                            <td class="stat-value">-</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Player2</td>
-                            <td class="stat-value">AK-47</td>
-                            <td class="stat-value positive">342</td>
-                            <td class="stat-value">24.1%</td>
-                            <td class="stat-value positive">51.2%</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Player3</td>
-                            <td class="stat-value">M4A4</td>
-                            <td class="stat-value">298</td>
-                            <td class="stat-value">21.8%</td>
-                            <td class="stat-value">46.7%</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Player4</td>
-                            <td class="stat-value">AK-47</td>
-                            <td class="stat-value">267</td>
-                            <td class="stat-value">19.4%</td>
-                            <td class="stat-value">42.3%</td>
-                        </tr>
-                        <tr>
-                            <td class="player-name">Player5</td>
-                            <td class="stat-value">AK-47</td>
-                            <td class="stat-value">243</td>
-                            <td class="stat-value">18.9%</td>
-                            <td class="stat-value">39.8%</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <h2 class="section-header">Proplayer Comps - Coming Soon</h2>
+                <p style="color: var(--text-secondary);">Pro player comparisons will be displayed here.</p>
             </div>
         </div>
     </div>
 
     <script>
+        // Google Sheets configuration
+        const SHEET_ID = '14dRJgt4aZUFMrBCP8KHkZ6_zhNZE2aInBU9U1kTJ3mg';
+        const SHEET_GIDS = {
+            'sum_stats_maps': '429282545'
+        };
+
+        // Column mappings (1-indexed)
+        const OVERVIEW_COLUMNS = {
+            name: 3,        // C
+            matches: 5,     // E
+            winrate: 9,     // I
+            kd: 14,         // N
+            adr: 22,        // V
+            hs_pct: 24,     // X
+            rating: 45      // AS
+        };
+
+        // Fetch data from Google Sheets
+        async function fetchSheetData(gid, range = '') {
+            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}${range ? '&range=' + range : ''}`;
+            
+            try {
+                const response = await fetch(url);
+                const text = await response.text();
+                return parseCSV(text);
+            } catch (error) {
+                console.error('Error fetching sheet data:', error);
+                return null;
+            }
+        }
+
+        // Simple CSV parser
+        function parseCSV(text) {
+            const lines = text.split('\n');
+            return lines.map(line => {
+                const values = [];
+                let current = '';
+                let inQuotes = false;
+                
+                for (let char of line) {
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        values.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                values.push(current.trim());
+                return values;
+            });
+        }
+
+        // Load overview page data
+        async function loadOverviewData() {
+            const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
+            
+            if (!data) {
+                document.getElementById('overview-loading').innerHTML = '<p style="color: var(--danger);">Error loading data. Please refresh the page.</p>';
+                return;
+            }
+
+            // Extract rows 8-16 (indices 7-15 in 0-indexed array)
+            const players = [];
+            for (let i = 7; i < 16 && i < data.length; i++) {
+                const row = data[i];
+                const name = row[OVERVIEW_COLUMNS.name - 1];
+                
+                // Skip empty rows or rows with #DIV/0! errors
+                if (!name || name === '' || name.includes('#DIV')) continue;
+                
+                players.push({
+                    name: name,
+                    matches: parseInt(row[OVERVIEW_COLUMNS.matches - 1]) || 0,
+                    winrate: parseFloat(row[OVERVIEW_COLUMNS.winrate - 1]) || 0,
+                    kd: parseFloat(row[OVERVIEW_COLUMNS.kd - 1]) || 0,
+                    adr: parseFloat(row[OVERVIEW_COLUMNS.adr - 1]) || 0,
+                    hs_pct: parseFloat(row[OVERVIEW_COLUMNS.hs_pct - 1]) || 0,
+                    rating: parseFloat(row[OVERVIEW_COLUMNS.rating - 1]) || 0
+                });
+            }
+
+            displayOverviewData(players);
+        }
+
+        // Display overview data in table
+        function displayOverviewData(players) {
+            const tbody = document.getElementById('overview-tbody');
+            tbody.innerHTML = '';
+
+            // Calculate summary stats
+            let totalGames = 0;
+            let totalWinrate = 0;
+            let totalRating = 0;
+            let playerCount = 0;
+
+            players.forEach(player => {
+                if (player.matches > 0) {
+                    totalGames += player.matches;
+                    totalWinrate += player.winrate;
+                    totalRating += player.rating;
+                    playerCount++;
+                }
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="player-name">${player.name}</td>
+                    <td class="stat-value">-</td>
+                    <td class="stat-value">-</td>
+                    <td class="stat-value">-</td>
+                    <td class="stat-value">-</td>
+                    <td class="stat-value">${player.matches}</td>
+                    <td class="stat-value ${player.winrate >= 0.5 ? 'positive' : 'negative'}">${(player.winrate * 100).toFixed(1)}%</td>
+                    <td class="stat-value ${player.kd >= 1.0 ? 'positive' : 'negative'}">${player.kd.toFixed(2)}</td>
+                    <td class="stat-value">${player.adr.toFixed(1)}</td>
+                    <td class="stat-value">${(player.hs_pct * 100).toFixed(1)}%</td>
+                    <td class="stat-value ${player.rating >= 1.0 ? 'positive' : 'negative'}">${player.rating.toFixed(2)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Update header stats
+            document.getElementById('total-games').textContent = Math.round(totalGames / playerCount);
+            document.getElementById('win-rate').textContent = ((totalWinrate / playerCount) * 100).toFixed(0) + '%';
+            document.getElementById('avg-rating').textContent = (totalRating / playerCount).toFixed(2);
+
+            // Hide loading, show table
+            document.getElementById('overview-loading').style.display = 'none';
+            document.getElementById('overview-table').style.display = 'table';
+        }
+
         // Navigation functionality
         const navLinks = document.querySelectorAll('.nav-link');
         const pages = document.querySelectorAll('.page');
@@ -1284,43 +598,21 @@
             link.addEventListener('click', (e) => {
                 e.preventDefault();
                 
-                // Remove active class from all links and pages
                 navLinks.forEach(l => l.classList.remove('active'));
                 pages.forEach(p => p.classList.remove('active'));
                 
-                // Add active class to clicked link
                 link.classList.add('active');
                 
-                // Show corresponding page
                 const pageId = link.getAttribute('data-page');
                 document.getElementById(pageId).classList.add('active');
                 
-                // Scroll to top
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
         });
 
-        // Add smooth animations on scroll
-        const sections = document.querySelectorAll('.section');
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -100px 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        }, observerOptions);
-
-        sections.forEach(section => {
-            section.style.opacity = '0';
-            section.style.transform = 'translateY(20px)';
-            section.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-            observer.observe(section);
+        // Load data on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadOverviewData();
         });
     </script>
 </body>
