@@ -1902,6 +1902,12 @@
                 return isNaN(num) ? '-' : num.toFixed(2);
             };
             
+            // Helper function to format integers (0 decimal places)
+            const formatInt = (val) => {
+                const num = parseFloat(val);
+                return isNaN(num) ? '-' : Math.round(num).toString();
+            };
+            
             // Helper function to format damage values (1 decimal place)
             const formatDamage = (val) => {
                 const num = parseFloat(val);
@@ -1941,6 +1947,10 @@
                 mapsPlayed: colToIndex('E'),           // 4
                 rating: colToIndex('GC'),              // 184
                 
+                // Sidebar stats
+                dprSidebar: colToIndex('AL'),          // 37 (AL for sidebar)
+                kastSidebar: colToIndex('Z'),          // 25 (Z for sidebar)
+                
                 // Firepower
                 killsPerRoundWin: colToIndex('BD'),    // 55
                 roundsMultikill: colToIndex('BK'),     // 62
@@ -1950,7 +1960,7 @@
                 tradedDeathsPerRound: colToIndex('BS'), // 70
                 tradedDeathsPct: colToIndex('BT'),     // 71
                 openingDeathsTraded: colToIndex('BX'), // 75
-                supportRounds: colToIndex('CA'),       // 78
+                supportRounds: colToIndex('CB'),       // 79 (CORRECTED from CA)
                 
                 // Trading
                 tradeKillsPerRound: colToIndex('CJ'),  // 87
@@ -1988,10 +1998,10 @@
             // Update sidebar stats
             document.getElementById('detail-rating').textContent = formatValue(playerRow[cols.rating]);
             document.getElementById('detail-round-swing').textContent = '-'; // Not provided
-            document.getElementById('detail-dpr').textContent = formatDamage(playerRow[cols.damagePerRound]);
-            document.getElementById('detail-kast').textContent = formatPercentage(playerRow[cols.roundsWithKill]);
+            document.getElementById('detail-dpr').textContent = formatDamage(playerRow[cols.dprSidebar]);
+            document.getElementById('detail-kast').textContent = formatPercentage(playerRow[cols.kastSidebar]);
             document.getElementById('detail-multikills').textContent = formatPercentage(playerRow[cols.roundsMultikill]);
-            document.getElementById('detail-adr').textContent = formatDamage(playerRow[cols.damagePerRound]);
+            document.getElementById('detail-adr').textContent = formatDamage(playerRow[cols.dprSidebar]);
             document.getElementById('detail-kpr').textContent = formatValue(playerRow[cols.killsPerRound]);
             
             // Update maps count
@@ -2002,17 +2012,17 @@
             
             // Update Overview tab - Statistics section
             const statsRows = document.querySelectorAll('#detail-tab-overview .player-detail-table')[0].querySelectorAll('tbody tr');
-            statsRows[0].children[1].textContent = formatValue(playerRow[cols.totalKills]);
+            statsRows[0].children[1].textContent = formatInt(playerRow[cols.totalKills]);
             statsRows[1].children[1].textContent = formatPercentage(playerRow[cols.headshotPct]);
-            statsRows[2].children[1].textContent = formatValue(playerRow[cols.totalDeaths]);
+            statsRows[2].children[1].textContent = formatInt(playerRow[cols.totalDeaths]);
             statsRows[3].children[1].textContent = formatValue(playerRow[cols.kdRatio]);
             statsRows[4].children[1].textContent = formatDamage(playerRow[cols.damagePerRound]);
             statsRows[5].children[1].textContent = formatDamage(playerRow[cols.grenadeDmgPerRound]);
-            statsRows[6].children[1].textContent = formatValue(playerRow[cols.roundsPlayed]);
+            statsRows[6].children[1].textContent = formatInt(playerRow[cols.roundsPlayed]);
             statsRows[7].children[1].textContent = formatValue(playerRow[cols.killsPerRound]);
             statsRows[8].children[1].textContent = formatValue(playerRow[cols.assistsPerRound]);
             statsRows[9].children[1].textContent = formatValue(playerRow[cols.deathsPerRound]);
-            statsRows[10].children[1].textContent = formatValue(playerRow[cols.mapsPlayed]);
+            statsRows[10].children[1].textContent = formatInt(playerRow[cols.mapsPlayed]);
             statsRows[11].children[1].textContent = formatValue(playerRow[cols.rating]);
             
             // Update Overview tab - Firepower section
@@ -2069,11 +2079,20 @@
             utilityRows[2].children[1].textContent = formatValue(playerRow[cols.flashAssistsPerRound]);
             utilityRows[3].children[1].textContent = formatValue(playerRow[cols.timeOpponentFlashed]);
             
-            // Update attribute scores above each section
-            // Note: These should come from the player's existing attribute data
-            // For now, keeping them as placeholders - we'll update them with the actual attribute values
+            // Update attribute scores above each section and in sidebar
+            // Note: These come from the "All" row for this player
             const playerData = await getPlayerAttributeData(currentPlayerName);
             if (playerData) {
+                // Update sidebar attributes
+                document.getElementById('detail-firepower').textContent = playerData.firepower;
+                document.getElementById('detail-entrying').textContent = playerData.entrying;
+                document.getElementById('detail-trading').textContent = playerData.trading;
+                document.getElementById('detail-opening').textContent = playerData.opening;
+                document.getElementById('detail-clutching').textContent = playerData.clutching;
+                document.getElementById('detail-sniping').textContent = playerData.sniping;
+                document.getElementById('detail-utility').textContent = playerData.utility;
+                
+                // Update section header scores
                 document.getElementById('detail-firepower-score').textContent = playerData.firepower;
                 document.getElementById('detail-entrying-score').textContent = playerData.entrying;
                 document.getElementById('detail-trading-score').textContent = playerData.trading;
@@ -2084,7 +2103,7 @@
             }
         }
         
-        // Get player attribute data from the main sheet
+        // Get player attribute data from the "All" row
         async function getPlayerAttributeData(playerName) {
             const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
             if (!data) return null;
@@ -2092,10 +2111,10 @@
             const info = PLAYER_INFO[playerName];
             if (!info) return null;
             
-            // Find the "All" row for this player to get attributes
-            for (let i = 0; i < data.length; i++) {
+            // Find the "All" row for this player to get attributes (rows 8-16, indices 7-15)
+            for (let i = 7; i <= 15 && i < data.length; i++) {
                 const row = data[i];
-                if (row[1] === 'All' && row[2] === info.nickname) {
+                if (row[2] === info.nickname) {
                     return {
                         firepower: row[PLAYER_COLUMNS.firepower - 1] || '0/100',
                         entrying: row[PLAYER_COLUMNS.entrying - 1] || '0/100',
