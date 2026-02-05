@@ -574,10 +574,10 @@
                     <td class="stat-value">-</td>
                     <td class="stat-value">-</td>
                     <td class="stat-value">${player.matches}</td>
-                    <td class="stat-value">${(player.winrate * 100).toFixed(2)}%</td>
+                    <td class="stat-value">${(player.winrate).toFixed(2)}%</td>
                     <td class="stat-value">${player.kd.toFixed(2)}</td>
                     <td class="stat-value">${player.adr.toFixed(1)}</td>
-                    <td class="stat-value">${(player.hs_pct * 100).toFixed(2)}%</td>
+                    <td class="stat-value">${(player.hs_pct).toFixed(2)}%</td>
                     <td class="stat-value">${player.rating.toFixed(2)}</td>
                 `;
                 tbody.appendChild(row);
@@ -585,7 +585,7 @@
 
             // Update header stats
             document.getElementById('total-games').textContent = Math.round(totalGames / playerCount);
-            document.getElementById('win-rate').textContent = ((totalWinrate / playerCount) * 100).toFixed(0) + '%';
+            document.getElementById('win-rate').textContent = (totalWinrate / playerCount).toFixed(0) + '%';
             document.getElementById('avg-rating').textContent = (totalRating / playerCount).toFixed(2);
 
             // Hide loading, show table
