@@ -858,9 +858,9 @@
                 const card = document.createElement('div');
                 card.className = 'player-card';
                 
-                // Use the photo from PLAYER_INFO
+                // Use the photo from PLAYER_INFO - images are at root level
                 const imageUrl = info.photo 
-                    ? `https://raw.githubusercontent.com/remokox/premierstats/main/player-images/${info.photo}`
+                    ? `https://github.com/remokox/premierstats/blob/main/${info.photo}?raw=true`
                     : `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='320'%3E%3Crect width='280' height='320' fill='%23333'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle' fill='white' font-size='72'%3E${info.nickname.substring(0, 2).toUpperCase()}%3C/text%3E%3C/svg%3E`;
                 
                 card.innerHTML = `
