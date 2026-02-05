@@ -1634,7 +1634,8 @@
         // Google Sheets configuration
         const SHEET_ID = '14dRJgt4aZUFMrBCP8KHkZ6_zhNZE2aInBU9U1kTJ3mg';
         const SHEET_GIDS = {
-            'sum_stats_maps': '429282545'
+            'sum_stats_maps': '429282545',
+            'maps': '1587882555'
         };
 
         // Column mappings (1-indexed)
@@ -1686,6 +1687,91 @@
             pistolKills: 192,       // GK
             grenadeKills: 193,      // GL
             otherKills: 194         // GM
+        };
+
+        // Column mappings for Matches tab - each player has different columns in the maps sheet
+        const MATCHES_COLUMNS = {
+            'Große Cigarette': {
+                date: 21,      // V
+                map: 23,       // X
+                result: 27,    // AB
+                score: 29,     // AD
+                kd: 31,        // AF
+                plusMinus: 33, // AH
+                rating: 34     // AI
+            },
+            'remokox': {
+                date: 5,       // F
+                map: 7,        // H
+                result: 11,    // L
+                score: 13,     // N
+                kd: 15,        // P
+                plusMinus: 17, // R
+                rating: 18     // S
+            },
+            'Badum': {
+                date: 37,      // AL
+                map: 39,       // AN
+                result: 43,    // AR
+                score: 45,     // AT
+                kd: 47,        // AV
+                plusMinus: 49, // AX
+                rating: 50     // AY
+            },
+            'MasnoPro Vulpes Wójcior': {
+                date: 53,      // BB
+                map: 55,       // BD
+                result: 59,    // BH
+                score: 61,     // BJ
+                kd: 63,        // BL
+                plusMinus: 65, // BN
+                rating: 66     // BO
+            },
+            'MasnoCoach THUNDER': {
+                date: 69,      // BR
+                map: 71,       // BT
+                result: 75,    // BX
+                score: 77,     // BZ
+                kd: 79,        // CB
+                plusMinus: 81, // CD
+                rating: 82     // CE
+            },
+            'Marnyr': {
+                date: 85,      // CH
+                map: 87,       // CJ
+                result: 91,    // CN
+                score: 93,     // CP
+                kd: 95,        // CR
+                plusMinus: 97, // CT
+                rating: 98     // CU
+            },
+            'Yao Ming': {
+                date: 101,     // CX
+                map: 103,      // CZ
+                result: 107,   // DD
+                score: 109,    // DF
+                kd: 111,       // DH
+                plusMinus: 113,// DJ
+                rating: 114    // DK
+            },
+            'Torrek': {
+                date: 117,     // DN
+                map: 119,      // DP
+                result: 123,   // DT
+                score: 125,    // DV
+                kd: 127,       // DX
+                plusMinus: 129,// DZ
+                rating: 130    // EA
+            },
+            'monke': {
+                date: 133,     // EE
+                map: 135,      // EG
+                result: 139,   // EK
+                score: 141,    // EM
+                kd: 143,       // EO
+                plusMinus: 145,// EQ
+                rating: 146    // ER
+            }
         };
 
         // Player data mapping
@@ -2390,6 +2476,9 @@
                 document.getElementById('detail-sniping-score').textContent = playerData.sniping;
                 document.getElementById('detail-utility-score').textContent = playerData.utility;
             }
+            
+            // Load matches data for Matches tab
+            await loadMatchesData(mapName);
         }
         
         // Get player attribute data from the "All" row
@@ -2416,6 +2505,117 @@
                 }
             }
             return null;
+        }
+
+        // Load matches data for Matches tab
+        async function loadMatchesData(mapName) {
+            if (!currentPlayerName) return;
+            
+            const info = PLAYER_INFO[currentPlayerName];
+            if (!info) return;
+            
+            const data = await fetchSheetData(SHEET_GIDS.maps);
+            if (!data) {
+                console.error('Failed to load matches data');
+                return;
+            }
+            
+            // Get column mappings for this player
+            const cols = MATCHES_COLUMNS[info.nickname];
+            if (!cols) {
+                console.error('No column mapping for player:', info.nickname);
+                return;
+            }
+            
+            // Find the row with player name + map filter
+            // Format: "PlayerNameMapName" e.g., "Große CigaretteAll", "Große CigaretteAncient"
+            const mapFilter = mapName.charAt(0).toUpperCase() + mapName.slice(1).toLowerCase();
+            const searchString = info.nickname + mapFilter;
+            
+            let startRow = -1;
+            for (let i = 0; i < data.length; i++) {
+                // Check all columns for the search string
+                for (let j = 0; j < data[i].length; j++) {
+                    if (data[i][j] && data[i][j].trim() === searchString) {
+                        startRow = i + 1; // Start from next row
+                        break;
+                    }
+                }
+                if (startRow !== -1) break;
+            }
+            
+            if (startRow === -1) {
+                console.error('Could not find section for:', searchString);
+                return;
+            }
+            
+            // Collect all matches from startRow until we hit an empty date cell
+            const matches = [];
+            for (let i = startRow; i < data.length; i++) {
+                const row = data[i];
+                const date = row[cols.date - 1];
+                
+                // Stop if we hit an empty date or another player section
+                if (!date || date.trim() === '') break;
+                
+                matches.push({
+                    date: date,
+                    map: row[cols.map - 1] || '-',
+                    result: row[cols.result - 1] || '-',
+                    score: row[cols.score - 1] || '-',
+                    kd: row[cols.kd - 1] || '-',
+                    plusMinus: row[cols.plusMinus - 1] || '-',
+                    rating: parseFloat(row[cols.rating - 1]) || 0
+                });
+            }
+            
+            // Calculate summary stats
+            const totalMatches = matches.length;
+            const wins = matches.filter(m => m.result.toLowerCase() === 'win').length;
+            const mapsWonPct = totalMatches > 0 ? (wins / totalMatches * 100) : 0;
+            
+            const onePlusRating = matches.filter(m => m.rating >= 1.0).length;
+            const onePlusRatingPct = totalMatches > 0 ? (onePlusRating / totalMatches * 100) : 0;
+            
+            // Calculate best 1+ rating streak
+            let bestStreak = 0;
+            let currentStreak = 0;
+            matches.forEach(m => {
+                if (m.rating >= 1.0) {
+                    currentStreak++;
+                    if (currentStreak > bestStreak) bestStreak = currentStreak;
+                } else {
+                    currentStreak = 0;
+                }
+            });
+            
+            // Calculate average rating
+            const totalRating = matches.reduce((sum, m) => sum + m.rating, 0);
+            const avgRating = totalMatches > 0 ? (totalRating / totalMatches) : 0;
+            
+            // Update summary stats
+            document.getElementById('matches-avg-rating').textContent = avgRating.toFixed(2);
+            document.getElementById('matches-maps-won').textContent = mapsWonPct.toFixed(1) + '%';
+            document.getElementById('matches-1plus-rating').textContent = onePlusRatingPct.toFixed(1) + '%';
+            document.getElementById('matches-best-streak').textContent = bestStreak;
+            
+            // Populate matches table
+            const tbody = document.getElementById('matches-tbody');
+            tbody.innerHTML = '';
+            
+            matches.forEach(match => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${match.date}</td>
+                    <td>${match.map}</td>
+                    <td>${match.result}</td>
+                    <td>${match.score}</td>
+                    <td>${match.kd}</td>
+                    <td>${match.plusMinus}</td>
+                    <td>${match.rating.toFixed(2)}</td>
+                `;
+                tbody.appendChild(row);
+            });
         }
 
         // Go back to players page
