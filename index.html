@@ -1948,7 +1948,8 @@
                 rating: colToIndex('GC'),              // 184
                 
                 // Sidebar stats
-                dprSidebar: colToIndex('AL'),          // 37 (AL for sidebar)
+                dprSidebar: colToIndex('AL'),          // 37 (AL for sidebar - DPR)
+                adrSidebar: colToIndex('V'),           // 21 (V for sidebar - ADR)
                 kastSidebar: colToIndex('Z'),          // 25 (Z for sidebar)
                 
                 // Firepower
@@ -1998,10 +1999,10 @@
             // Update sidebar stats
             document.getElementById('detail-rating').textContent = formatValue(playerRow[cols.rating]);
             document.getElementById('detail-round-swing').textContent = '-'; // Not provided
-            document.getElementById('detail-dpr').textContent = formatDamage(playerRow[cols.dprSidebar]);
+            document.getElementById('detail-dpr').textContent = formatValue(playerRow[cols.dprSidebar]);
             document.getElementById('detail-kast').textContent = formatPercentage(playerRow[cols.kastSidebar]);
             document.getElementById('detail-multikills').textContent = formatPercentage(playerRow[cols.roundsMultikill]);
-            document.getElementById('detail-adr').textContent = formatDamage(playerRow[cols.dprSidebar]);
+            document.getElementById('detail-adr').textContent = formatDamage(playerRow[cols.adrSidebar]);
             document.getElementById('detail-kpr').textContent = formatValue(playerRow[cols.killsPerRound]);
             
             // Update maps count
