@@ -1747,11 +1747,20 @@
         let currentPlayerName = null; // Store current player for map filtering
 
         function showPlayerDetail(playerName) {
+            console.log('showPlayerDetail called with playerName:', playerName);
+            console.log('PLAYER_INFO keys:', Object.keys(PLAYER_INFO));
+            
             const info = PLAYER_INFO[playerName];
-            if (!info) return;
+            console.log('Found player info:', info);
+            
+            if (!info) {
+                console.error('No player info found for:', playerName);
+                return;
+            }
             
             // Store current player name
             currentPlayerName = playerName;
+            console.log('Set currentPlayerName to:', currentPlayerName);
             
             // Populate player details
             document.getElementById('detail-photo').src = `https://github.com/remokox/premierstats/blob/main/${info.photo}?raw=true`;
@@ -1768,6 +1777,7 @@
             document.getElementById('map-filter').value = 'all';
             
             // Load data for "All" maps
+            console.log('About to call loadPlayerDetailData with currentPlayerName:', currentPlayerName);
             loadPlayerDetailData('all');
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
