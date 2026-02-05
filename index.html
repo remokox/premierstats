@@ -1815,7 +1815,13 @@
                     e.preventDefault();
                     const playerName = e.target.getAttribute('data-player-name');
                     console.log('Clicked complete stats for:', playerName);
-                    showPlayerDetail(playerName);
+                    console.log('About to call showPlayerDetail');
+                    try {
+                        showPlayerDetail(playerName);
+                        console.log('showPlayerDetail called successfully');
+                    } catch (error) {
+                        console.error('Error calling showPlayerDetail:', error);
+                    }
                 }
             });
         });
