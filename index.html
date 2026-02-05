@@ -1352,7 +1352,7 @@
                             </div>
                             <div class="matches-stat-box">
                                 <div class="matches-stat-value" id="matches-maps-won">0.0%</div>
-                                <div class="matches-stat-label">Maps won</div>
+                                <div class="matches-stat-label">Win rate excl. ties</div>
                             </div>
                             <div class="matches-stat-box">
                                 <div class="matches-stat-value" id="matches-1plus-rating">0.0%</div>
@@ -2579,7 +2579,9 @@
             // Calculate summary stats
             const totalMatches = matches.length;
             const wins = matches.filter(m => m.result.toLowerCase() === 'win').length;
-            const mapsWonPct = totalMatches > 0 ? (wins / totalMatches * 100) : 0;
+            const losses = matches.filter(m => m.result.toLowerCase() === 'loss').length;
+            const totalExclTies = wins + losses;
+            const winRatePct = totalExclTies > 0 ? (wins / totalExclTies * 100) : 0;
             
             const onePlusRating = matches.filter(m => m.rating >= 1.0).length;
             const onePlusRatingPct = totalMatches > 0 ? (onePlusRating / totalMatches * 100) : 0;
@@ -2602,7 +2604,7 @@
             
             // Update summary stats
             document.getElementById('matches-avg-rating').textContent = avgRating.toFixed(2);
-            document.getElementById('matches-maps-won').textContent = mapsWonPct.toFixed(1) + '%';
+            document.getElementById('matches-maps-won').textContent = winRatePct.toFixed(1) + '%';
             document.getElementById('matches-1plus-rating').textContent = onePlusRatingPct.toFixed(1) + '%';
             document.getElementById('matches-best-streak').textContent = bestStreak;
             
