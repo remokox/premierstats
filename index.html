@@ -826,6 +826,44 @@
             border-color: var(--accent-primary);
         }
 
+        .map-filter-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .map-filter-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .map-filter-select {
+            padding: 10px 15px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .map-filter-select:hover {
+            border-color: var(--accent-primary);
+            background: rgba(255, 107, 53, 0.1);
+        }
+
+        .map-filter-select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
         @media (max-width: 768px) {
             h1 {
                 font-size: 1.8rem;
@@ -933,6 +971,20 @@
                     <button class="detail-tab-button" data-tab="matches">Matches</button>
                     <button class="detail-tab-button" data-tab="weapons">Weapons</button>
                     <button class="detail-tab-button" data-tab="clutches">Clutches</button>
+                    
+                    <div class="map-filter-container">
+                        <label class="map-filter-label">Map:</label>
+                        <select class="map-filter-select" id="map-filter">
+                            <option value="all">All</option>
+                            <option value="ancient">Ancient</option>
+                            <option value="anubis">Anubis</option>
+                            <option value="dust2">Dust II</option>
+                            <option value="inferno">Inferno</option>
+                            <option value="mirage">Mirage</option>
+                            <option value="nuke">Nuke</option>
+                            <option value="overpass">Overpass</option>
+                        </select>
+                    </div>
                 </div>
                 
                 <div class="player-detail-container">
@@ -1731,7 +1783,26 @@
                     switchDetailTab(tabName);
                 });
             });
+            
+            // Add event listener for map filter
+            const mapFilter = document.getElementById('map-filter');
+            if (mapFilter) {
+                mapFilter.addEventListener('change', (e) => {
+                    const selectedMap = e.target.value;
+                    loadPlayerDetailData(selectedMap);
+                });
+            }
         });
+
+        // Load player detail data based on selected map
+        function loadPlayerDetailData(mapName) {
+            // This function will load data from Google Sheets based on the selected map
+            // For now, it's a placeholder - we'll implement this after you tell me the data structure
+            console.log('Loading data for map:', mapName);
+            
+            // TODO: Fetch data from Google Sheets for the selected map
+            // and update all the values in the detail page
+        }
 
         // Go back to players page
         function showPlayersPage() {
