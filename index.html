@@ -2532,12 +2532,15 @@
             const mapFilter = mapName.charAt(0).toUpperCase() + mapName.slice(1).toLowerCase();
             const searchString = info.nickname + mapFilter;
             
+            console.log('Searching for:', searchString);
+            
             let startRow = -1;
             for (let i = 0; i < data.length; i++) {
                 // Check all columns for the search string
                 for (let j = 0; j < data[i].length; j++) {
                     if (data[i][j] && data[i][j].trim() === searchString) {
-                        startRow = i + 1; // Start from next row
+                        startRow = i + 2; // Start from 2 rows below (skip merged empty row)
+                        console.log('Found section at row', i, 'starting matches from row', startRow);
                         break;
                     }
                 }
@@ -2553,21 +2556,25 @@
             const matches = [];
             for (let i = startRow; i < data.length; i++) {
                 const row = data[i];
-                const date = row[cols.date - 1];
+                const date = row[cols.date]; // No -1, indices are already 0-based
+                
+                console.log('Row', i, 'date column', cols.date, 'value:', date);
                 
                 // Stop if we hit an empty date or another player section
                 if (!date || date.trim() === '') break;
                 
                 matches.push({
                     date: date,
-                    map: row[cols.map - 1] || '-',
-                    result: row[cols.result - 1] || '-',
-                    score: row[cols.score - 1] || '-',
-                    kd: row[cols.kd - 1] || '-',
-                    plusMinus: row[cols.plusMinus - 1] || '-',
-                    rating: parseFloat(row[cols.rating - 1]) || 0
+                    map: row[cols.map] || '-',
+                    result: row[cols.result] || '-',
+                    score: row[cols.score] || '-',
+                    kd: row[cols.kd] || '-',
+                    plusMinus: row[cols.plusMinus] || '-',
+                    rating: parseFloat(row[cols.rating]) || 0
                 });
             }
+            
+            console.log('Found', matches.length, 'matches');
             
             // Calculate summary stats
             const totalMatches = matches.length;
