@@ -1119,6 +1119,162 @@
             font-weight: 600;
         }
 
+        /* Maps Page Styles */
+        .maps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .map-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px var(--shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .map-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.3);
+        }
+
+        .map-card-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 3px solid var(--accent-primary);
+        }
+
+        .map-card-header {
+            background: var(--bg-tertiary);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .map-card-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .map-winrate-main {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: center;
+            padding: 12px 15px;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .map-winrate-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .map-winrate-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .map-record {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+
+        .map-record-item {
+            padding: 8px;
+            background: var(--bg-primary);
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .map-record-item .label {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .map-record-item .value {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .map-card-body {
+            padding: 20px;
+        }
+
+        .map-stats-section {
+            margin-bottom: 20px;
+        }
+
+        .map-stats-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .map-stats-header {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            padding: 10px 15px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 6px 6px 0 0;
+            margin-bottom: 0;
+        }
+
+        .map-stats-table {
+            width: 100%;
+            background: var(--bg-tertiary);
+            border-radius: 0 0 6px 6px;
+            overflow: hidden;
+        }
+
+        .map-stats-table tr {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .map-stats-table tr:last-child {
+            border-bottom: none;
+        }
+
+        .map-stats-table td {
+            padding: 10px 15px;
+            font-size: 0.85rem;
+        }
+
+        .map-stats-table td:first-child {
+            color: var(--text-secondary);
+            width: 70%;
+        }
+
+        .map-stats-table td:last-child {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            text-align: right;
+            width: 30%;
+        }
+
         @media (max-width: 768px) {
             h1 {
                 font-size: 1.8rem;
@@ -1215,6 +1371,19 @@
 
             th, td {
                 padding: 10px;
+            }
+
+            .maps-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .map-card-image {
+                height: 150px;
+            }
+
+            .map-card-title {
+                font-size: 1.4rem;
             }
         }
     </style>
@@ -1664,8 +1833,14 @@
         <!-- MAPS PAGE -->
         <div id="maps" class="page">
             <div class="section">
-                <h2 class="section-header">Maps - Coming Soon</h2>
-                <p style="color: var(--text-secondary);">Map statistics will be displayed here.</p>
+                <h2 class="section-header">Map Performance</h2>
+                <div class="loading" id="maps-loading">
+                    <div class="loading-spinner"></div>
+                    Loading map data from Google Sheets...
+                </div>
+                <div id="maps-container" class="maps-grid" style="display:none;">
+                    <!-- Map cards will be inserted here dynamically -->
+                </div>
             </div>
         </div>
 
@@ -3300,6 +3475,193 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        // Load maps data
+        async function loadMapsData() {
+            const loading = document.getElementById('maps-loading');
+            const container = document.getElementById('maps-container');
+            
+            loading.style.display = 'flex';
+            container.style.display = 'none';
+            
+            const data = await fetchSheetData(SHEET_GIDS.maps);
+            if (!data) {
+                console.error('Failed to load maps data');
+                loading.innerHTML = '<p style="color: var(--danger);">Failed to load map data. Please try again.</p>';
+                return;
+            }
+            
+            loading.style.display = 'none';
+            container.style.display = 'grid';
+            
+            // Map names and their placeholder image URLs
+            const maps = [
+                { name: 'Ancient', image: 'https://placehold.co/600x300/13171f/ff6b35?text=Ancient' },
+                { name: 'Anubis', image: 'https://placehold.co/600x300/13171f/ff6b35?text=Anubis' },
+                { name: 'Dust II', image: 'https://placehold.co/600x300/13171f/ff6b35?text=Dust+II' },
+                { name: 'Inferno', image: 'https://placehold.co/600x300/13171f/ff6b35?text=Inferno' },
+                { name: 'Mirage', image: 'https://placehold.co/600x300/13171f/ff6b35?text=Mirage' },
+                { name: 'Nuke', image: 'https://placehold.co/600x300/13171f/ff6b35?text=Nuke' },
+                { name: 'Overpass', image: 'https://placehold.co/600x300/13171f/ff6b35?text=Overpass' }
+            ];
+            
+            // Clear container
+            container.innerHTML = '';
+            
+            // Process data for each map
+            maps.forEach(mapInfo => {
+                // Find the row for this map in the data
+                const mapRow = data.find(row => {
+                    const mapName = (row[0] || '').toString().trim();
+                    return mapName.toLowerCase() === mapInfo.name.toLowerCase();
+                });
+                
+                if (!mapRow) {
+                    console.log(`No data found for ${mapInfo.name}`);
+                    return;
+                }
+                
+                // Extract map statistics (adjust column indices based on your sheet structure)
+                const wins = parseInt(mapRow[1]) || 0;
+                const losses = parseInt(mapRow[2]) || 0;
+                const ties = parseInt(mapRow[3]) || 0;
+                const totalGames = wins + losses;
+                const winrate = totalGames > 0 ? ((wins / totalGames) * 100).toFixed(1) : '0.0';
+                
+                // Round stats (columns 4-8)
+                const roundWinrate = mapRow[4] || '0.0%';
+                const pistolWinrate = mapRow[5] || '0.0%';
+                const round2Conv = mapRow[6] || '0.0%';
+                const winAfterFirstKill = mapRow[7] || '0.0%';
+                const winAfterFirstDeath = mapRow[8] || '0.0%';
+                
+                // CT stats (columns 9-13)
+                const ctRoundWinrate = mapRow[9] || '0.0%';
+                const ctPistolWinrate = mapRow[10] || '0.0%';
+                const ctRound2Conv = mapRow[11] || '0.0%';
+                const ctWinAfterFirstKill = mapRow[12] || '0.0%';
+                const ctWinAfterFirstDeath = mapRow[13] || '0.0%';
+                
+                // T stats (columns 14-18)
+                const tRoundWinrate = mapRow[14] || '0.0%';
+                const tPistolWinrate = mapRow[15] || '0.0%';
+                const tRound2Conv = mapRow[16] || '0.0%';
+                const tWinAfterFirstKill = mapRow[17] || '0.0%';
+                const tWinAfterFirstDeath = mapRow[18] || '0.0%';
+                
+                // Create map card
+                const card = document.createElement('div');
+                card.className = 'map-card';
+                card.innerHTML = `
+                    <img src="${mapInfo.image}" alt="${mapInfo.name}" class="map-card-image">
+                    <div class="map-card-header">
+                        <div class="map-card-title">${mapInfo.name}</div>
+                        <div class="map-winrate-main">
+                            <span class="map-winrate-label">MAP WINRATE (excl.ties)</span>
+                            <span class="map-winrate-value">${winrate}%</span>
+                        </div>
+                        <div class="map-record">
+                            <div class="map-record-item">
+                                <span class="label">wins</span>
+                                <span class="value">${wins}</span>
+                            </div>
+                            <div class="map-record-item">
+                                <span class="label">losses</span>
+                                <span class="value">${losses}</span>
+                            </div>
+                            <div class="map-record-item">
+                                <span class="label">ties</span>
+                                <span class="value">${ties}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="map-card-body">
+                        <!-- Overall Round Stats -->
+                        <div class="map-stats-section">
+                            <div class="map-stats-header">Round winrate</div>
+                            <table class="map-stats-table">
+                                <tr>
+                                    <td>Round winrate</td>
+                                    <td>${roundWinrate}</td>
+                                </tr>
+                                <tr>
+                                    <td>Pistol winrate</td>
+                                    <td>${pistolWinrate}</td>
+                                </tr>
+                                <tr>
+                                    <td>Round 2 conversion %</td>
+                                    <td>${round2Conv}</td>
+                                </tr>
+                                <tr>
+                                    <td>Win percentage after getting first kill</td>
+                                    <td>${winAfterFirstKill}</td>
+                                </tr>
+                                <tr>
+                                    <td>Win percentage after receiving first death</td>
+                                    <td>${winAfterFirstDeath}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        
+                        <!-- CT Round Stats -->
+                        <div class="map-stats-section">
+                            <div class="map-stats-header">CT round winrate</div>
+                            <table class="map-stats-table">
+                                <tr>
+                                    <td>CT round winrate</td>
+                                    <td>${ctRoundWinrate}</td>
+                                </tr>
+                                <tr>
+                                    <td>CT pistol winrate</td>
+                                    <td>${ctPistolWinrate}</td>
+                                </tr>
+                                <tr>
+                                    <td>CT round 2 conversion</td>
+                                    <td>${ctRound2Conv}</td>
+                                </tr>
+                                <tr>
+                                    <td>CT win percentage after getting first kill</td>
+                                    <td>${ctWinAfterFirstKill}</td>
+                                </tr>
+                                <tr>
+                                    <td>CT win percentage after receiving first death</td>
+                                    <td>${ctWinAfterFirstDeath}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        
+                        <!-- T Round Stats -->
+                        <div class="map-stats-section">
+                            <div class="map-stats-header">T round winrate</div>
+                            <table class="map-stats-table">
+                                <tr>
+                                    <td>T round winrate</td>
+                                    <td>${tRoundWinrate}</td>
+                                </tr>
+                                <tr>
+                                    <td>T pistol winrate</td>
+                                    <td>${tPistolWinrate}</td>
+                                </tr>
+                                <tr>
+                                    <td>T round 2 conversion</td>
+                                    <td>${tRound2Conv}</td>
+                                </tr>
+                                <tr>
+                                    <td>T win percentage after getting first kill</td>
+                                    <td>${tWinAfterFirstKill}</td>
+                                </tr>
+                                <tr>
+                                    <td>T win percentage after receiving first death</td>
+                                    <td>${tWinAfterFirstDeath}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
         // Navigation functionality
         const navLinks = document.querySelectorAll('.nav-link');
         const pages = document.querySelectorAll('.page');
@@ -3319,6 +3681,9 @@
                 // Load page data if needed
                 if (pageId === 'players' && document.getElementById('players-container').children.length === 0) {
                     loadPlayersData();
+                }
+                if (pageId === 'maps' && document.getElementById('maps-container').children.length === 0) {
+                    loadMapsData();
                 }
                 
                 window.scrollTo({ top: 0, behavior: 'smooth' });
