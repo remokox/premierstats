@@ -2150,7 +2150,8 @@
         const SHEET_GIDS = {
             'sum_stats_maps': '429282545',
             'maps': '1587882555',
-            'clutches': '372093401'
+            'clutches': '372093401',
+            'maps_data': '1325823481'
         };
 
         // Column mappings (1-indexed)
@@ -3549,180 +3550,213 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Load maps data with placeholder values
-        function loadMapsData() {
+        // Load maps data from Google Sheets and calculate statistics
+        async function loadMapsData() {
             const container = document.getElementById('maps-container');
             
-            // Map data with actual images
-            const maps = [
-                {
-                    name: 'Ancient',
-                    image: 'ancient.png',
-                    wins: 3,
-                    losses: 4,
-                    ties: 0,
-                    winrate: 42.9,
-                    roundWinrate: '48.4%',
-                    pistolWinrate: '50.0%',
-                    round2Conv: '71.4%',
-                    winAfterFirstKill: '74.5%',
-                    winAfterFirstDeath: '30.7%',
-                    ctRoundWinrate: '41.9%',
-                    ctPistolWinrate: '42.9%',
-                    ctRound2Conv: '33.3%',
-                    ctWinAfterFirstKill: '69.2%',
-                    ctWinAfterFirstDeath: '22.2%',
-                    tRoundWinrate: '54.7%',
-                    tPistolWinrate: '57.1%',
-                    tRound2Conv: '100.0%',
-                    tWinAfterFirstKill: '80.0%',
-                    tWinAfterFirstDeath: '38.5%'
-                },
-                {
-                    name: 'Anubis',
-                    image: 'anubis.png',
-                    wins: 5,
-                    losses: 1,
-                    ties: 0,
-                    winrate: 83.3,
-                    roundWinrate: '52.2%',
-                    pistolWinrate: '33.3%',
-                    round2Conv: '75.0%',
-                    winAfterFirstKill: '70.8%',
-                    winAfterFirstDeath: '30.3%',
-                    ctRoundWinrate: '42.4%',
-                    ctPistolWinrate: '33.3%',
-                    ctRound2Conv: '50.0%',
-                    ctWinAfterFirstKill: '64.7%',
-                    ctWinAfterFirstDeath: '18.8%',
-                    tRoundWinrate: '61.1%',
-                    tPistolWinrate: '33.3%',
-                    tRound2Conv: '100.0%',
-                    tWinAfterFirstKill: '76.3%',
-                    tWinAfterFirstDeath: '41.2%'
-                },
-                {
-                    name: 'Dust II',
-                    image: 'dust2.png',
-                    wins: 0,
-                    losses: 2,
-                    ties: 0,
-                    winrate: 0.0,
-                    roundWinrate: '38.1%',
-                    pistolWinrate: '50.0%',
-                    round2Conv: '100.0%',
-                    winAfterFirstKill: '64.7%',
-                    winAfterFirstDeath: '20.0%',
-                    ctRoundWinrate: '25.0%',
-                    ctPistolWinrate: '50.0%',
-                    ctRound2Conv: '100.0%',
-                    ctWinAfterFirstKill: '45.5%',
-                    ctWinAfterFirstDeath: '7.7%',
-                    tRoundWinrate: '55.6%',
-                    tPistolWinrate: '50.0%',
-                    tRound2Conv: '100.0%',
-                    tWinAfterFirstKill: '100.0%',
-                    tWinAfterFirstDeath: '33.3%'
-                },
-                {
-                    name: 'Inferno',
-                    image: 'inferno.png',
-                    wins: 4,
-                    losses: 3,
-                    ties: 1,
-                    winrate: 57.1,
-                    roundWinrate: '51.8%',
-                    pistolWinrate: '37.5%',
-                    round2Conv: '66.7%',
-                    winAfterFirstKill: '73.3%',
-                    winAfterFirstDeath: '35.3%',
-                    ctRoundWinrate: '46.7%',
-                    ctPistolWinrate: '25.0%',
-                    ctRound2Conv: '75.0%',
-                    ctWinAfterFirstKill: '70.0%',
-                    ctWinAfterFirstDeath: '28.6%',
-                    tRoundWinrate: '56.4%',
-                    tPistolWinrate: '50.0%',
-                    tRound2Conv: '60.0%',
-                    tWinAfterFirstKill: '76.2%',
-                    tWinAfterFirstDeath: '41.2%'
-                },
-                {
-                    name: 'Mirage',
-                    image: 'mirage.png',
-                    wins: 6,
-                    losses: 2,
-                    ties: 0,
-                    winrate: 75.0,
-                    roundWinrate: '54.3%',
-                    pistolWinrate: '62.5%',
-                    round2Conv: '80.0%',
-                    winAfterFirstKill: '76.5%',
-                    winAfterFirstDeath: '32.1%',
-                    ctRoundWinrate: '48.8%',
-                    ctPistolWinrate: '50.0%',
-                    ctRound2Conv: '75.0%',
-                    ctWinAfterFirstKill: '72.7%',
-                    ctWinAfterFirstDeath: '25.0%',
-                    tRoundWinrate: '59.5%',
-                    tPistolWinrate: '75.0%',
-                    tRound2Conv: '83.3%',
-                    tWinAfterFirstKill: '80.0%',
-                    tWinAfterFirstDeath: '38.5%'
-                },
-                {
-                    name: 'Nuke',
-                    image: 'nuke.png',
-                    wins: 2,
-                    losses: 4,
-                    ties: 1,
-                    winrate: 33.3,
-                    roundWinrate: '45.2%',
-                    pistolWinrate: '28.6%',
-                    round2Conv: '50.0%',
-                    winAfterFirstKill: '65.2%',
-                    winAfterFirstDeath: '27.8%',
-                    ctRoundWinrate: '38.5%',
-                    ctPistolWinrate: '14.3%',
-                    ctRound2Conv: '0.0%',
-                    ctWinAfterFirstKill: '57.1%',
-                    ctWinAfterFirstDeath: '21.4%',
-                    tRoundWinrate: '51.4%',
-                    tPistolWinrate: '42.9%',
-                    tRound2Conv: '75.0%',
-                    tWinAfterFirstKill: '72.7%',
-                    tWinAfterFirstDeath: '33.3%'
-                },
-                {
-                    name: 'Overpass',
-                    image: 'overpass.png',
-                    wins: 3,
-                    losses: 2,
-                    ties: 0,
-                    winrate: 60.0,
-                    roundWinrate: '52.9%',
-                    pistolWinrate: '60.0%',
-                    round2Conv: '83.3%',
-                    winAfterFirstKill: '78.3%',
-                    winAfterFirstDeath: '29.4%',
-                    ctRoundWinrate: '50.0%',
-                    ctPistolWinrate: '60.0%',
-                    ctRound2Conv: '83.3%',
-                    ctWinAfterFirstKill: '75.0%',
-                    ctWinAfterFirstDeath: '26.7%',
-                    tRoundWinrate: '55.6%',
-                    tPistolWinrate: '60.0%',
-                    tRound2Conv: '83.3%',
-                    tWinAfterFirstKill: '81.3%',
-                    tWinAfterFirstDeath: '31.6%'
-                }
-            ];
+            // Show loading state
+            container.innerHTML = '<div class="loading"><div class="loading-spinner"></div>Loading map data...</div>';
             
-            // Clear container
+            // Fetch data from Google Sheets
+            const data = await fetchSheetData(SHEET_GIDS.maps_data);
+            if (!data) {
+                console.error('Failed to load maps data');
+                container.innerHTML = '<p style="color: var(--danger);">Failed to load map data. Please try again.</p>';
+                return;
+            }
+            
+            // Map names we want to process
+            const mapNames = ['Ancient', 'Anubis', 'Dust II', 'Inferno', 'Mirage', 'Nuke', 'Overpass'];
+            const mapImages = {
+                'Ancient': 'ancient.png',
+                'Anubis': 'anubis.png',
+                'Dust II': 'dust2.png',
+                'Inferno': 'inferno.png',
+                'Mirage': 'mirage.png',
+                'Nuke': 'nuke.png',
+                'Overpass': 'overpass.png'
+            };
+            
+            const mapsStats = [];
+            
+            // Process each map
+            mapNames.forEach(mapName => {
+                // Filter rows for this map (column C, index 2)
+                const mapRows = data.filter(row => {
+                    const name = (row[2] || '').toString().trim();
+                    return name === mapName;
+                });
+                
+                if (mapRows.length === 0) {
+                    console.log(`No data found for ${mapName}`);
+                    return;
+                }
+                
+                console.log(`Processing ${mapName}: ${mapRows.length} matches`);
+                
+                // Initialize counters
+                let wins = 0, losses = 0, ties = 0;
+                let totalRoundsPlayedCT = 0, totalRoundsWonCT = 0;
+                let totalRoundsPlayedT = 0, totalRoundsWonT = 0;
+                let pistolCTWins = 0, pistolCTTotal = 0;
+                let pistolTWins = 0, pistolTTotal = 0;
+                let round2CTWins = 0, round2CTTotal = 0;
+                let round2TWins = 0, round2TTotal = 0;
+                let wonAfterFirstKillCT = 0, lostAfterFirstKillCT = 0;
+                let wonAfterFirstKillT = 0, lostAfterFirstKillT = 0;
+                let wonAfterFirstDeathCT = 0, lostAfterFirstDeathCT = 0;
+                let wonAfterFirstDeathT = 0, lostAfterFirstDeathT = 0;
+                
+                // Process each match
+                mapRows.forEach(row => {
+                    // Match outcome (column D, index 3)
+                    const outcome = (row[3] || '').toString().toLowerCase().trim();
+                    if (outcome === 'win') wins++;
+                    else if (outcome === 'loss') losses++;
+                    else if (outcome === 'tie') ties++;
+                    
+                    // CT rounds (F=5, G=6)
+                    const ctPlayed = parseInt(row[5]) || 0;
+                    const ctWon = parseInt(row[6]) || 0;
+                    totalRoundsPlayedCT += ctPlayed;
+                    totalRoundsWonCT += ctWon;
+                    
+                    // T rounds (H=7, I=8)
+                    const tPlayed = parseInt(row[7]) || 0;
+                    const tWon = parseInt(row[8]) || 0;
+                    totalRoundsPlayedT += tPlayed;
+                    totalRoundsWonT += tWon;
+                    
+                    // Pistol CT (J=9)
+                    const pistolCT = (row[9] || '').toString().toLowerCase().trim();
+                    if (pistolCT === 'win' || pistolCT === 'loss') {
+                        pistolCTTotal++;
+                        if (pistolCT === 'win') {
+                            pistolCTWins++;
+                            // Round 2 CT conversion (K=10) - only count when pistol was won
+                            const round2CT = (row[10] || '').toString().toLowerCase().trim();
+                            if (round2CT === 'win' || round2CT === 'loss') {
+                                round2CTTotal++;
+                                if (round2CT === 'win') round2CTWins++;
+                            }
+                        }
+                    }
+                    
+                    // Pistol T (L=11)
+                    const pistolT = (row[11] || '').toString().toLowerCase().trim();
+                    if (pistolT === 'win' || pistolT === 'loss') {
+                        pistolTTotal++;
+                        if (pistolT === 'win') {
+                            pistolTWins++;
+                            // Round 2 T conversion (M=12) - only count when pistol was won
+                            const round2T = (row[12] || '').toString().toLowerCase().trim();
+                            if (round2T === 'win' || round2T === 'loss') {
+                                round2TTotal++;
+                                if (round2T === 'win') round2TWins++;
+                            }
+                        }
+                    }
+                    
+                    // First kill CT (P=15, Q=16)
+                    wonAfterFirstKillCT += parseInt(row[15]) || 0;
+                    lostAfterFirstKillCT += parseInt(row[16]) || 0;
+                    
+                    // First kill T (R=17, S=18)
+                    wonAfterFirstKillT += parseInt(row[17]) || 0;
+                    lostAfterFirstKillT += parseInt(row[18]) || 0;
+                    
+                    // First death CT (V=21, W=22)
+                    wonAfterFirstDeathCT += parseInt(row[21]) || 0;
+                    lostAfterFirstDeathCT += parseInt(row[22]) || 0;
+                    
+                    // First death T (X=23, Y=24)
+                    wonAfterFirstDeathT += parseInt(row[23]) || 0;
+                    lostAfterFirstDeathT += parseInt(row[24]) || 0;
+                });
+                
+                // Calculate statistics
+                const totalGames = wins + losses;
+                const winrate = totalGames > 0 ? ((wins / totalGames) * 100).toFixed(1) : '0.0';
+                
+                // Overall round stats
+                const totalRoundsPlayed = totalRoundsPlayedCT + totalRoundsPlayedT;
+                const totalRoundsWon = totalRoundsWonCT + totalRoundsWonT;
+                const roundWinrate = totalRoundsPlayed > 0 ? ((totalRoundsWon / totalRoundsPlayed) * 100).toFixed(1) + '%' : '0.0%';
+                
+                // Overall pistol
+                const totalPistolRounds = pistolCTTotal + pistolTTotal;
+                const totalPistolWins = pistolCTWins + pistolTWins;
+                const pistolWinrate = totalPistolRounds > 0 ? ((totalPistolWins / totalPistolRounds) * 100).toFixed(1) + '%' : '0.0%';
+                
+                // Overall round 2 conversion
+                const totalRound2Attempts = round2CTTotal + round2TTotal;
+                const totalRound2Wins = round2CTWins + round2TWins;
+                const round2Conv = totalRound2Attempts > 0 ? ((totalRound2Wins / totalRound2Attempts) * 100).toFixed(1) + '%' : '0.0%';
+                
+                // Overall first kill
+                const totalFirstKillAttempts = wonAfterFirstKillCT + lostAfterFirstKillCT + wonAfterFirstKillT + lostAfterFirstKillT;
+                const totalFirstKillWins = wonAfterFirstKillCT + wonAfterFirstKillT;
+                const winAfterFirstKill = totalFirstKillAttempts > 0 ? ((totalFirstKillWins / totalFirstKillAttempts) * 100).toFixed(1) + '%' : '0.0%';
+                
+                // Overall first death
+                const totalFirstDeathAttempts = wonAfterFirstDeathCT + lostAfterFirstDeathCT + wonAfterFirstDeathT + lostAfterFirstDeathT;
+                const totalFirstDeathWins = wonAfterFirstDeathCT + wonAfterFirstDeathT;
+                const winAfterFirstDeath = totalFirstDeathAttempts > 0 ? ((totalFirstDeathWins / totalFirstDeathAttempts) * 100).toFixed(1) + '%' : '0.0%';
+                
+                // CT stats
+                const ctRoundWinrate = totalRoundsPlayedCT > 0 ? ((totalRoundsWonCT / totalRoundsPlayedCT) * 100).toFixed(1) + '%' : '0.0%';
+                const ctPistolWinrate = pistolCTTotal > 0 ? ((pistolCTWins / pistolCTTotal) * 100).toFixed(1) + '%' : '0.0%';
+                const ctRound2Conv = round2CTTotal > 0 ? ((round2CTWins / round2CTTotal) * 100).toFixed(1) + '%' : '0.0%';
+                const ctFirstKillAttempts = wonAfterFirstKillCT + lostAfterFirstKillCT;
+                const ctWinAfterFirstKill = ctFirstKillAttempts > 0 ? ((wonAfterFirstKillCT / ctFirstKillAttempts) * 100).toFixed(1) + '%' : '0.0%';
+                const ctFirstDeathAttempts = wonAfterFirstDeathCT + lostAfterFirstDeathCT;
+                const ctWinAfterFirstDeath = ctFirstDeathAttempts > 0 ? ((wonAfterFirstDeathCT / ctFirstDeathAttempts) * 100).toFixed(1) + '%' : '0.0%';
+                
+                // T stats
+                const tRoundWinrate = totalRoundsPlayedT > 0 ? ((totalRoundsWonT / totalRoundsPlayedT) * 100).toFixed(1) + '%' : '0.0%';
+                const tPistolWinrate = pistolTTotal > 0 ? ((pistolTWins / pistolTTotal) * 100).toFixed(1) + '%' : '0.0%';
+                const tRound2Conv = round2TTotal > 0 ? ((round2TWins / round2TTotal) * 100).toFixed(1) + '%' : '0.0%';
+                const tFirstKillAttempts = wonAfterFirstKillT + lostAfterFirstKillT;
+                const tWinAfterFirstKill = tFirstKillAttempts > 0 ? ((wonAfterFirstKillT / tFirstKillAttempts) * 100).toFixed(1) + '%' : '0.0%';
+                const tFirstDeathAttempts = wonAfterFirstDeathT + lostAfterFirstDeathT;
+                const tWinAfterFirstDeath = tFirstDeathAttempts > 0 ? ((wonAfterFirstDeathT / tFirstDeathAttempts) * 100).toFixed(1) + '%' : '0.0%';
+                
+                // Add to results
+                mapsStats.push({
+                    name: mapName,
+                    image: mapImages[mapName],
+                    wins: wins,
+                    losses: losses,
+                    ties: ties,
+                    winrate: winrate,
+                    roundWinrate: roundWinrate,
+                    pistolWinrate: pistolWinrate,
+                    round2Conv: round2Conv,
+                    winAfterFirstKill: winAfterFirstKill,
+                    winAfterFirstDeath: winAfterFirstDeath,
+                    ctRoundWinrate: ctRoundWinrate,
+                    ctPistolWinrate: ctPistolWinrate,
+                    ctRound2Conv: ctRound2Conv,
+                    ctWinAfterFirstKill: ctWinAfterFirstKill,
+                    ctWinAfterFirstDeath: ctWinAfterFirstDeath,
+                    tRoundWinrate: tRoundWinrate,
+                    tPistolWinrate: tPistolWinrate,
+                    tRound2Conv: tRound2Conv,
+                    tWinAfterFirstKill: tWinAfterFirstKill,
+                    tWinAfterFirstDeath: tWinAfterFirstDeath
+                });
+            });
+            
+            // Clear container and create cards
             container.innerHTML = '';
             
+            if (mapsStats.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-secondary);">No map data available.</p>';
+                return;
+            }
+            
             // Create cards for each map
-            maps.forEach(mapData => {
+            mapsStats.forEach(mapData => {
                 const card = document.createElement('div');
                 card.className = 'map-card';
                 card.innerHTML = `
