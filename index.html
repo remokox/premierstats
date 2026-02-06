@@ -1119,6 +1119,148 @@
             font-weight: 600;
         }
 
+        /* Ecohunters Page Styles */
+        .ecohunters-explanation {
+            background: var(--bg-secondary);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border-left: 4px solid var(--accent-primary);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .ecohunters-explanation h3 {
+            color: var(--accent-primary);
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .ecohunters-explanation ul {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 15px;
+        }
+
+        .ecohunters-explanation li {
+            color: var(--text-secondary);
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        .ecohunters-explanation li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--accent-primary);
+            font-weight: bold;
+        }
+
+        .ecohunters-explanation p {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 12px;
+        }
+
+        .ecohunters-explanation p:last-child {
+            margin-bottom: 0;
+        }
+
+        .ecohunters-avg-box {
+            background: var(--bg-tertiary);
+            padding: 15px 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 2px solid var(--border);
+            display: inline-block;
+        }
+
+        .ecohunters-avg-label {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 5px;
+        }
+
+        .ecohunters-avg-value {
+            color: var(--accent-primary);
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .ecohunters-table-container {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px var(--shadow);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .ecohunters-table {
+            width: 100%;
+        }
+
+        .ecohunters-table thead {
+            background: var(--bg-tertiary);
+        }
+
+        .ecohunters-table th {
+            padding: 15px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .ecohunters-table th:first-child {
+            text-align: left;
+            padding-left: 25px;
+        }
+
+        .ecohunters-table tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.3s ease;
+        }
+
+        .ecohunters-table tbody tr:hover {
+            background: rgba(255, 107, 53, 0.05);
+        }
+
+        .ecohunters-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .ecohunters-table td {
+            padding: 15px;
+            text-align: center;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+        }
+
+        .ecohunters-table td:first-child {
+            text-align: left;
+            padding-left: 25px;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .ecohunters-table .sortable {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        .ecohunters-table .sortable:hover {
+            color: var(--accent-primary);
+        }
+
         /* Maps Page Styles */
         .maps-slider-container {
             position: relative;
@@ -1458,6 +1600,33 @@
 
             .slider-nav-button {
                 display: none;
+            }
+
+            .ecohunters-table {
+                font-size: 0.85rem;
+            }
+
+            .ecohunters-table th,
+            .ecohunters-table td {
+                padding: 10px 8px;
+            }
+
+            .ecohunters-table th:first-child,
+            .ecohunters-table td:first-child {
+                padding-left: 15px;
+            }
+
+            .ecohunters-explanation {
+                padding: 20px;
+            }
+
+            .ecohunters-explanation h3 {
+                font-size: 1.2rem;
+            }
+
+            .ecohunters-avg-box {
+                width: 100%;
+                text-align: center;
             }
         }
     </style>
@@ -1921,8 +2090,106 @@
         <!-- ECOHUNTERS PAGE -->
         <div id="ecohunters" class="page">
             <div class="section">
-                <h2 class="section-header">Ecohunters - Coming Soon</h2>
-                <p style="color: var(--text-secondary);">Eco round performance will be displayed here.</p>
+                <h2 class="section-header">Ecohunters</h2>
+                
+                <!-- Explanation Box -->
+                <div class="ecohunters-explanation">
+                    <h3>Ecohunters uses two metrics to find the hunters of the most difficult frags:</h3>
+                    <ul>
+                        <li>differences in the number of entries made on full and "lowbuy"</li>
+                        <li>percentage of kills earned in fulls and lowbuys</li>
+                    </ul>
+                    <p>"Lowbuy" is a situation where the opposing team has spent a maximum of $16,500 ($3,300 per person).</p>
+                    <p>The first metric compares the percentage of entries against low buys with the percentage of entries against fulls.</p>
+                    <p>This second metric is the difference from the average percentage of kills earned on low buys. Based on both metrics, you can find the biggest ecofraggers.</p>
+                    <p>It is worth mentioning that for the first metric, the first duels in the round count, regardless of whether they were won or lost.</p>
+                </div>
+
+                <!-- Average Box -->
+                <div class="ecohunters-avg-box">
+                    <div class="ecohunters-avg-label">Average percentage of kills earned on low buys</div>
+                    <div class="ecohunters-avg-value">26%</div>
+                </div>
+
+                <!-- Stats Table -->
+                <div class="ecohunters-table-container">
+                    <table class="ecohunters-table">
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th class="sortable">Op% lowbuy ↕</th>
+                                <th class="sortable">Op% full ↕</th>
+                                <th class="sortable">Op% lowbuy/ Op% full ↕</th>
+                                <th class="sortable">K% lowbuy ↕</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Torrek</td>
+                                <td>33%</td>
+                                <td>23%</td>
+                                <td>146%</td>
+                                <td>23%</td>
+                            </tr>
+                            <tr>
+                                <td>Marcinek</td>
+                                <td>9%</td>
+                                <td>17%</td>
+                                <td>55%</td>
+                                <td>28%</td>
+                            </tr>
+                            <tr>
+                                <td>Mingdon</td>
+                                <td>27%</td>
+                                <td>13%</td>
+                                <td>205%</td>
+                                <td>18%</td>
+                            </tr>
+                            <tr>
+                                <td>Vulpes</td>
+                                <td>20%</td>
+                                <td>18%</td>
+                                <td>111%</td>
+                                <td>29%</td>
+                            </tr>
+                            <tr>
+                                <td>Nefik</td>
+                                <td>16%</td>
+                                <td>17%</td>
+                                <td>99%</td>
+                                <td>23%</td>
+                            </tr>
+                            <tr>
+                                <td>Krakers</td>
+                                <td>21%</td>
+                                <td>25%</td>
+                                <td>85%</td>
+                                <td>28%</td>
+                            </tr>
+                            <tr>
+                                <td>Badum</td>
+                                <td>18%</td>
+                                <td>21%</td>
+                                <td>87%</td>
+                                <td>29%</td>
+                            </tr>
+                            <tr>
+                                <td>Jano</td>
+                                <td>15%</td>
+                                <td>30%</td>
+                                <td>49%</td>
+                                <td>24%</td>
+                            </tr>
+                            <tr>
+                                <td>Remo</td>
+                                <td>25%</td>
+                                <td>20%</td>
+                                <td>128%</td>
+                                <td>25%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
