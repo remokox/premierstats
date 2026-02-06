@@ -3200,8 +3200,28 @@
             
             console.log('Loaded', weapons.length, 'weapons, total kills:', totalKills);
             
-            // Filter out weapons with 0 kills for the chart
-            const weaponsForChart = weapons.filter(w => w.kills > 0);
+            // Separate weapons into >= 1% and < 1%
+            const weaponsForChart = [];
+            let otherKills = 0;
+            
+            weapons.forEach(weapon => {
+                if (weapon.kills > 0) {
+                    if (weapon.killsPercent >= 1.0) {
+                        weaponsForChart.push(weapon);
+                    } else {
+                        otherKills += weapon.kills;
+                    }
+                }
+            });
+            
+            // Add "Other" category if there are weapons < 1%
+            if (otherKills > 0) {
+                weaponsForChart.push({
+                    name: 'Other',
+                    kills: otherKills,
+                    killsPercent: (otherKills / totalKills * 100)
+                });
+            }
             
             // Destroy existing chart if it exists
             if (window.weaponsChart) {
@@ -3224,7 +3244,7 @@
                             '#dc2626', '#7c3aed', '#059669', '#d946ef', '#ca8a04',
                             '#2563eb', '#16a34a', '#ea580c', '#0284c7', '#4d7c0f',
                             '#b91c1c', '#6d28d9', '#047857', '#c026d3', '#a16207',
-                            '#1d4ed8', '#15803d', '#c2410c'
+                            '#1d4ed8', '#15803d', '#c2410c', '#6b7280'
                         ],
                         borderColor: '#1a1f2b',
                         borderWidth: 2
