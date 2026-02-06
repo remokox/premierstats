@@ -1834,11 +1834,7 @@
         <div id="maps" class="page">
             <div class="section">
                 <h2 class="section-header">Map Performance</h2>
-                <div class="loading" id="maps-loading">
-                    <div class="loading-spinner"></div>
-                    Loading map data from Google Sheets...
-                </div>
-                <div id="maps-container" class="maps-grid" style="display:none;">
+                <div id="maps-container" class="maps-grid">
                     <!-- Map cards will be inserted here dynamically -->
                 </div>
             </div>
@@ -3475,102 +3471,202 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Load maps data
-        async function loadMapsData() {
-            const loading = document.getElementById('maps-loading');
+        // Load maps data with placeholder values
+        function loadMapsData() {
             const container = document.getElementById('maps-container');
             
-            loading.style.display = 'flex';
-            container.style.display = 'none';
-            
-            const data = await fetchSheetData(SHEET_GIDS.maps);
-            if (!data) {
-                console.error('Failed to load maps data');
-                loading.innerHTML = '<p style="color: var(--danger);">Failed to load map data. Please try again.</p>';
-                return;
-            }
-            
-            loading.style.display = 'none';
-            container.style.display = 'grid';
-            
-            // Map names and their placeholder image URLs
+            // Map data with placeholder values
             const maps = [
-                { name: 'Ancient', image: 'https://placehold.co/600x300/13171f/ff6b35?text=Ancient' },
-                { name: 'Anubis', image: 'https://placehold.co/600x300/13171f/ff6b35?text=Anubis' },
-                { name: 'Dust II', image: 'https://placehold.co/600x300/13171f/ff6b35?text=Dust+II' },
-                { name: 'Inferno', image: 'https://placehold.co/600x300/13171f/ff6b35?text=Inferno' },
-                { name: 'Mirage', image: 'https://placehold.co/600x300/13171f/ff6b35?text=Mirage' },
-                { name: 'Nuke', image: 'https://placehold.co/600x300/13171f/ff6b35?text=Nuke' },
-                { name: 'Overpass', image: 'https://placehold.co/600x300/13171f/ff6b35?text=Overpass' }
+                {
+                    name: 'Ancient',
+                    image: 'https://placehold.co/600x300/13171f/ff6b35?text=Ancient',
+                    wins: 3,
+                    losses: 4,
+                    ties: 0,
+                    winrate: 42.9,
+                    roundWinrate: '48.4%',
+                    pistolWinrate: '50.0%',
+                    round2Conv: '71.4%',
+                    winAfterFirstKill: '74.5%',
+                    winAfterFirstDeath: '30.7%',
+                    ctRoundWinrate: '41.9%',
+                    ctPistolWinrate: '42.9%',
+                    ctRound2Conv: '33.3%',
+                    ctWinAfterFirstKill: '69.2%',
+                    ctWinAfterFirstDeath: '22.2%',
+                    tRoundWinrate: '54.7%',
+                    tPistolWinrate: '57.1%',
+                    tRound2Conv: '100.0%',
+                    tWinAfterFirstKill: '80.0%',
+                    tWinAfterFirstDeath: '38.5%'
+                },
+                {
+                    name: 'Anubis',
+                    image: 'https://placehold.co/600x300/13171f/ff6b35?text=Anubis',
+                    wins: 5,
+                    losses: 1,
+                    ties: 0,
+                    winrate: 83.3,
+                    roundWinrate: '52.2%',
+                    pistolWinrate: '33.3%',
+                    round2Conv: '75.0%',
+                    winAfterFirstKill: '70.8%',
+                    winAfterFirstDeath: '30.3%',
+                    ctRoundWinrate: '42.4%',
+                    ctPistolWinrate: '33.3%',
+                    ctRound2Conv: '50.0%',
+                    ctWinAfterFirstKill: '64.7%',
+                    ctWinAfterFirstDeath: '18.8%',
+                    tRoundWinrate: '61.1%',
+                    tPistolWinrate: '33.3%',
+                    tRound2Conv: '100.0%',
+                    tWinAfterFirstKill: '76.3%',
+                    tWinAfterFirstDeath: '41.2%'
+                },
+                {
+                    name: 'Dust II',
+                    image: 'https://placehold.co/600x300/13171f/ff6b35?text=Dust+II',
+                    wins: 0,
+                    losses: 2,
+                    ties: 0,
+                    winrate: 0.0,
+                    roundWinrate: '38.1%',
+                    pistolWinrate: '50.0%',
+                    round2Conv: '100.0%',
+                    winAfterFirstKill: '64.7%',
+                    winAfterFirstDeath: '20.0%',
+                    ctRoundWinrate: '25.0%',
+                    ctPistolWinrate: '50.0%',
+                    ctRound2Conv: '100.0%',
+                    ctWinAfterFirstKill: '45.5%',
+                    ctWinAfterFirstDeath: '7.7%',
+                    tRoundWinrate: '55.6%',
+                    tPistolWinrate: '50.0%',
+                    tRound2Conv: '100.0%',
+                    tWinAfterFirstKill: '100.0%',
+                    tWinAfterFirstDeath: '33.3%'
+                },
+                {
+                    name: 'Inferno',
+                    image: 'https://placehold.co/600x300/13171f/ff6b35?text=Inferno',
+                    wins: 4,
+                    losses: 3,
+                    ties: 1,
+                    winrate: 57.1,
+                    roundWinrate: '51.8%',
+                    pistolWinrate: '37.5%',
+                    round2Conv: '66.7%',
+                    winAfterFirstKill: '73.3%',
+                    winAfterFirstDeath: '35.3%',
+                    ctRoundWinrate: '46.7%',
+                    ctPistolWinrate: '25.0%',
+                    ctRound2Conv: '75.0%',
+                    ctWinAfterFirstKill: '70.0%',
+                    ctWinAfterFirstDeath: '28.6%',
+                    tRoundWinrate: '56.4%',
+                    tPistolWinrate: '50.0%',
+                    tRound2Conv: '60.0%',
+                    tWinAfterFirstKill: '76.2%',
+                    tWinAfterFirstDeath: '41.2%'
+                },
+                {
+                    name: 'Mirage',
+                    image: 'https://placehold.co/600x300/13171f/ff6b35?text=Mirage',
+                    wins: 6,
+                    losses: 2,
+                    ties: 0,
+                    winrate: 75.0,
+                    roundWinrate: '54.3%',
+                    pistolWinrate: '62.5%',
+                    round2Conv: '80.0%',
+                    winAfterFirstKill: '76.5%',
+                    winAfterFirstDeath: '32.1%',
+                    ctRoundWinrate: '48.8%',
+                    ctPistolWinrate: '50.0%',
+                    ctRound2Conv: '75.0%',
+                    ctWinAfterFirstKill: '72.7%',
+                    ctWinAfterFirstDeath: '25.0%',
+                    tRoundWinrate: '59.5%',
+                    tPistolWinrate: '75.0%',
+                    tRound2Conv: '83.3%',
+                    tWinAfterFirstKill: '80.0%',
+                    tWinAfterFirstDeath: '38.5%'
+                },
+                {
+                    name: 'Nuke',
+                    image: 'https://placehold.co/600x300/13171f/ff6b35?text=Nuke',
+                    wins: 2,
+                    losses: 4,
+                    ties: 1,
+                    winrate: 33.3,
+                    roundWinrate: '45.2%',
+                    pistolWinrate: '28.6%',
+                    round2Conv: '50.0%',
+                    winAfterFirstKill: '65.2%',
+                    winAfterFirstDeath: '27.8%',
+                    ctRoundWinrate: '38.5%',
+                    ctPistolWinrate: '14.3%',
+                    ctRound2Conv: '0.0%',
+                    ctWinAfterFirstKill: '57.1%',
+                    ctWinAfterFirstDeath: '21.4%',
+                    tRoundWinrate: '51.4%',
+                    tPistolWinrate: '42.9%',
+                    tRound2Conv: '75.0%',
+                    tWinAfterFirstKill: '72.7%',
+                    tWinAfterFirstDeath: '33.3%'
+                },
+                {
+                    name: 'Overpass',
+                    image: 'https://placehold.co/600x300/13171f/ff6b35?text=Overpass',
+                    wins: 3,
+                    losses: 2,
+                    ties: 0,
+                    winrate: 60.0,
+                    roundWinrate: '52.9%',
+                    pistolWinrate: '60.0%',
+                    round2Conv: '83.3%',
+                    winAfterFirstKill: '78.3%',
+                    winAfterFirstDeath: '29.4%',
+                    ctRoundWinrate: '50.0%',
+                    ctPistolWinrate: '60.0%',
+                    ctRound2Conv: '83.3%',
+                    ctWinAfterFirstKill: '75.0%',
+                    ctWinAfterFirstDeath: '26.7%',
+                    tRoundWinrate: '55.6%',
+                    tPistolWinrate: '60.0%',
+                    tRound2Conv: '83.3%',
+                    tWinAfterFirstKill: '81.3%',
+                    tWinAfterFirstDeath: '31.6%'
+                }
             ];
             
             // Clear container
             container.innerHTML = '';
             
-            // Process data for each map
-            maps.forEach(mapInfo => {
-                // Find the row for this map in the data
-                const mapRow = data.find(row => {
-                    const mapName = (row[0] || '').toString().trim();
-                    return mapName.toLowerCase() === mapInfo.name.toLowerCase();
-                });
-                
-                if (!mapRow) {
-                    console.log(`No data found for ${mapInfo.name}`);
-                    return;
-                }
-                
-                // Extract map statistics (adjust column indices based on your sheet structure)
-                const wins = parseInt(mapRow[1]) || 0;
-                const losses = parseInt(mapRow[2]) || 0;
-                const ties = parseInt(mapRow[3]) || 0;
-                const totalGames = wins + losses;
-                const winrate = totalGames > 0 ? ((wins / totalGames) * 100).toFixed(1) : '0.0';
-                
-                // Round stats (columns 4-8)
-                const roundWinrate = mapRow[4] || '0.0%';
-                const pistolWinrate = mapRow[5] || '0.0%';
-                const round2Conv = mapRow[6] || '0.0%';
-                const winAfterFirstKill = mapRow[7] || '0.0%';
-                const winAfterFirstDeath = mapRow[8] || '0.0%';
-                
-                // CT stats (columns 9-13)
-                const ctRoundWinrate = mapRow[9] || '0.0%';
-                const ctPistolWinrate = mapRow[10] || '0.0%';
-                const ctRound2Conv = mapRow[11] || '0.0%';
-                const ctWinAfterFirstKill = mapRow[12] || '0.0%';
-                const ctWinAfterFirstDeath = mapRow[13] || '0.0%';
-                
-                // T stats (columns 14-18)
-                const tRoundWinrate = mapRow[14] || '0.0%';
-                const tPistolWinrate = mapRow[15] || '0.0%';
-                const tRound2Conv = mapRow[16] || '0.0%';
-                const tWinAfterFirstKill = mapRow[17] || '0.0%';
-                const tWinAfterFirstDeath = mapRow[18] || '0.0%';
-                
-                // Create map card
+            // Create cards for each map
+            maps.forEach(mapData => {
                 const card = document.createElement('div');
                 card.className = 'map-card';
                 card.innerHTML = `
-                    <img src="${mapInfo.image}" alt="${mapInfo.name}" class="map-card-image">
+                    <img src="${mapData.image}" alt="${mapData.name}" class="map-card-image">
                     <div class="map-card-header">
-                        <div class="map-card-title">${mapInfo.name}</div>
+                        <div class="map-card-title">${mapData.name}</div>
                         <div class="map-winrate-main">
                             <span class="map-winrate-label">MAP WINRATE (excl.ties)</span>
-                            <span class="map-winrate-value">${winrate}%</span>
+                            <span class="map-winrate-value">${mapData.winrate}%</span>
                         </div>
                         <div class="map-record">
                             <div class="map-record-item">
                                 <span class="label">wins</span>
-                                <span class="value">${wins}</span>
+                                <span class="value">${mapData.wins}</span>
                             </div>
                             <div class="map-record-item">
                                 <span class="label">losses</span>
-                                <span class="value">${losses}</span>
+                                <span class="value">${mapData.losses}</span>
                             </div>
                             <div class="map-record-item">
                                 <span class="label">ties</span>
-                                <span class="value">${ties}</span>
+                                <span class="value">${mapData.ties}</span>
                             </div>
                         </div>
                     </div>
@@ -3581,23 +3677,23 @@
                             <table class="map-stats-table">
                                 <tr>
                                     <td>Round winrate</td>
-                                    <td>${roundWinrate}</td>
+                                    <td>${mapData.roundWinrate}</td>
                                 </tr>
                                 <tr>
                                     <td>Pistol winrate</td>
-                                    <td>${pistolWinrate}</td>
+                                    <td>${mapData.pistolWinrate}</td>
                                 </tr>
                                 <tr>
                                     <td>Round 2 conversion %</td>
-                                    <td>${round2Conv}</td>
+                                    <td>${mapData.round2Conv}</td>
                                 </tr>
                                 <tr>
                                     <td>Win percentage after getting first kill</td>
-                                    <td>${winAfterFirstKill}</td>
+                                    <td>${mapData.winAfterFirstKill}</td>
                                 </tr>
                                 <tr>
                                     <td>Win percentage after receiving first death</td>
-                                    <td>${winAfterFirstDeath}</td>
+                                    <td>${mapData.winAfterFirstDeath}</td>
                                 </tr>
                             </table>
                         </div>
@@ -3608,23 +3704,23 @@
                             <table class="map-stats-table">
                                 <tr>
                                     <td>CT round winrate</td>
-                                    <td>${ctRoundWinrate}</td>
+                                    <td>${mapData.ctRoundWinrate}</td>
                                 </tr>
                                 <tr>
                                     <td>CT pistol winrate</td>
-                                    <td>${ctPistolWinrate}</td>
+                                    <td>${mapData.ctPistolWinrate}</td>
                                 </tr>
                                 <tr>
                                     <td>CT round 2 conversion</td>
-                                    <td>${ctRound2Conv}</td>
+                                    <td>${mapData.ctRound2Conv}</td>
                                 </tr>
                                 <tr>
                                     <td>CT win percentage after getting first kill</td>
-                                    <td>${ctWinAfterFirstKill}</td>
+                                    <td>${mapData.ctWinAfterFirstKill}</td>
                                 </tr>
                                 <tr>
                                     <td>CT win percentage after receiving first death</td>
-                                    <td>${ctWinAfterFirstDeath}</td>
+                                    <td>${mapData.ctWinAfterFirstDeath}</td>
                                 </tr>
                             </table>
                         </div>
@@ -3635,23 +3731,23 @@
                             <table class="map-stats-table">
                                 <tr>
                                     <td>T round winrate</td>
-                                    <td>${tRoundWinrate}</td>
+                                    <td>${mapData.tRoundWinrate}</td>
                                 </tr>
                                 <tr>
                                     <td>T pistol winrate</td>
-                                    <td>${tPistolWinrate}</td>
+                                    <td>${mapData.tPistolWinrate}</td>
                                 </tr>
                                 <tr>
                                     <td>T round 2 conversion</td>
-                                    <td>${tRound2Conv}</td>
+                                    <td>${mapData.tRound2Conv}</td>
                                 </tr>
                                 <tr>
                                     <td>T win percentage after getting first kill</td>
-                                    <td>${tWinAfterFirstKill}</td>
+                                    <td>${mapData.tWinAfterFirstKill}</td>
                                 </tr>
                                 <tr>
                                     <td>T win percentage after receiving first death</td>
-                                    <td>${tWinAfterFirstDeath}</td>
+                                    <td>${mapData.tWinAfterFirstDeath}</td>
                                 </tr>
                             </table>
                         </div>
