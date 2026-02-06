@@ -1107,6 +1107,17 @@
             border-bottom: none;
         }
 
+        /* Conditional Coloring */
+        .text-green {
+            color: var(--success) !important;
+            font-weight: 600;
+        }
+
+        .text-red {
+            color: var(--danger) !important;
+            font-weight: 600;
+        }
+
         @media (max-width: 768px) {
             h1 {
                 font-size: 1.8rem;
@@ -2987,14 +2998,22 @@
             
             matches.forEach(match => {
                 const row = document.createElement('tr');
+                
+                // Determine +/- color class
+                const plusMinusValue = parseFloat(match.plusMinus);
+                const plusMinusClass = plusMinusValue > 0 ? 'text-green' : plusMinusValue < 0 ? 'text-red' : '';
+                
+                // Determine rating color class
+                const ratingClass = match.rating < 0.97 ? 'text-red' : match.rating > 1.03 ? 'text-green' : '';
+                
                 row.innerHTML = `
                     <td>${match.date}</td>
                     <td>${match.map}</td>
                     <td>${match.result}</td>
                     <td>${match.score}</td>
                     <td>${match.kd}</td>
-                    <td>${match.plusMinus}</td>
-                    <td>${match.rating.toFixed(2)}</td>
+                    <td class="${plusMinusClass}">${match.plusMinus}</td>
+                    <td class="${ratingClass}">${match.rating.toFixed(2)}</td>
                 `;
                 tbody.appendChild(row);
             });
@@ -3073,7 +3092,16 @@
             // Update summary stats
             document.getElementById('clutches-wins').textContent = wins;
             document.getElementById('clutches-losses').textContent = losses;
-            document.getElementById('clutches-difference').textContent = difference;
+            
+            // Color the difference based on value
+            const differenceElement = document.getElementById('clutches-difference');
+            differenceElement.textContent = difference;
+            differenceElement.className = 'clutches-stat-value';
+            if (difference > 0) {
+                differenceElement.classList.add('text-green');
+            } else if (difference < 0) {
+                differenceElement.classList.add('text-red');
+            }
             
             // Populate clutches table
             const tbody = document.getElementById('clutches-tbody');
@@ -3081,11 +3109,16 @@
             
             clutches.forEach(clutch => {
                 const row = document.createElement('tr');
+                
+                // Determine status color class
+                const statusLower = clutch.status.toLowerCase();
+                const statusClass = statusLower === 'won' ? 'text-green' : statusLower === 'lost' ? 'text-red' : '';
+                
                 row.innerHTML = `
                     <td>${clutch.date}</td>
                     <td>${clutch.map}</td>
                     <td>${clutch.oneVX}</td>
-                    <td>${clutch.status}</td>
+                    <td class="${statusClass}">${clutch.status}</td>
                     <td>${clutch.round}</td>
                 `;
                 tbody.appendChild(row);
