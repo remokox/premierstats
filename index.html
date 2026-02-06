@@ -2117,10 +2117,10 @@
                         <thead>
                             <tr>
                                 <th>Player</th>
-                                <th class="sortable">Op% lowbuy ↕</th>
-                                <th class="sortable">Op% full ↕</th>
-                                <th class="sortable">Op% lowbuy/ Op% full ↕</th>
-                                <th class="sortable">K% lowbuy ↕</th>
+                                <th class="sortable">Op% lowbuy</th>
+                                <th class="sortable">Op% full</th>
+                                <th class="sortable">Op% lowbuy/ Op% full</th>
+                                <th class="sortable">K% lowbuy</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -4137,6 +4137,70 @@
             });
         }
 
+        // Ecohunters table sorting functionality
+        function initEcohuntersSorting() {
+            const table = document.querySelector('.ecohunters-table');
+            if (!table) return;
+            
+            const headers = table.querySelectorAll('th.sortable');
+            let currentSort = { column: -1, ascending: true };
+            
+            // Add initial sort indicators
+            headers.forEach(header => {
+                if (!header.textContent.includes('↕')) {
+                    header.textContent = header.textContent.trim() + ' ↕';
+                }
+            });
+            
+            headers.forEach((header, index) => {
+                header.addEventListener('click', () => {
+                    // Get column index (add 1 because first column is player name)
+                    const columnIndex = index + 1;
+                    
+                    // Determine sort direction
+                    if (currentSort.column === columnIndex) {
+                        currentSort.ascending = !currentSort.ascending;
+                    } else {
+                        currentSort.ascending = false; // Default to descending for stats
+                        currentSort.column = columnIndex;
+                    }
+                    
+                    // Sort the table
+                    sortTable(columnIndex, currentSort.ascending);
+                    
+                    // Update header indicators
+                    headers.forEach(h => {
+                        h.textContent = h.textContent.replace(' ↑', '').replace(' ↓', '').replace(' ↕', '') + ' ↕';
+                    });
+                    header.textContent = header.textContent.replace(' ↕', '') + (currentSort.ascending ? ' ↑' : ' ↓');
+                });
+            });
+            
+            function sortTable(columnIndex, ascending) {
+                const tbody = table.querySelector('tbody');
+                const rows = Array.from(tbody.querySelectorAll('tr'));
+                
+                rows.sort((a, b) => {
+                    const aValue = a.cells[columnIndex].textContent.trim();
+                    const bValue = b.cells[columnIndex].textContent.trim();
+                    
+                    // Parse percentage values (remove % sign)
+                    const aNum = parseFloat(aValue.replace('%', ''));
+                    const bNum = parseFloat(bValue.replace('%', ''));
+                    
+                    if (ascending) {
+                        return aNum - bNum;
+                    } else {
+                        return bNum - aNum;
+                    }
+                });
+                
+                // Clear tbody and append sorted rows
+                tbody.innerHTML = '';
+                rows.forEach(row => tbody.appendChild(row));
+            }
+        }
+
         // Slider navigation functionality
         function initMapSlider() {
             const slider = document.getElementById('maps-container');
@@ -4189,6 +4253,9 @@
                 if (pageId === 'maps' && document.getElementById('maps-container').children.length === 0) {
                     loadMapsData();
                     setTimeout(initMapSlider, 100); // Initialize slider after maps load
+                }
+                if (pageId === 'ecohunters') {
+                    setTimeout(initEcohuntersSorting, 100); // Initialize sorting when ecohunters page is viewed
                 }
                 
                 window.scrollTo({ top: 0, behavior: 'smooth' });
