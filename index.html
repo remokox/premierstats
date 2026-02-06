@@ -2108,7 +2108,7 @@
                 <!-- Average Box -->
                 <div class="ecohunters-avg-box">
                     <div class="ecohunters-avg-label">Average percentage of kills earned on low buys</div>
-                    <div class="ecohunters-avg-value">26%</div>
+                    <div class="ecohunters-avg-value">-</div>
                 </div>
 
                 <!-- Stats Table -->
@@ -2124,69 +2124,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>Torrek</td>
-                                <td>33%</td>
-                                <td>23%</td>
-                                <td>146%</td>
-                                <td>23%</td>
-                            </tr>
-                            <tr>
-                                <td>Marcinek</td>
-                                <td>9%</td>
-                                <td>17%</td>
-                                <td>55%</td>
-                                <td>28%</td>
-                            </tr>
-                            <tr>
-                                <td>Mingdon</td>
-                                <td>27%</td>
-                                <td>13%</td>
-                                <td>205%</td>
-                                <td>18%</td>
-                            </tr>
-                            <tr>
-                                <td>Vulpes</td>
-                                <td>20%</td>
-                                <td>18%</td>
-                                <td>111%</td>
-                                <td>29%</td>
-                            </tr>
-                            <tr>
-                                <td>Nefik</td>
-                                <td>16%</td>
-                                <td>17%</td>
-                                <td>99%</td>
-                                <td>23%</td>
-                            </tr>
-                            <tr>
-                                <td>Krakers</td>
-                                <td>21%</td>
-                                <td>25%</td>
-                                <td>85%</td>
-                                <td>28%</td>
-                            </tr>
-                            <tr>
-                                <td>Badum</td>
-                                <td>18%</td>
-                                <td>21%</td>
-                                <td>87%</td>
-                                <td>29%</td>
-                            </tr>
-                            <tr>
-                                <td>Jano</td>
-                                <td>15%</td>
-                                <td>30%</td>
-                                <td>49%</td>
-                                <td>24%</td>
-                            </tr>
-                            <tr>
-                                <td>Remo</td>
-                                <td>25%</td>
-                                <td>20%</td>
-                                <td>128%</td>
-                                <td>25%</td>
-                            </tr>
+                            <!-- Data will be loaded dynamically -->
                         </tbody>
                     </table>
                 </div>
@@ -2418,7 +2356,8 @@
             'sum_stats_maps': '429282545',
             'maps': '1587882555',
             'clutches': '372093401',
-            'maps_data': '1325823481'
+            'maps_data': '1325823481',
+            'ecohunters': '172695085'
         };
 
         // Column mappings (1-indexed)
@@ -4137,6 +4076,119 @@
             });
         }
 
+        // Load Ecohunters data from Google Sheets
+        async function loadEcohuntersData() {
+            const container = document.querySelector('.ecohunters-table-container');
+            const avgBox = document.querySelector('.ecohunters-avg-value');
+            
+            if (!container) return;
+            
+            // Show loading state
+            container.innerHTML = '<div class="loading"><div class="loading-spinner"></div>Loading ecohunters data...</div>';
+            
+            // Fetch data from Google Sheets
+            const data = await fetchSheetData(SHEET_GIDS.ecohunters);
+            if (!data) {
+                console.error('Failed to load ecohunters data');
+                container.innerHTML = '<p style="color: var(--danger);">Failed to load ecohunters data. Please try again.</p>';
+                return;
+            }
+            
+            // Get unique player names from column G (index 6)
+            const playerNames = [...new Set(data.map(row => (row[6] || '').toString().trim()).filter(name => name !== ''))];
+            
+            console.log('Found players:', playerNames);
+            
+            const playersStats = [];
+            
+            // Process each player
+            playerNames.forEach(playerName => {
+                // Filter rows for this player
+                const playerRows = data.filter(row => {
+                    const name = (row[6] || '').toString().trim();
+                    return name === playerName;
+                });
+                
+                if (playerRows.length === 0) return;
+                
+                // Initialize sums
+                let sumCM = 0; // Opening attempts vs lowbuy (index 90)
+                let sumCN = 0; // Opening attempts vs fullbuy (index 91)
+                let sumCO = 0; // Openings lowbuy TEAM (index 92)
+                let sumCP = 0; // Opening fullbuy TEAM (index 93)
+                let sumCQ = 0; // Kills vs lowbuy (index 94)
+                let sumCR = 0; // Kills vs fullbuy (index 95)
+                let sumCS = 0; // Total kills (index 96)
+                
+                // Sum values across all matches
+                playerRows.forEach(row => {
+                    sumCM += parseInt(row[90]) || 0;
+                    sumCN += parseInt(row[91]) || 0;
+                    sumCO += parseInt(row[92]) || 0;
+                    sumCP += parseInt(row[93]) || 0;
+                    sumCQ += parseInt(row[94]) || 0;
+                    sumCR += parseInt(row[95]) || 0;
+                    sumCS += parseInt(row[96]) || 0;
+                });
+                
+                console.log(`${playerName}: CM=${sumCM}, CN=${sumCN}, CO=${sumCO}, CP=${sumCP}, CQ=${sumCQ}, CR=${sumCR}, CS=${sumCS}`);
+                
+                // Calculate metrics
+                const opLowbuy = sumCO > 0 ? (sumCM / sumCO * 100) : 0;
+                const opFull = sumCP > 0 ? (sumCN / sumCP * 100) : 0;
+                const opRatio = opFull > 0 ? (opLowbuy / opFull * 100) : 0;
+                const kLowbuy = sumCS > 0 ? (sumCQ / sumCS * 100) : 0;
+                
+                playersStats.push({
+                    name: playerName,
+                    opLowbuy: opLowbuy.toFixed(0) + '%',
+                    opFull: opFull.toFixed(0) + '%',
+                    opRatio: opRatio.toFixed(0) + '%',
+                    kLowbuy: kLowbuy.toFixed(0) + '%',
+                    kLowbuyNum: kLowbuy // Keep numeric value for average calculation
+                });
+            });
+            
+            // Calculate average K% lowbuy
+            const avgKLowbuy = playersStats.length > 0 
+                ? (playersStats.reduce((sum, p) => sum + p.kLowbuyNum, 0) / playersStats.length) 
+                : 0;
+            
+            // Update average box
+            if (avgBox) {
+                avgBox.textContent = Math.round(avgKLowbuy) + '%';
+            }
+            
+            // Rebuild table
+            container.innerHTML = `
+                <table class="ecohunters-table">
+                    <thead>
+                        <tr>
+                            <th>Player</th>
+                            <th class="sortable">Op% lowbuy</th>
+                            <th class="sortable">Op% full</th>
+                            <th class="sortable">Op% lowbuy/ Op% full</th>
+                            <th class="sortable">K% lowbuy</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${playersStats.map(player => `
+                            <tr>
+                                <td>${player.name}</td>
+                                <td>${player.opLowbuy}</td>
+                                <td>${player.opFull}</td>
+                                <td>${player.opRatio}</td>
+                                <td>${player.kLowbuy}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            // Reinitialize sorting after table is rebuilt
+            setTimeout(initEcohuntersSorting, 100);
+        }
+
         // Ecohunters table sorting functionality
         function initEcohuntersSorting() {
             const table = document.querySelector('.ecohunters-table');
@@ -4254,8 +4306,8 @@
                     loadMapsData();
                     setTimeout(initMapSlider, 100); // Initialize slider after maps load
                 }
-                if (pageId === 'ecohunters') {
-                    setTimeout(initEcohuntersSorting, 100); // Initialize sorting when ecohunters page is viewed
+                if (pageId === 'ecohunters' && !document.querySelector('.ecohunters-table tbody tr')) {
+                    loadEcohuntersData();
                 }
                 
                 window.scrollTo({ top: 0, behavior: 'smooth' });
