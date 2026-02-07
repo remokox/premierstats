@@ -4417,8 +4417,31 @@
             console.log(`Total matches found: ${matches.length}`);
             console.log(`Filtering by stat: ${selectedStat}`);
             
-            // Determine which stat to sort by and direction
-            let sortKey = selectedStat;
+            // Map stat filter values to actual property names
+            const statPropertyMap = {
+                'rating': 'rating',
+                'roundswing': 'roundSwing',
+                'kills': 'kills',
+                'deaths': 'deaths',
+                'kd': 'kd',
+                'adr': 'adr',
+                'ef': 'ef',
+                'ud': 'ud',
+                'entrykd': 'entryKD',
+                'clutches': 'clutches',
+                'aces': 'aces',
+                'multikills': 'multikills',
+                'sniperkills': 'sniperKills'
+            };
+            
+            const sortKey = statPropertyMap[selectedStat];
+            if (!sortKey) {
+                console.error('Unknown stat:', selectedStat);
+                bestContainer.innerHTML = '<div class="records-empty">Invalid stat selected</div>';
+                worstContainer.innerHTML = '<div class="records-empty">Invalid stat selected</div>';
+                return;
+            }
+            
             let higherIsBetter = true;
             
             if (selectedStat === 'deaths') {
