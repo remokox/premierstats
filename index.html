@@ -4454,9 +4454,25 @@
                 let bVal = b[sortKey];
                 
                 if (higherIsBetter) {
-                    return bVal - aVal; // Descending
+                    // Primary sort: by stat value descending
+                    if (bVal !== aVal) {
+                        return bVal - aVal;
+                    }
+                    // Secondary sort for entrykd: prefer fewer entry deaths
+                    if (selectedStat === 'entrykd') {
+                        return a.entryDeaths - b.entryDeaths;
+                    }
+                    return 0;
                 } else {
-                    return aVal - bVal; // Ascending
+                    // Primary sort: by stat value ascending
+                    if (aVal !== bVal) {
+                        return aVal - bVal;
+                    }
+                    // Secondary sort for entrykd: prefer fewer entry deaths
+                    if (selectedStat === 'entrykd') {
+                        return a.entryDeaths - b.entryDeaths;
+                    }
+                    return 0;
                 }
             });
             
@@ -4466,11 +4482,23 @@
             // Find best value and get all matches with that value (with small tolerance for floating point)
             const bestValue = sortedMatches[0][sortKey];
             const tolerance = 0.001; // For floating point comparison
-            const bestMatches = sortedMatches.filter(m => Math.abs(m[sortKey] - bestValue) < tolerance);
+            let bestMatches = sortedMatches.filter(m => Math.abs(m[sortKey] - bestValue) < tolerance);
+            
+            // For entrykd, if there are multiple matches with same ratio, only show ones with minimum entry deaths
+            if (selectedStat === 'entrykd' && bestMatches.length > 1) {
+                const minEntryDeaths = Math.min(...bestMatches.map(m => m.entryDeaths));
+                bestMatches = bestMatches.filter(m => m.entryDeaths === minEntryDeaths);
+            }
             
             // Find worst value and get all matches with that value
             const worstValue = sortedMatches[sortedMatches.length - 1][sortKey];
-            const worstMatches = sortedMatches.filter(m => Math.abs(m[sortKey] - worstValue) < tolerance);
+            let worstMatches = sortedMatches.filter(m => Math.abs(m[sortKey] - worstValue) < tolerance);
+            
+            // For entrykd, if there are multiple matches with same ratio, only show ones with minimum entry deaths
+            if (selectedStat === 'entrykd' && worstMatches.length > 1) {
+                const minEntryDeaths = Math.min(...worstMatches.map(m => m.entryDeaths));
+                worstMatches = worstMatches.filter(m => m.entryDeaths === minEntryDeaths);
+            }
             
             console.log(`Best matches found: ${bestMatches.length}`);
             console.log(`Worst matches found: ${worstMatches.length}`);
@@ -4571,7 +4599,7 @@
                 case 'adr': return match.adr.toFixed(1);
                 case 'ef': return match.ef; // No decimals
                 case 'ud': return match.ud; // No decimals
-                case 'entrykd': return match.entryKD.toFixed(2);
+                case 'entrykd': return `${match.entryKills} EK / ${match.entryDeaths} ED`;
                 case 'clutches': return match.clutches;
                 case 'aces': return match.aces;
                 case 'multikills': return match.multikills;
