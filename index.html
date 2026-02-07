@@ -487,10 +487,12 @@
 
         /* Player Cards Styles */
         .players-container {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            display: flex;
+            flex-direction: column;
             gap: 20px;
             padding: 20px 0;
+            max-width: 800px;
+            margin: 0 auto;
         }
 
         .player-card {
@@ -499,6 +501,7 @@
             border-radius: 12px;
             overflow: hidden;
             transition: all 0.3s ease;
+            width: 100%;
         }
 
         .player-card:hover {
@@ -1776,16 +1779,9 @@
             .records-table td {
                 padding: 10px 8px;
             }
-
-            .players-container {
-                grid-template-columns: repeat(2, 1fr);
-            }
         }
 
         @media (max-width: 480px) {
-            .players-container {
-                grid-template-columns: 1fr;
-            }
         }
     </style>
 </head>
@@ -4900,36 +4896,49 @@
             const prevBtn = document.getElementById('slider-prev');
             const nextBtn = document.getElementById('slider-next');
             
-            if (!slider || !prevBtn || !nextBtn) return;
+            if (!slider || !prevBtn || !nextBtn) {
+                console.log('Slider elements not found');
+                return;
+            }
+            
+            console.log('Initializing map slider...');
             
             const scrollAmount = 430; // card width (400) + gap (30)
-            
-            // Remove existing listeners and add new ones
-            const prevClick = () => {
-                slider.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-            };
-            const nextClick = () => {
-                slider.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-            };
-            
-            prevBtn.onclick = prevClick;
-            nextBtn.onclick = nextClick;
             
             // Update button states based on scroll position
             function updateButtons() {
                 const maxScroll = slider.scrollWidth - slider.clientWidth;
-                prevBtn.disabled = slider.scrollLeft <= 0;
-                nextBtn.disabled = slider.scrollLeft >= maxScroll - 5; // -5 for rounding
+                const currentScroll = slider.scrollLeft;
+                
+                prevBtn.disabled = currentScroll <= 0;
+                nextBtn.disabled = currentScroll >= maxScroll - 5;
+                
+                console.log(`Scroll: ${currentScroll}, Max: ${maxScroll}, Prev disabled: ${prevBtn.disabled}, Next disabled: ${nextBtn.disabled}`);
             }
             
-            // Remove existing scroll listener
-            slider.removeEventListener('scroll', updateButtons);
-            slider.addEventListener('scroll', updateButtons);
+            // Attach click handlers directly
+            prevBtn.onclick = function(e) {
+                e.preventDefault();
+                console.log('Prev button clicked');
+                slider.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+                setTimeout(updateButtons, 300);
+            };
             
-            // Initial state - use requestAnimationFrame to ensure DOM is fully rendered
-            requestAnimationFrame(() => {
-                setTimeout(updateButtons, 100); // Increased delay to ensure images are sized
-            });
+            nextBtn.onclick = function(e) {
+                e.preventDefault();
+                console.log('Next button clicked');
+                slider.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                setTimeout(updateButtons, 300);
+            };
+            
+            // Listen to scroll events
+            slider.onscroll = updateButtons;
+            
+            // Initial state - wait for images to load
+            setTimeout(function() {
+                updateButtons();
+                console.log('Initial button state set');
+            }, 200);
         }
 
         // Navigation functionality
@@ -4953,8 +4962,13 @@
                     loadPlayersData();
                 }
                 if (pageId === 'maps' && document.getElementById('maps-container').children.length === 0) {
-                    loadMapsData();
-                    setTimeout(initMapSlider, 100); // Initialize slider after maps load
+                    loadMapsData().then(() => {
+                        console.log('Maps loaded, initializing slider...');
+                        setTimeout(initMapSlider, 200);
+                    });
+                } else if (pageId === 'maps') {
+                    // Re-initialize slider if returning to maps page
+                    setTimeout(initMapSlider, 100);
                 }
                 if (pageId === 'ecohunters' && !document.querySelector('.ecohunters-table tbody tr')) {
                     loadEcohuntersData();
