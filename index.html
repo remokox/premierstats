@@ -4378,6 +4378,11 @@
                 // Entry K/D: treat 0 deaths as 1
                 const entryKD = entryKills / Math.max(entryDeaths, 1);
                 
+                // Debug logging for first few rows
+                if (matches.length < 3) {
+                    console.log(`Match ${matches.length + 1}: Player=${playerNick}, SniperKills=${sniperKills} (raw: ${row[83]}), EntryKD=${entryKD} (EK=${entryKills}, ED=${entryDeaths})`);
+                }
+                
                 matches.push({
                     player: playerNick,
                     date: dateStr,
@@ -4409,6 +4414,9 @@
                 return;
             }
             
+            console.log(`Total matches found: ${matches.length}`);
+            console.log(`Filtering by stat: ${selectedStat}`);
+            
             // Determine which stat to sort by and direction
             let sortKey = selectedStat;
             let higherIsBetter = true;
@@ -4429,13 +4437,20 @@
                 }
             });
             
-            // Find best value and get all matches with that value
+            console.log(`Best value: ${sortedMatches[0][sortKey]}`);
+            console.log(`Worst value: ${sortedMatches[sortedMatches.length - 1][sortKey]}`);
+            
+            // Find best value and get all matches with that value (with small tolerance for floating point)
             const bestValue = sortedMatches[0][sortKey];
-            const bestMatches = sortedMatches.filter(m => m[sortKey] === bestValue);
+            const tolerance = 0.001; // For floating point comparison
+            const bestMatches = sortedMatches.filter(m => Math.abs(m[sortKey] - bestValue) < tolerance);
             
             // Find worst value and get all matches with that value
             const worstValue = sortedMatches[sortedMatches.length - 1][sortKey];
-            const worstMatches = sortedMatches.filter(m => m[sortKey] === worstValue);
+            const worstMatches = sortedMatches.filter(m => Math.abs(m[sortKey] - worstValue) < tolerance);
+            
+            console.log(`Best matches found: ${bestMatches.length}`);
+            console.log(`Worst matches found: ${worstMatches.length}`);
             
             // Render tables
             renderRecordTable(bestContainer, bestMatches, selectedStat);
