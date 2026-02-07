@@ -4344,8 +4344,22 @@
                     return;
                 }
                 
-                // Parse date (column B, index 1)
+                // Parse date (column B, index 1) and convert from mm/dd/yyyy to dd/mm/yyyy
                 const dateStr = (row[1] || '').toString().trim();
+                let formattedDate = dateStr;
+                
+                // Try to convert mm/dd/yyyy to dd/mm/yyyy
+                try {
+                    const dateParts = dateStr.split('/');
+                    if (dateParts.length === 3) {
+                        const month = dateParts[0];
+                        const day = dateParts[1];
+                        const year = dateParts[2];
+                        formattedDate = `${day}/${month}/${year}`;
+                    }
+                } catch (e) {
+                    formattedDate = dateStr; // Keep original if parsing fails
+                }
                 
                 // Parse stats
                 const kills = parseInt(row[12]) || 0; // M
@@ -4388,7 +4402,7 @@
                 
                 matches.push({
                     player: playerNick,
-                    date: dateStr,
+                    date: formattedDate,
                     map: mapName,
                     kills,
                     deaths,
