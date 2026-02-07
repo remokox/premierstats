@@ -1261,6 +1261,145 @@
             color: var(--accent-primary);
         }
 
+        /* Game Records Page Styles */
+        .records-filters {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .records-filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .records-filter-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .records-filter-select {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 1rem;
+            font-family: 'Rajdhani', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 200px;
+        }
+
+        .records-filter-select:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .records-filter-select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+
+        .records-section {
+            margin-bottom: 40px;
+        }
+
+        .records-section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .records-table-container {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            overflow-x: auto;
+            box-shadow: 0 4px 15px var(--shadow);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .records-table {
+            width: 100%;
+            min-width: 800px;
+        }
+
+        .records-table thead {
+            background: var(--bg-tertiary);
+        }
+
+        .records-table th {
+            padding: 15px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .records-table th:first-child,
+        .records-table th:nth-child(2) {
+            text-align: left;
+        }
+
+        .records-table tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.3s ease;
+        }
+
+        .records-table tbody tr:hover {
+            background: rgba(255, 107, 53, 0.05);
+        }
+
+        .records-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .records-table td {
+            padding: 15px;
+            text-align: center;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+        }
+
+        .records-table td:first-child,
+        .records-table td:nth-child(2) {
+            text-align: left;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .records-table td:first-child {
+            color: var(--accent-primary);
+        }
+
+        .records-highlight {
+            background: rgba(255, 107, 53, 0.15);
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .records-empty {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
         /* Maps Page Styles */
         .maps-slider-container {
             position: relative;
@@ -1627,6 +1766,28 @@
             .ecohunters-avg-box {
                 width: 100%;
                 text-align: center;
+            }
+
+            .records-filters {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .records-filter-select {
+                min-width: 100%;
+            }
+
+            .records-table-container {
+                overflow-x: auto;
+            }
+
+            .records-table {
+                font-size: 0.85rem;
+            }
+
+            .records-table th,
+            .records-table td {
+                padding: 10px 8px;
             }
         }
     </style>
@@ -2134,8 +2295,59 @@
         <!-- GAME RECORDS PAGE -->
         <div id="records" class="page">
             <div class="section">
-                <h2 class="section-header">Game Records - Coming Soon</h2>
-                <p style="color: var(--text-secondary);">Game records will be displayed here.</p>
+                <h2 class="section-header">Game Records</h2>
+                
+                <!-- Filters -->
+                <div class="records-filters">
+                    <div class="records-filter-group">
+                        <label class="records-filter-label">Map</label>
+                        <select class="records-filter-select" id="records-map-filter">
+                            <option value="all">All Maps</option>
+                            <option value="Ancient">Ancient</option>
+                            <option value="Anubis">Anubis</option>
+                            <option value="Dust II">Dust II</option>
+                            <option value="Inferno">Inferno</option>
+                            <option value="Mirage">Mirage</option>
+                            <option value="Nuke">Nuke</option>
+                            <option value="Overpass">Overpass</option>
+                        </select>
+                    </div>
+                    
+                    <div class="records-filter-group">
+                        <label class="records-filter-label">Stat</label>
+                        <select class="records-filter-select" id="records-stat-filter">
+                            <option value="rating">Rating 3.0</option>
+                            <option value="roundswing">Round Swing</option>
+                            <option value="kills">Kills</option>
+                            <option value="deaths">Deaths</option>
+                            <option value="kd">K/D</option>
+                            <option value="adr">ADR</option>
+                            <option value="ef">EF</option>
+                            <option value="ud">UD</option>
+                            <option value="entrykd">Entry K/D</option>
+                            <option value="clutches">Clutches</option>
+                            <option value="aces">Aces</option>
+                            <option value="multikills">Multikills</option>
+                            <option value="sniperkills">Sniper Kills</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Best Performance -->
+                <div class="records-section">
+                    <h3 class="records-section-title">🏆 Best Performance</h3>
+                    <div class="records-table-container" id="best-records-container">
+                        <div class="records-empty">Loading...</div>
+                    </div>
+                </div>
+
+                <!-- Worst Performance -->
+                <div class="records-section">
+                    <h3 class="records-section-title">📉 Worst Performance</h3>
+                    <div class="records-table-container" id="worst-records-container">
+                        <div class="records-empty">Loading...</div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -4076,6 +4288,256 @@
             });
         }
 
+        // Load Game Records data
+        let cachedRecordsData = null;
+        let cachedPlayerNicknames = null;
+
+        async function loadGameRecords() {
+            const selectedMap = document.getElementById('records-map-filter').value;
+            const selectedStat = document.getElementById('records-stat-filter').value;
+            
+            const bestContainer = document.getElementById('best-records-container');
+            const worstContainer = document.getElementById('worst-records-container');
+            
+            // Show loading
+            bestContainer.innerHTML = '<div class="records-empty">Loading...</div>';
+            worstContainer.innerHTML = '<div class="records-empty">Loading...</div>';
+            
+            // Fetch data if not cached
+            if (!cachedRecordsData) {
+                cachedRecordsData = await fetchSheetData(SHEET_GIDS.ecohunters); // GID 172695085
+            }
+            if (!cachedPlayerNicknames) {
+                cachedPlayerNicknames = await fetchSheetData(SHEET_GIDS.sum_stats_maps); // GID 429282545 for player lookup
+            }
+            
+            if (!cachedRecordsData || !cachedPlayerNicknames) {
+                bestContainer.innerHTML = '<div class="records-empty" style="color: var(--danger);">Failed to load data</div>';
+                worstContainer.innerHTML = '<div class="records-empty" style="color: var(--danger);">Failed to load data</div>';
+                return;
+            }
+            
+            // Create player nickname lookup map (column D -> column C)
+            const playerLookup = {};
+            cachedPlayerNicknames.forEach(row => {
+                const playerId = (row[3] || '').toString().trim(); // Column D (index 3)
+                const nickname = (row[2] || '').toString().trim(); // Column C (index 2)
+                if (playerId && nickname && playerId.toLowerCase() !== 'player' && nickname.toLowerCase() !== 'nickname') {
+                    playerLookup[playerId] = nickname;
+                }
+            });
+            
+            // Process matches
+            const matches = [];
+            cachedRecordsData.forEach(row => {
+                const mapName = (row[2] || '').toString().trim(); // Column C
+                const playerId = (row[6] || '').toString().trim(); // Column G
+                const playerNick = playerLookup[playerId] || playerId;
+                
+                // Skip if no valid player or if it's a header row
+                if (!playerNick || playerNick.toLowerCase() === 'player' || playerNick.toLowerCase() === 'player details') {
+                    return;
+                }
+                
+                // Skip if map filter is active and doesn't match
+                if (selectedMap !== 'all' && mapName !== selectedMap) {
+                    return;
+                }
+                
+                // Parse date (column B, index 1)
+                const dateStr = (row[1] || '').toString().trim();
+                
+                // Parse stats
+                const kills = parseInt(row[12]) || 0; // M
+                const deaths = parseInt(row[13]) || 0; // N
+                const assists = parseInt(row[14]) || 0; // O
+                const adr = parseFloat(row[15]) || 0; // P
+                const hs = parseFloat(row[16]) || 0; // Q
+                const kast = parseFloat(row[17]) || 0; // R
+                const roundSwing = parseFloat(row[44]) || 0; // AS
+                const rating = parseFloat(row[46]) || 0; // AU
+                const ef = parseFloat(row[18]) || 0; // S
+                const ud = parseFloat(row[21]) || 0; // V
+                const entryKills = parseInt(row[22]) || 0; // W
+                const entryDeaths = parseInt(row[23]) || 0; // X
+                
+                // Clutches: sum of AC:AG (indices 28-32)
+                const clutches = (parseInt(row[28]) || 0) + (parseInt(row[29]) || 0) + 
+                                (parseInt(row[30]) || 0) + (parseInt(row[31]) || 0) + (parseInt(row[32]) || 0);
+                
+                const aces = parseInt(row[33]) || 0; // AH
+                
+                // Multikills: sum of AH:AK (indices 33-36)
+                const multikills = (parseInt(row[33]) || 0) + (parseInt(row[34]) || 0) + 
+                                  (parseInt(row[35]) || 0) + (parseInt(row[36]) || 0);
+                
+                const sniperKills = parseInt(row[83]) || 0; // CF
+                
+                // Calculate derived stats
+                const kd = deaths > 0 ? (kills / deaths) : kills;
+                const entryKD = Math.max(entryDeaths, 1) > 0 ? (entryKills / Math.max(entryDeaths, 1)) : entryKills;
+                
+                matches.push({
+                    player: playerNick,
+                    date: dateStr,
+                    map: mapName,
+                    kills,
+                    deaths,
+                    assists,
+                    adr,
+                    hs,
+                    kast,
+                    roundSwing,
+                    rating,
+                    ef,
+                    ud,
+                    entryKills,
+                    entryDeaths,
+                    entryKD,
+                    clutches,
+                    aces,
+                    multikills,
+                    sniperKills,
+                    kd
+                });
+            });
+            
+            if (matches.length === 0) {
+                bestContainer.innerHTML = '<div class="records-empty">No matches found</div>';
+                worstContainer.innerHTML = '<div class="records-empty">No matches found</div>';
+                return;
+            }
+            
+            // Determine which stat to sort by and direction
+            let sortKey = selectedStat;
+            let higherIsBetter = true;
+            
+            if (selectedStat === 'deaths') {
+                higherIsBetter = false; // Lower deaths is better
+            }
+            
+            // Sort matches
+            const sortedMatches = [...matches].sort((a, b) => {
+                let aVal = a[sortKey];
+                let bVal = b[sortKey];
+                
+                if (higherIsBetter) {
+                    return bVal - aVal; // Descending
+                } else {
+                    return aVal - bVal; // Ascending
+                }
+            });
+            
+            const bestMatch = sortedMatches[0];
+            const worstMatch = sortedMatches[sortedMatches.length - 1];
+            
+            // Render tables
+            renderRecordTable(bestContainer, bestMatch, selectedStat);
+            renderRecordTable(worstContainer, worstMatch, selectedStat);
+        }
+
+        function renderRecordTable(container, match, selectedStat) {
+            if (!match) {
+                container.innerHTML = '<div class="records-empty">No data</div>';
+                return;
+            }
+            
+            // Format date to dd/mm/yyyy
+            let formattedDate = match.date;
+            try {
+                // Try to parse and format if it's a date
+                const dateParts = match.date.split('/');
+                if (dateParts.length === 3) {
+                    formattedDate = match.date; // Already in correct format
+                } else {
+                    // Try other formats if needed
+                    formattedDate = match.date;
+                }
+            } catch (e) {
+                formattedDate = match.date;
+            }
+            
+            // Determine stat labels
+            const statLabels = {
+                'rating': 'Rating 3.0',
+                'roundswing': 'Round Swing',
+                'kills': 'K',
+                'deaths': 'D',
+                'kd': 'K/D',
+                'adr': 'ADR',
+                'ef': 'EF',
+                'ud': 'UD',
+                'entrykd': 'Entry K/D',
+                'clutches': 'Clutches',
+                'aces': 'Aces',
+                'multikills': 'Multikills',
+                'sniperkills': 'Sniper Kills'
+            };
+            
+            // Base columns
+            const baseColumns = ['K', 'D', 'A', 'ADR', 'HS%', 'KAST', 'Round Swing', 'Rating 3.0'];
+            const selectedStatLabel = statLabels[selectedStat];
+            
+            // Add selected stat column if not already in base columns
+            const showExtraColumn = !baseColumns.includes(selectedStatLabel);
+            
+            let html = `
+                <table class="records-table">
+                    <thead>
+                        <tr>
+                            <th>Player</th>
+                            <th>Date</th>
+                            <th>K</th>
+                            <th>D</th>
+                            <th>A</th>
+                            <th>ADR</th>
+                            <th>HS%</th>
+                            <th>KAST</th>
+                            <th>Round Swing</th>
+                            <th>Rating 3.0</th>
+                            ${showExtraColumn ? `<th>${selectedStatLabel}</th>` : ''}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>${match.player}</td>
+                            <td>${formattedDate}</td>
+                            <td>${match.kills}</td>
+                            <td>${match.deaths}</td>
+                            <td>${match.assists}</td>
+                            <td>${match.adr.toFixed(1)}</td>
+                            <td>${match.hs.toFixed(1)}%</td>
+                            <td>${match.kast.toFixed(1)}%</td>
+                            <td>${match.roundSwing.toFixed(1)}</td>
+                            <td>${match.rating.toFixed(2)}</td>
+                            ${showExtraColumn ? `<td class="records-highlight">${getStatValue(match, selectedStat)}</td>` : ''}
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        function getStatValue(match, stat) {
+            switch(stat) {
+                case 'rating': return match.rating.toFixed(2);
+                case 'roundswing': return match.roundSwing.toFixed(1);
+                case 'kills': return match.kills;
+                case 'deaths': return match.deaths;
+                case 'kd': return match.kd.toFixed(2);
+                case 'adr': return match.adr.toFixed(1);
+                case 'ef': return match.ef.toFixed(1);
+                case 'ud': return match.ud.toFixed(1);
+                case 'entrykd': return match.entryKD.toFixed(2);
+                case 'clutches': return match.clutches;
+                case 'aces': return match.aces;
+                case 'multikills': return match.multikills;
+                case 'sniperkills': return match.sniperKills;
+                default: return '-';
+            }
+        }
+
         // Load Ecohunters data from Google Sheets
         async function loadEcohuntersData() {
             const container = document.querySelector('.ecohunters-table-container');
@@ -4312,6 +4774,9 @@
                 if (pageId === 'ecohunters' && !document.querySelector('.ecohunters-table tbody tr')) {
                     loadEcohuntersData();
                 }
+                if (pageId === 'records') {
+                    loadGameRecords();
+                }
                 
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
@@ -4340,6 +4805,22 @@
                 showPlayerDetail(playerName);
             }
         });
+
+        // Game Records filter event listeners
+        const recordsMapFilter = document.getElementById('records-map-filter');
+        const recordsStatFilter = document.getElementById('records-stat-filter');
+        
+        if (recordsMapFilter) {
+            recordsMapFilter.addEventListener('change', () => {
+                loadGameRecords();
+            });
+        }
+        
+        if (recordsStatFilter) {
+            recordsStatFilter.addEventListener('change', () => {
+                loadGameRecords();
+            });
+        }
 
         // Load data on page load
         window.addEventListener('DOMContentLoaded', () => {
