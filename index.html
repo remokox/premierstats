@@ -4356,8 +4356,8 @@
                 const kast = parseFloat(row[17]) || 0; // R
                 const roundSwing = parseFloat(row[44]) || 0; // AS
                 const rating = parseFloat(row[46]) || 0; // AU
-                const ef = parseFloat(row[18]) || 0; // S
-                const ud = parseFloat(row[21]) || 0; // V
+                const ef = parseInt(row[18]) || 0; // S - no decimals
+                const ud = parseInt(row[21]) || 0; // V - no decimals
                 const entryKills = parseInt(row[22]) || 0; // W
                 const entryDeaths = parseInt(row[23]) || 0; // X
                 
@@ -4375,7 +4375,8 @@
                 
                 // Calculate derived stats
                 const kd = deaths > 0 ? (kills / deaths) : kills;
-                const entryKD = Math.max(entryDeaths, 1) > 0 ? (entryKills / Math.max(entryDeaths, 1)) : entryKills;
+                // Entry K/D: treat 0 deaths as 1
+                const entryKD = entryKills / Math.max(entryDeaths, 1);
                 
                 matches.push({
                     player: playerNick,
@@ -4428,33 +4429,23 @@
                 }
             });
             
-            const bestMatch = sortedMatches[0];
-            const worstMatch = sortedMatches[sortedMatches.length - 1];
+            // Find best value and get all matches with that value
+            const bestValue = sortedMatches[0][sortKey];
+            const bestMatches = sortedMatches.filter(m => m[sortKey] === bestValue);
+            
+            // Find worst value and get all matches with that value
+            const worstValue = sortedMatches[sortedMatches.length - 1][sortKey];
+            const worstMatches = sortedMatches.filter(m => m[sortKey] === worstValue);
             
             // Render tables
-            renderRecordTable(bestContainer, bestMatch, selectedStat);
-            renderRecordTable(worstContainer, worstMatch, selectedStat);
+            renderRecordTable(bestContainer, bestMatches, selectedStat);
+            renderRecordTable(worstContainer, worstMatches, selectedStat);
         }
 
-        function renderRecordTable(container, match, selectedStat) {
-            if (!match) {
+        function renderRecordTable(container, matches, selectedStat) {
+            if (!matches || matches.length === 0) {
                 container.innerHTML = '<div class="records-empty">No data</div>';
                 return;
-            }
-            
-            // Format date to dd/mm/yyyy
-            let formattedDate = match.date;
-            try {
-                // Try to parse and format if it's a date
-                const dateParts = match.date.split('/');
-                if (dateParts.length === 3) {
-                    formattedDate = match.date; // Already in correct format
-                } else {
-                    // Try other formats if needed
-                    formattedDate = match.date;
-                }
-            } catch (e) {
-                formattedDate = match.date;
             }
             
             // Determine stat labels
@@ -4487,6 +4478,7 @@
                         <tr>
                             <th>Player</th>
                             <th>Date</th>
+                            <th>Map</th>
                             <th>K</th>
                             <th>D</th>
                             <th>A</th>
@@ -4499,9 +4491,17 @@
                         </tr>
                     </thead>
                     <tbody>
+            `;
+            
+            matches.forEach(match => {
+                // Format date to dd/mm/yyyy
+                let formattedDate = match.date;
+                
+                html += `
                         <tr>
                             <td>${match.player}</td>
                             <td>${formattedDate}</td>
+                            <td>${match.map}</td>
                             <td>${match.kills}</td>
                             <td>${match.deaths}</td>
                             <td>${match.assists}</td>
@@ -4512,6 +4512,10 @@
                             <td>${match.rating.toFixed(2)}</td>
                             ${showExtraColumn ? `<td class="records-highlight">${getStatValue(match, selectedStat)}</td>` : ''}
                         </tr>
+                `;
+            });
+            
+            html += `
                     </tbody>
                 </table>
             `;
@@ -4527,8 +4531,8 @@
                 case 'deaths': return match.deaths;
                 case 'kd': return match.kd.toFixed(2);
                 case 'adr': return match.adr.toFixed(1);
-                case 'ef': return match.ef.toFixed(1);
-                case 'ud': return match.ud.toFixed(1);
+                case 'ef': return match.ef; // No decimals
+                case 'ud': return match.ud; // No decimals
                 case 'entrykd': return match.entryKD.toFixed(2);
                 case 'clutches': return match.clutches;
                 case 'aces': return match.aces;
