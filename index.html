@@ -62,7 +62,7 @@
         header {
             background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
             border-bottom: 3px solid var(--accent-primary);
-            padding: 30px 0;
+            padding: 15px 0;
             margin-bottom: 40px;
             box-shadow: 0 4px 20px var(--shadow);
             animation: slideDown 0.6s ease-out;
@@ -88,7 +88,7 @@
 
         h1 {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: 700;
             background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 50%, var(--accent-tertiary) 100%);
             -webkit-background-clip: text;
@@ -378,12 +378,7 @@
             margin-bottom: 30px;
             box-shadow: 0 4px 20px var(--shadow);
             border: 1px solid var(--border);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .section:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 30px var(--shadow);
+            transition: box-shadow 0.3s ease;
         }
 
         .section-header {
@@ -482,36 +477,18 @@
 
         /* Player Cards Styles */
         .players-container {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 20px;
-            overflow-x: auto;
             padding: 20px 0;
-            scroll-behavior: smooth;
-        }
-
-        .players-container::-webkit-scrollbar {
-            height: 10px;
-        }
-
-        .players-container::-webkit-scrollbar-track {
-            background: var(--bg-tertiary);
-            border-radius: 5px;
-        }
-
-        .players-container::-webkit-scrollbar-thumb {
-            background: var(--accent-primary);
-            border-radius: 5px;
         }
 
         .player-card {
-            min-width: 280px;
-            max-width: 280px;
             background: var(--bg-tertiary);
             border: 2px solid var(--border);
             border-radius: 12px;
             overflow: hidden;
             transition: all 0.3s ease;
-            flex-shrink: 0;
         }
 
         .player-card:hover {
@@ -1789,6 +1766,16 @@
             .records-table td {
                 padding: 10px 8px;
             }
+
+            .players-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .players-container {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -1828,16 +1815,16 @@
                     <thead>
                         <tr>
                             <th>Player</th>
-                            <th>End Rank</th>
-                            <th>Avg Opponent</th>
-                            <th>Peak</th>
-                            <th>Rank Change</th>
-                            <th>Matches</th>
-                            <th>Win Rate (excl. ties)</th>
-                            <th>K/D</th>
-                            <th>ADR</th>
-                            <th>HS%</th>
-                            <th>Rating 3.0</th>
+                            <th class="sortable" data-column="1">End Rank</th>
+                            <th class="sortable" data-column="2">Avg Opponent</th>
+                            <th class="sortable" data-column="3">Peak</th>
+                            <th class="sortable" data-column="4">Rank Change</th>
+                            <th class="sortable" data-column="5">Matches</th>
+                            <th class="sortable" data-column="6">Win Rate (excl. ties)</th>
+                            <th class="sortable" data-column="7">K/D</th>
+                            <th class="sortable" data-column="8">ADR</th>
+                            <th class="sortable" data-column="9">HS%</th>
+                            <th class="sortable" data-column="10">Rating 3.0</th>
                         </tr>
                     </thead>
                     <tbody id="overview-tbody">
@@ -2880,7 +2867,7 @@
                 nickname: 'monke',
                 realname: 'Janusz Półtorak',
                 flag: 'canada.png',
-                photo: 'jano.png'
+                photo: 'monke.png'
             }
         };
 
@@ -2995,6 +2982,84 @@
             // Hide loading, show table
             document.getElementById('overview-loading').style.display = 'none';
             document.getElementById('overview-table').style.display = 'table';
+            
+            // Initialize sorting and sort by Rating 3.0 by default
+            initOverviewSorting();
+            sortOverviewTable(10, false); // Column 10 is Rating 3.0, false = descending
+        }
+
+        // Overview table sorting functionality
+        function initOverviewSorting() {
+            const table = document.getElementById('overview-table');
+            if (!table) return;
+            
+            const headers = table.querySelectorAll('th.sortable');
+            let currentSort = { column: 10, ascending: false }; // Default: Rating 3.0 descending
+            
+            headers.forEach(header => {
+                const column = parseInt(header.getAttribute('data-column'));
+                
+                // Add initial indicator to Rating column
+                if (column === 10) {
+                    header.textContent = header.textContent.replace(' ↑', '').replace(' ↓', '').replace(' ↕', '') + ' ↓';
+                } else {
+                    header.textContent = header.textContent.replace(' ↑', '').replace(' ↓', '').replace(' ↕', '') + ' ↕';
+                }
+                
+                header.addEventListener('click', () => {
+                    // Determine sort direction
+                    if (currentSort.column === column) {
+                        currentSort.ascending = !currentSort.ascending;
+                    } else {
+                        currentSort.ascending = false; // Default to descending for new column
+                        currentSort.column = column;
+                    }
+                    
+                    // Sort the table
+                    sortOverviewTable(column, currentSort.ascending);
+                    
+                    // Update header indicators
+                    headers.forEach(h => {
+                        h.textContent = h.textContent.replace(' ↑', '').replace(' ↓', '').replace(' ↕', '') + ' ↕';
+                    });
+                    header.textContent = header.textContent.replace(' ↕', '') + (currentSort.ascending ? ' ↑' : ' ↓');
+                });
+            });
+        }
+
+        function sortOverviewTable(columnIndex, ascending) {
+            const table = document.getElementById('overview-table');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            rows.sort((a, b) => {
+                let aValue = a.cells[columnIndex].textContent.trim();
+                let bValue = b.cells[columnIndex].textContent.trim();
+                
+                // Remove % signs if present
+                aValue = aValue.replace('%', '');
+                bValue = bValue.replace('%', '');
+                
+                // Try to parse as numbers
+                const aNum = parseFloat(aValue);
+                const bNum = parseFloat(bValue);
+                
+                // If both are valid numbers, sort numerically
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    return ascending ? aNum - bNum : bNum - aNum;
+                }
+                
+                // Otherwise sort as strings
+                if (ascending) {
+                    return aValue.localeCompare(bValue);
+                } else {
+                    return bValue.localeCompare(aValue);
+                }
+            });
+            
+            // Clear tbody and append sorted rows
+            tbody.innerHTML = '';
+            rows.forEach(row => tbody.appendChild(row));
         }
 
         // Load players page data
@@ -4845,7 +4910,11 @@
             }
             
             slider.addEventListener('scroll', updateButtons);
-            updateButtons(); // Initial state
+            
+            // Initial state - use requestAnimationFrame to ensure DOM is fully rendered
+            requestAnimationFrame(() => {
+                setTimeout(updateButtons, 50); // Small delay to ensure images are sized
+            });
         }
 
         // Navigation functionality
