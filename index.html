@@ -487,12 +487,10 @@
 
         /* Player Cards Styles */
         .players-container {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 20px;
             padding: 20px 0;
-            max-width: 800px;
-            margin: 0 auto;
         }
 
         .player-card {
@@ -501,7 +499,6 @@
             border-radius: 12px;
             overflow: hidden;
             transition: all 0.3s ease;
-            width: 100%;
         }
 
         .player-card:hover {
@@ -512,9 +509,10 @@
 
         .player-photo {
             width: 100%;
-            height: 250px;
-            object-fit: cover;
+            height: auto;
+            object-fit: contain;
             border-bottom: 3px solid var(--accent-primary);
+            background: var(--bg-tertiary);
         }
 
         .player-info {
@@ -1779,9 +1777,16 @@
             .records-table td {
                 padding: 10px 8px;
             }
+
+            .players-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         @media (max-width: 480px) {
+            .players-container {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -3121,7 +3126,7 @@
                 // Use the photo from PLAYER_INFO - images are at root level
                 const imageUrl = info.photo 
                     ? `https://github.com/remokox/premierstats/blob/main/${info.photo}?raw=true`
-                    : `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='250'%3E%3Crect width='280' height='250' fill='%23333'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle' fill='white' font-size='72'%3E${info.nickname.substring(0, 2).toUpperCase()}%3C/text%3E%3C/svg%3E`;
+                    : `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' fill='%23333'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle' fill='white' font-size='100'%3E${info.nickname.substring(0, 2).toUpperCase()}%3C/text%3E%3C/svg%3E`;
                 
                 const flagUrl = info.flag 
                     ? `https://github.com/remokox/premierstats/blob/main/${info.flag}?raw=true`
