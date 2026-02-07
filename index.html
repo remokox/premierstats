@@ -4383,6 +4383,9 @@
                     console.log(`Match ${matches.length + 1}: Player=${playerNick}, SniperKills=${sniperKills} (raw: ${row[83]}), EntryKD=${entryKD} (EK=${entryKills}, ED=${entryDeaths})`);
                 }
                 
+                // Skip matches with 0 EK and 0 ED for Entry K/D filtering
+                const skipForEntryKD = (entryKills === 0 && entryDeaths === 0);
+                
                 matches.push({
                     player: playerNick,
                     date: dateStr,
@@ -4404,7 +4407,8 @@
                     aces,
                     multikills,
                     sniperKills,
-                    kd
+                    kd,
+                    skipForEntryKD
                 });
             });
             
@@ -4414,7 +4418,20 @@
                 return;
             }
             
-            console.log(`Total matches found: ${matches.length}`);
+            // Filter out 0 EK / 0 ED matches for Entry K/D stat
+            let filteredMatches = matches;
+            if (selectedStat === 'entrykd') {
+                filteredMatches = matches.filter(m => !m.skipForEntryKD);
+                console.log(`Filtered out ${matches.length - filteredMatches.length} matches with 0 EK / 0 ED`);
+            }
+            
+            if (filteredMatches.length === 0) {
+                bestContainer.innerHTML = '<div class="records-empty">No valid matches found</div>';
+                worstContainer.innerHTML = '<div class="records-empty">No valid matches found</div>';
+                return;
+            }
+            
+            console.log(`Total matches found: ${filteredMatches.length}`);
             console.log(`Filtering by stat: ${selectedStat}`);
             
             // Map stat filter values to actual property names
@@ -4449,7 +4466,7 @@
             }
             
             // Sort matches
-            const sortedMatches = [...matches].sort((a, b) => {
+            const sortedMatches = [...filteredMatches].sort((a, b) => {
                 let aVal = a[sortKey];
                 let bVal = b[sortKey];
                 
@@ -4494,10 +4511,10 @@
             const worstValue = sortedMatches[sortedMatches.length - 1][sortKey];
             let worstMatches = sortedMatches.filter(m => Math.abs(m[sortKey] - worstValue) < tolerance);
             
-            // For entrykd, if there are multiple matches with same ratio, only show ones with minimum entry deaths
+            // For entrykd worst, if there are multiple matches with same ratio, only show ones with MAXIMUM entry deaths
             if (selectedStat === 'entrykd' && worstMatches.length > 1) {
-                const minEntryDeaths = Math.min(...worstMatches.map(m => m.entryDeaths));
-                worstMatches = worstMatches.filter(m => m.entryDeaths === minEntryDeaths);
+                const maxEntryDeaths = Math.max(...worstMatches.map(m => m.entryDeaths));
+                worstMatches = worstMatches.filter(m => m.entryDeaths === maxEntryDeaths);
             }
             
             console.log(`Best matches found: ${bestMatches.length}`);
