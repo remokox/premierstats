@@ -2941,9 +2941,9 @@
                 return;
             }
 
-            // Extract rows 8-16 (indices 7-15 in 0-indexed array)
+            // Extract rows 8-18 (indices 7-17 in 0-indexed array)
             const players = [];
-            for (let i = 7; i < 16 && i < data.length; i++) {
+            for (let i = 7; i < 18 && i < data.length; i++) {
                 const row = data[i];
                 const name = row[OVERVIEW_COLUMNS.name - 1];
                 
@@ -2997,7 +2997,7 @@
                     <td class="stat-value">${(player.winrate).toFixed(2)}%</td>
                     <td class="stat-value">${player.kd.toFixed(2)}</td>
                     <td class="stat-value">${player.adr.toFixed(1)}</td>
-                    <td class="stat-value">${(player.hs_pct).toFixed(2)}%</td>
+                    <td class="stat-value">${(player.hs_pct).toFixed(0)}%</td>
                     <td class="stat-value">${player.rating.toFixed(2)}</td>
                 `;
                 tbody.appendChild(row);
@@ -3095,9 +3095,9 @@
                 return;
             }
 
-            // Extract rows 8-16 (indices 7-15 in 0-indexed array)
+            // Extract rows 8-18 (indices 7-17 in 0-indexed array)
             const players = [];
-            for (let i = 7; i < 16 && i < data.length; i++) {
+            for (let i = 7; i < 18 && i < data.length; i++) {
                 const row = data[i];
                 const name = row[PLAYER_COLUMNS.name - 1];
                 
