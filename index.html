@@ -3192,11 +3192,11 @@
                 
                 // Use the photo from PLAYER_INFO - images are at root level
                 const imageUrl = info.photo 
-                    ? `https://github.com/remokox/premierstats/blob/main/${info.photo}?raw=true`
+                    ? `https://raw.githubusercontent.com/remokox/premierstats/main/${info.photo}`
                     : `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' fill='%23333'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle' fill='white' font-size='100'%3E${info.nickname.substring(0, 2).toUpperCase()}%3C/text%3E%3C/svg%3E`;
                 
                 const flagUrl = info.flag 
-                    ? `https://github.com/remokox/premierstats/blob/main/${info.flag}?raw=true`
+                    ? `https://raw.githubusercontent.com/remokox/premierstats/main/${info.flag}`
                     : '';
                 
                 card.innerHTML = `
@@ -3272,9 +3272,9 @@
             console.log('Set currentPlayerName to:', currentPlayerName);
             
             // Populate player details
-            document.getElementById('detail-photo').src = `https://github.com/remokox/premierstats/blob/main/${info.photo}?raw=true`;
+            document.getElementById('detail-photo').src = `https://raw.githubusercontent.com/remokox/premierstats/main/${info.photo}`;
             document.getElementById('detail-nickname').textContent = info.nickname;
-            document.getElementById('detail-flag').src = `https://github.com/remokox/premierstats/blob/main/${info.flag}?raw=true`;
+            document.getElementById('detail-flag').src = `https://raw.githubusercontent.com/remokox/premierstats/main/${info.flag}`;
             document.getElementById('detail-realname').textContent = info.realname;
             
             // Show player detail page
