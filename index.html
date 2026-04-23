@@ -2731,6 +2731,33 @@
                 kd: 192,       // GK
                 plusMinus: 194,// GM
                 rating: 195    // GN
+            },
+            'kieik': {
+                date: 198,     // GQ
+                map: 200,      // GS
+                result: 204,   // GW
+                score: 206,    // GY
+                kd: 208,       // HA
+                plusMinus: 210,// HC
+                rating: 211    // HD
+            },
+            'wuja': {
+                date: 214,     // HG
+                map: 216,      // HI
+                result: 220,   // HM
+                score: 222,    // HO
+                kd: 224,       // HQ
+                plusMinus: 226,// HS
+                rating: 227    // HT
+            },
+            'Jeffrey Epstein': {
+                date: 230,     // HW
+                map: 232,      // HY
+                result: 236,   // IC
+                score: 238,    // IE
+                kd: 240,       // IG
+                plusMinus: 242,// II
+                rating: 243    // IJ
             }
         };
 
@@ -2819,6 +2846,27 @@
                 oneVX: 118,    // DO
                 status: 120,   // DQ
                 round: 121     // DR
+            },
+            'kieik': {
+                date: 123,     // DT
+                map: 125,      // DV
+                oneVX: 128,    // DY
+                status: 130,   // EA
+                round: 131     // EB
+            },
+            'wuja': {
+                date: 133,     // ED
+                map: 135,      // EF
+                oneVX: 138,    // EI
+                status: 140,   // EK
+                round: 141     // EL
+            },
+            'Jeffrey Epstein': {
+                date: 143,     // EN
+                map: 145,      // EP
+                oneVX: 148,    // ES
+                status: 150,   // EU
+                round: 151     // EV
             }
         };
 
@@ -2946,6 +2994,24 @@
                 realname: 'Kapi',
                 flag: 'poland.png',
                 photo: 'kapi.png'
+            },
+            'kieik': {
+                nickname: 'kieik',
+                realname: 'Kiemon',
+                flag: 'poland.png',
+                photo: 'kiemon.png'
+            },
+            'wuja': {
+                nickname: 'wuja',
+                realname: 'Nitaszek',
+                flag: 'poland.png',
+                photo: 'nitaszek.png'
+            },
+            'Jeffrey Epstein': {
+                nickname: 'Jeffrey Epstein',
+                realname: 'Haha Pedau',
+                flag: 'pride.png',
+                photo: 'winiar.png'
             }
         };
 
@@ -2995,9 +3061,9 @@
                 return;
             }
 
-            // Extract rows 8-19 (indices 7-18 in 0-indexed array)
+            // Extract rows 8-22 (indices 7-21 in 0-indexed array)
             const players = [];
-            for (let i = 7; i < 19 && i < data.length; i++) {
+            for (let i = 7; i < 22 && i < data.length; i++) {
                 const row = data[i];
                 const name = row[OVERVIEW_COLUMNS.name - 1];
                 
@@ -3149,9 +3215,9 @@
                 return;
             }
 
-            // Extract rows 8-19 (indices 7-18 in 0-indexed array)
+            // Extract rows 8-22 (indices 7-21 in 0-indexed array)
             const players = [];
-            for (let i = 7; i < 19 && i < data.length; i++) {
+            for (let i = 7; i < 22 && i < data.length; i++) {
                 const row = data[i];
                 const name = row[PLAYER_COLUMNS.name - 1];
                 
