@@ -3756,8 +3756,8 @@
             const info = PLAYER_INFO[playerName];
             if (!info) return null;
             
-            // Find the "All" row for this player to get attributes (rows 8-18, indices 7-17)
-            for (let i = 7; i <= 17 && i < data.length; i++) {
+            // Find the "All" row for this player to get attributes (rows 8-22, indices 7-21)
+            for (let i = 7; i <= 21 && i < data.length; i++) {
                 const row = data[i];
                 if (row[2] === info.nickname) {
                     return {
