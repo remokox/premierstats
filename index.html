@@ -3458,18 +3458,15 @@
             
             // Define row ranges for each map (convert to 0-based indices)
             const mapRowRanges = {
-                'all': [7, 17],          // rows 8-18
-                'ancient': [29, 39],     // rows 30-40
-                'anubis': [51, 61],      // rows 52-62
-                'dust2': [73, 83],       // rows 74-84
-                'inferno': [95, 105],    // rows 96-106
-                'mirage': [117, 127],    // rows 118-128
-                'nuke': [139, 149],      // rows 140-150
-                'overpass': [161, 171]   // rows 162-172
+                'all': [7, 22],          // rows 8-23
+                'ancient': [29, 44],     // rows 30-45
+                'anubis': [51, 66],      // rows 52-67
+                'dust2': [73, 88],       // rows 74-89
+                'inferno': [95, 110],    // rows 96-111
+                'mirage': [117, 132],    // rows 118-133
+                'nuke': [139, 154],      // rows 140-155
+                'overpass': [161, 176]   // rows 162-177
             };
-            
-            const [startRow, endRow] = mapRowRanges[mapName.toLowerCase()];
-            console.log(`Searching in rows ${startRow + 1} to ${endRow + 1} (indices ${startRow}-${endRow})`);
             
             // Find the row for this player within the specified range
             let playerRow = null;
@@ -4045,14 +4042,14 @@
             
             // Use same row finding logic as loadPlayerDetailData
             const mapRowRanges = {
-                'all': [7, 17],          // rows 8-18
-                'ancient': [29, 39],     // rows 30-40
-                'anubis': [51, 61],      // rows 52-62
-                'dust2': [73, 83],       // rows 74-84
-                'inferno': [95, 105],    // rows 96-106
-                'mirage': [117, 127],    // rows 118-128
-                'nuke': [139, 149],      // rows 140-150
-                'overpass': [161, 171]   // rows 162-172
+                'all': [7, 22],          // rows 8-23
+                'ancient': [29, 44],     // rows 30-45
+                'anubis': [51, 66],      // rows 52-67
+                'dust2': [73, 88],       // rows 74-89
+                'inferno': [95, 110],    // rows 96-111
+                'mirage': [117, 132],    // rows 118-133
+                'nuke': [139, 154],      // rows 140-155
+                'overpass': [161, 176]   // rows 162-177
             };
             
             const [startRow, endRow] = mapRowRanges[mapName.toLowerCase()];
