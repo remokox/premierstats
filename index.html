@@ -2758,6 +2758,15 @@
                 kd: 240,       // IG
                 plusMinus: 242,// II
                 rating: 243    // IJ
+            },
+            'Szymon Gwiazda Rocka': {
+                date: 246,     // IM
+                map: 248,      // IO
+                result: 252,   // IS
+                score: 254,    // IU
+                kd: 256,       // IW
+                plusMinus: 258,// IY
+                rating: 259    // IZ
             }
         };
 
@@ -2867,6 +2876,13 @@
                 oneVX: 148,    // ES
                 status: 150,   // EU
                 round: 151     // EV
+            },
+            'Szymon Gwiazda Rocka': {
+                date: 153,     // EX
+                map: 155,      // EZ
+                oneVX: 158,    // FC
+                status: 160,   // FE
+                round: 161     // FF
             }
         };
 
@@ -3012,6 +3028,12 @@
                 realname: 'Haha Pedau',
                 flag: 'pride.png',
                 photo: 'winiar.png'
+            },
+            'Szymon Gwiazda Rocka': {
+                nickname: 'Szymon Gwiazda Rocka',
+                realname: 'Szymon Kolega Ołmiego',
+                flag: 'poland.png',
+                photo: 'szymon.png'
             }
         };
 
@@ -3063,7 +3085,7 @@
 
             // Extract rows 8-22 (indices 7-21 in 0-indexed array)
             const players = [];
-            for (let i = 7; i < 22 && i < data.length; i++) {
+            for (let i = 7; i < 23 && i < data.length; i++) {
                 const row = data[i];
                 const name = row[OVERVIEW_COLUMNS.name - 1];
                 
@@ -3217,7 +3239,7 @@
 
             // Extract rows 8-22 (indices 7-21 in 0-indexed array)
             const players = [];
-            for (let i = 7; i < 22 && i < data.length; i++) {
+            for (let i = 7; i < 23 && i < data.length; i++) {
                 const row = data[i];
                 const name = row[PLAYER_COLUMNS.name - 1];
                 
@@ -3757,7 +3779,7 @@
             if (!info) return null;
             
             // Find the "All" row for this player to get attributes (rows 8-22, indices 7-21)
-            for (let i = 7; i <= 21 && i < data.length; i++) {
+            for (let i = 7; i <= 22 && i < data.length; i++) {
                 const row = data[i];
                 if (row[2] === info.nickname) {
                     return {
