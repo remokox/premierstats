@@ -3468,6 +3468,9 @@
                 'overpass': [161, 176]   // rows 162-177
             };
             
+            const [startRow, endRow] = mapRowRanges[mapName.toLowerCase()];
+            console.log(`Searching in rows ${startRow + 1} to ${endRow + 1} (indices ${startRow}-${endRow})`);
+            
             // Find the row for this player within the specified range
             let playerRow = null;
             for (let i = startRow; i <= endRow; i++) {
