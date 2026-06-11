@@ -4562,6 +4562,7 @@
             const matches = [];
             cachedRecordsData.forEach(row => {
                 const mapName = (row[2] || '').toString().trim(); // Column C
+                const score = (row[4] || '').toString().trim(); // Column E - game score
                 const playerId = (row[6] || '').toString().trim(); // Column G
                 const playerNick = playerLookup[playerId] || playerId;
                 
@@ -4635,6 +4636,7 @@
                     player: playerNick,
                     date: formattedDate,
                     map: mapName,
+                    score,
                     kills,
                     deaths,
                     assists,
@@ -4807,6 +4809,7 @@
                             <th>Player</th>
                             <th>Date</th>
                             <th>Map</th>
+                            <th>Score</th>
                             <th>K</th>
                             <th>D</th>
                             <th>A</th>
@@ -4830,6 +4833,7 @@
                             <td>${match.player}</td>
                             <td>${formattedDate}</td>
                             <td>${match.map}</td>
+                            <td>${match.score || '-'}</td>
                             <td>${match.kills}</td>
                             <td>${match.deaths}</td>
                             <td>${match.assists}</td>
