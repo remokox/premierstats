@@ -2299,6 +2299,13 @@
                 <!-- Filters -->
                 <div class="records-filters">
                     <div class="records-filter-group">
+                        <label class="records-filter-label">Player</label>
+                        <select class="records-filter-select" id="records-player-filter">
+                            <option value="all">All Players</option>
+                        </select>
+                    </div>
+                    
+                    <div class="records-filter-group">
                         <label class="records-filter-label">Map</label>
                         <select class="records-filter-select" id="records-map-filter">
                             <option value="all">All Maps</option>
@@ -4526,6 +4533,7 @@
         async function loadGameRecords() {
             const selectedMap = document.getElementById('records-map-filter').value;
             const selectedStat = document.getElementById('records-stat-filter').value;
+            const selectedPlayer = document.getElementById('records-player-filter').value;
             
             const bestContainer = document.getElementById('best-records-container');
             const worstContainer = document.getElementById('worst-records-container');
@@ -4558,6 +4566,27 @@
                 }
             });
             
+            // Populate the player filter dropdown (once) from players present in records data
+            const playerFilterEl = document.getElementById('records-player-filter');
+            if (playerFilterEl && playerFilterEl.options.length <= 1) {
+                const namesSet = new Set();
+                cachedRecordsData.forEach(row => {
+                    const pid = (row[6] || '').toString().trim(); // Column G
+                    const nick = playerLookup[pid] || pid;
+                    if (nick && nick.toLowerCase() !== 'player' && nick.toLowerCase() !== 'player details') {
+                        namesSet.add(nick);
+                    }
+                });
+                const sortedNames = [...namesSet].sort((a, b) =>
+                    a.toLowerCase().localeCompare(b.toLowerCase()));
+                sortedNames.forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    opt.textContent = name;
+                    playerFilterEl.appendChild(opt);
+                });
+            }
+            
             // Process matches
             const matches = [];
             cachedRecordsData.forEach(row => {
@@ -4573,6 +4602,11 @@
                 
                 // Skip if map filter is active and doesn't match
                 if (selectedMap !== 'all' && mapName !== selectedMap) {
+                    return;
+                }
+                
+                // Skip if player filter is active and doesn't match
+                if (selectedPlayer !== 'all' && playerNick !== selectedPlayer) {
                     return;
                 }
                 
@@ -5172,6 +5206,13 @@
         // Game Records filter event listeners
         const recordsMapFilter = document.getElementById('records-map-filter');
         const recordsStatFilter = document.getElementById('records-stat-filter');
+        const recordsPlayerFilter = document.getElementById('records-player-filter');
+        
+        if (recordsPlayerFilter) {
+            recordsPlayerFilter.addEventListener('change', () => {
+                loadGameRecords();
+            });
+        }
         
         if (recordsMapFilter) {
             recordsMapFilter.addEventListener('change', () => {
