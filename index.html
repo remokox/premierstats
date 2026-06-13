@@ -1107,6 +1107,11 @@
             font-weight: 600;
         }
 
+        .text-yellow {
+            color: var(--accent-secondary) !important;
+            font-weight: 600;
+        }
+
         /* Ecohunters Page Styles */
         .ecohunters-explanation {
             background: var(--bg-secondary);
@@ -2547,7 +2552,22 @@
                     </div>
                 </div>
                 <div class="winrate-content" id="winrate-five-stack" hidden>
-                    <p style="color: var(--text-secondary);">No data yet.</p>
+                    <div class="matches-table-container">
+                        <table class="matches-table" id="winrate-five-stack-table">
+                            <thead>
+                                <tr>
+                                    <th>Lineup</th>
+                                    <th>Wins</th>
+                                    <th>Losses</th>
+                                    <th>Ties</th>
+                                    <th>Winrate (excl. ties)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="winrate-five-stack-tbody">
+                                <tr><td colspan="5" style="color: var(--text-secondary);">No data yet.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 <div class="winrate-content" id="winrate-duo-synergy" hidden>
                     <p style="color: var(--text-secondary);">No data yet.</p>
@@ -4787,10 +4807,93 @@
                 tr.cells[1].textContent = wins;
                 tr.cells[2].textContent = losses;
                 tr.cells[3].textContent = winrate;
+                tr.cells[3].classList.remove('text-green', 'text-red', 'text-yellow');
+                if (total > 0) {
+                    const pct = (wins / total) * 100;
+                    if (pct > 50) tr.cells[3].classList.add('text-green');
+                    else if (pct < 50) tr.cells[3].classList.add('text-red');
+                    else tr.cells[3].classList.add('text-yellow');
+                }
             });
 
             const tiesEl = document.getElementById('winrate-ml-ties-count');
             if (tiesEl) tiesEl.textContent = ties;
+        }
+
+        // Five Stack Winrates — winrate per unique 5-player lineup
+        async function loadWinrateFiveStack() {
+            const tbody = document.getElementById('winrate-five-stack-tbody');
+            if (!tbody) return;
+
+            const data = await fetchSheetData(SHEET_GIDS.ecohunters);
+            if (!data) {
+                console.error('Failed to load data for five stack winrates');
+                tbody.innerHTML = '<tr><td colspan="5" style="color: var(--danger);">Failed to load data.</td></tr>';
+                return;
+            }
+
+            // Keep only real player data rows (player name in column G / index 6)
+            const dataRows = data.filter(row => {
+                const name = (row[6] || '').toString().trim();
+                const n = name.toLowerCase();
+                return name !== '' && n !== 'player' && n !== 'player details';
+            });
+
+            // Walk in sequential chunks of 5 (one match = 5 player rows)
+            const lineups = {}; // key -> { names:[], wins, losses, ties }
+            for (let i = 0; i + 5 <= dataRows.length; i += 5) {
+                const chunk = dataRows.slice(i, i + 5);
+
+                // Validate the 5 rows belong to the same match (date|map|score)
+                const sig = r => (r[0] || '') + '|' + (r[1] || '') + '|' + (r[3] || '');
+                const matchSig = sig(chunk[0]);
+                if (!chunk.every(r => sig(r) === matchSig)) {
+                    console.warn('Five stack: chunk at row', i, 'does not share date/map/score; skipping');
+                    continue;
+                }
+
+                const names = chunk.map(r => (r[6] || '').toString().trim()).sort();
+                const key = names.join(' | ');
+                const outcome = (chunk[0][2] || '').toString().toLowerCase().trim();
+
+                if (!lineups[key]) lineups[key] = { names, wins: 0, losses: 0, ties: 0 };
+                if (outcome === 'win') lineups[key].wins++;
+                else if (outcome === 'loss') lineups[key].losses++;
+                else if (outcome === 'tie') lineups[key].ties++;
+            }
+
+            // Sort lineups by games played (desc), then winrate (desc)
+            const rows = Object.values(lineups).sort((a, b) => {
+                const ga = a.wins + a.losses + a.ties;
+                const gb = b.wins + b.losses + b.ties;
+                if (gb !== ga) return gb - ga;
+                const wa = (a.wins + a.losses) ? a.wins / (a.wins + a.losses) : 0;
+                const wb = (b.wins + b.losses) ? b.wins / (b.wins + b.losses) : 0;
+                return wb - wa;
+            });
+
+            if (rows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="color: var(--text-secondary);">No data yet.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = rows.map(lu => {
+                const decisive = lu.wins + lu.losses;
+                let winrate = '-';
+                let cls = '';
+                if (decisive > 0) {
+                    const pct = lu.wins / decisive * 100;
+                    winrate = pct.toFixed(1) + '%';
+                    cls = pct > 50 ? 'text-green' : pct < 50 ? 'text-red' : 'text-yellow';
+                }
+                return `<tr>
+                    <td>${lu.names.join(' - ')}</td>
+                    <td>${lu.wins}</td>
+                    <td>${lu.losses}</td>
+                    <td>${lu.ties}</td>
+                    <td class="${cls}">${winrate}</td>
+                </tr>`;
+            }).join('');
         }
 
         // Load Game Records data
@@ -5516,6 +5619,13 @@
                 document.querySelectorAll('.winrate-content').forEach(c => {
                     c.hidden = (c.id !== 'winrate-' + tab);
                 });
+
+                if (tab === 'five-stack') {
+                    const fsBody = document.getElementById('winrate-five-stack-tbody');
+                    if (fsBody && fsBody.textContent.trim() === 'No data yet.') {
+                        loadWinrateFiveStack();
+                    }
+                }
             });
         });
 
