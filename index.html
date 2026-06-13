@@ -2586,7 +2586,20 @@
                     <p style="color: var(--text-secondary);">No data yet.</p>
                 </div>
                 <div class="winrate-content" id="winrate-session-length" hidden>
-                    <p style="color: var(--text-secondary);">No data yet.</p>
+                    <div class="matches-table-container">
+                        <table class="matches-table" id="winrate-session-table">
+                            <thead>
+                                <tr>
+                                    <th>No. of games a day</th>
+                                    <th>No. of sessions</th>
+                                    <th>Winrate (excl. ties)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="winrate-session-tbody">
+                                <tr><td colspan="3" style="color: var(--text-secondary);">No data yet.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -4946,6 +4959,70 @@
             });
         }
 
+        // Session Length Winrate — group days by how many matches were played that day
+        async function loadWinrateSessionLength() {
+            const tbody = document.getElementById('winrate-session-tbody');
+            if (!tbody) return;
+
+            const data = await fetchSheetData(SHEET_GIDS.maps_data);
+            if (!data) {
+                console.error('Failed to load maps_data for session length winrate');
+                tbody.innerHTML = '<tr><td colspan="3" style="color: var(--danger);">Failed to load data.</td></tr>';
+                return;
+            }
+
+            // Group matches by date (index 1). Only rows with a real outcome count.
+            const days = {}; // date -> { games, wins, losses }
+            data.forEach(row => {
+                const date = (row[1] || '').toString().trim();
+                const outcome = (row[3] || '').toString().toLowerCase().trim();
+                if (!date) return;
+                if (outcome !== 'win' && outcome !== 'loss' && outcome !== 'tie') return;
+
+                if (!days[date]) days[date] = { games: 0, wins: 0, losses: 0 };
+                days[date].games++;
+                if (outcome === 'win') days[date].wins++;
+                else if (outcome === 'loss') days[date].losses++;
+            });
+
+            // Bucket days by their games-per-day count
+            const buckets = {}; // N -> { sessions, wins, losses }
+            let maxGames = 0;
+            Object.values(days).forEach(d => {
+                const n = d.games;
+                if (n > maxGames) maxGames = n;
+                if (!buckets[n]) buckets[n] = { sessions: 0, wins: 0, losses: 0 };
+                buckets[n].sessions++;
+                buckets[n].wins += d.wins;
+                buckets[n].losses += d.losses;
+            });
+
+            if (maxGames === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="color: var(--text-secondary);">No data yet.</td></tr>';
+                return;
+            }
+
+            // Build rows 1..maxGames (dynamic)
+            let html = '';
+            for (let n = 1; n <= maxGames; n++) {
+                const b = buckets[n] || { sessions: 0, wins: 0, losses: 0 };
+                const decisive = b.wins + b.losses;
+                let winrate = '-';
+                let cls = '';
+                if (decisive > 0) {
+                    const pct = b.wins / decisive * 100;
+                    winrate = pct.toFixed(1) + '%';
+                    cls = pct > 50 ? 'text-green' : pct < 50 ? 'text-red' : 'text-yellow';
+                }
+                html += `<tr>
+                    <td>${n}</td>
+                    <td>${b.sessions}</td>
+                    <td class="${cls}">${winrate}</td>
+                </tr>`;
+            }
+            tbody.innerHTML = html;
+        }
+
         // Load Game Records data
         let cachedRecordsData = null;
         let cachedPlayerNicknames = null;
@@ -5691,6 +5768,13 @@
                     const fsBody = document.getElementById('winrate-five-stack-tbody');
                     if (fsBody && fsBody.textContent.trim() === 'No data yet.') {
                         loadWinrateFiveStack();
+                    }
+                }
+
+                if (tab === 'session-length') {
+                    const slBody = document.getElementById('winrate-session-tbody');
+                    if (slBody && slBody.textContent.trim() === 'No data yet.') {
+                        loadWinrateSessionLength();
                     }
                 }
             });
