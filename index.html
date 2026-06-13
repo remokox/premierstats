@@ -2697,7 +2697,7 @@
                         <div class="graph-canvas-wrap"><canvas id="graph-rating"></canvas></div>
                     </div>
                     <div class="graph-card">
-                        <div class="graph-card-title">Firepower × Trading</div>
+                        <div class="graph-card-title">Firepower × Entrying</div>
                         <div class="graph-canvas-wrap"><canvas id="graph-firepower-trading"></canvas></div>
                     </div>
                     <div class="graph-card">
@@ -5254,7 +5254,7 @@
         function initGraphs(mapName) {
             const map = mapName || (document.getElementById('graphs-map-filter') ? document.getElementById('graphs-map-filter').value : 'All');
             buildRatingChart(map);
-            buildAttributeScatter('graph-firepower-trading', PLAYER_COLUMNS.firepower, PLAYER_COLUMNS.trading, 'Firepower', 'Trading', true, map);
+            buildAttributeScatter('graph-firepower-trading', PLAYER_COLUMNS.firepower, PLAYER_COLUMNS.entrying, 'Firepower', 'Entrying', true, map);
             buildAttributeScatter('graph-opening-clutching', PLAYER_COLUMNS.opening, PLAYER_COLUMNS.clutching, 'Opening', 'Clutching', true, map);
             buildPerGameScatter('graph-trades-traded', 30, 31, 'Trades per game', 'Deaths traded per game', map);
             graphsInitialized = true;
