@@ -2478,7 +2478,63 @@
                     </div>
 
                     <div class="player-detail-content" id="detail-tab-score-stats" style="display:none;">
-                        <p style="color: var(--text-secondary);">Stats by game score — coming soon.</p>
+                        <h3 style="color: var(--accent-primary); margin: 0 0 10px;">Wins</h3>
+                        <div class="matches-table-container">
+                            <table class="matches-table" id="score-wins-table">
+                                <thead><tr><th>Win score</th><th>Games</th><th>Average K/D</th><th>Average rating</th></tr></thead>
+                                <tbody id="score-wins-tbody">
+                                    <tr data-score="13:0"><td>13:0</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="13:1"><td>13:1</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="13:2"><td>13:2</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="13:3"><td>13:3</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="13:4"><td>13:4</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="13:5"><td>13:5</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="13:6"><td>13:6</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="13:7"><td>13:7</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="13:8"><td>13:8</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="13:9"><td>13:9</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="13:10"><td>13:10</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="13:11"><td>13:11</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="16:12"><td>16:12</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="16:13"><td>16:13</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="16:14"><td>16:14</td><td>-</td><td>-</td><td>-</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h3 style="color: var(--accent-primary); margin: 24px 0 10px;">Losses</h3>
+                        <div class="matches-table-container">
+                            <table class="matches-table" id="score-losses-table">
+                                <thead><tr><th>Loss score</th><th>Games</th><th>Average K/D</th><th>Average rating</th></tr></thead>
+                                <tbody id="score-losses-tbody">
+                                    <tr data-score="0:13"><td>0:13</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="1:13"><td>1:13</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="2:13"><td>2:13</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="3:13"><td>3:13</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="4:13"><td>4:13</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="5:13"><td>5:13</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="6:13"><td>6:13</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="7:13"><td>7:13</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="8:13"><td>8:13</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="9:13"><td>9:13</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="10:13"><td>10:13</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="11:13"><td>11:13</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="12:16"><td>12:16</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="13:16"><td>13:16</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr data-score="14:16"><td>14:16</td><td>-</td><td>-</td><td>-</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h3 style="color: var(--accent-primary); margin: 24px 0 10px;">Ties</h3>
+                        <div class="matches-table-container">
+                            <table class="matches-table" id="score-ties-table">
+                                <thead><tr><th>Tie score</th><th>Games</th><th>Average K/D</th><th>Average rating</th></tr></thead>
+                                <tbody id="score-ties-tbody">
+                                    <tr data-score="15:15"><td>15:15</td><td>-</td><td>-</td><td>-</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -4208,6 +4264,9 @@
 
             // Load streaks data for Streaks tab
             await loadStreaksData(mapName);
+
+            // Load stats-by-score data for Stats by game score tab
+            await loadScoreStatsData(mapName);
         }
         
         // Get player attribute data from the "All" row
@@ -4449,6 +4508,65 @@
             };
 
             Object.entries(streaks).forEach(([key, run]) => setRow(key, run.len, rangeText(run)));
+        }
+
+        // Stats by game score (ecohunters tab)
+        async function loadScoreStatsData(mapName) {
+            if (!currentPlayerName) return;
+            const info = PLAYER_INFO[currentPlayerName];
+            if (!info) return;
+
+            const data = await fetchSheetData(SHEET_GIDS.ecohunters);
+            if (!data) { console.error('Score stats: failed to load data'); return; }
+
+            // Map nav filter value -> sheet map-name string
+            const MAP_NAMES = {
+                ancient: 'Ancient', anubis: 'Anubis', dust2: 'Dust II', inferno: 'Inferno',
+                mirage: 'Mirage', nuke: 'Nuke', overpass: 'Overpass'
+            };
+            const wantMap = (mapName && mapName !== 'all') ? MAP_NAMES[mapName] : null;
+
+            const KILLS = 12, DEATHS = 13, RATING = 46, SCORE = 4, MAP = 2, PLAYER = 6;
+
+            // Bucket games by score string for this player
+            const buckets = {}; // score -> { games, kills, deaths, ratingSum, ratingCount }
+            data.forEach(row => {
+                const name = (row[PLAYER] || '').toString().trim();
+                if (name !== info.nickname) return;
+                if (wantMap && (row[MAP] || '').toString().trim() !== wantMap) return;
+
+                const score = (row[SCORE] || '').toString().trim();
+                if (!score) return;
+
+                if (!buckets[score]) buckets[score] = { games: 0, kills: 0, deaths: 0, ratingSum: 0, ratingCount: 0 };
+                const b = buckets[score];
+                b.games++;
+                const k = parseInt(row[KILLS]); if (!isNaN(k)) b.kills += k;
+                const d = parseInt(row[DEATHS]); if (!isNaN(d)) b.deaths += d;
+                const r = parseFloat(row[RATING]); if (!isNaN(r)) { b.ratingSum += r; b.ratingCount++; }
+            });
+
+            // Fill a tbody's rows from buckets
+            const fill = (tbodyId) => {
+                const tbody = document.getElementById(tbodyId);
+                if (!tbody) return;
+                tbody.querySelectorAll('tr[data-score]').forEach(tr => {
+                    const b = buckets[tr.getAttribute('data-score')];
+                    if (!b || b.games === 0) {
+                        tr.cells[1].textContent = 0;
+                        tr.cells[2].textContent = '-';
+                        tr.cells[3].textContent = '-';
+                        return;
+                    }
+                    tr.cells[1].textContent = b.games;
+                    tr.cells[2].textContent = b.deaths > 0 ? (b.kills / b.deaths).toFixed(2) : (b.kills > 0 ? '∞' : '-');
+                    tr.cells[3].textContent = b.ratingCount > 0 ? (b.ratingSum / b.ratingCount).toFixed(2) : '-';
+                });
+            };
+
+            fill('score-wins-tbody');
+            fill('score-losses-tbody');
+            fill('score-ties-tbody');
         }
 
         // Load clutches data for Clutches tab
