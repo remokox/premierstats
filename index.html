@@ -2503,6 +2503,18 @@
                     <button class="winrate-tab-button" type="button" data-winrate-tab="session-length">Session Length Winrate</button>
                 </div>
                 <div class="winrate-content" id="winrate-match-length">
+                    <div class="records-filters" style="margin-bottom: 16px;">
+                        <select class="records-filter-select" id="winrate-ml-map-filter">
+                            <option value="all">All Maps</option>
+                            <option value="Ancient">Ancient</option>
+                            <option value="Anubis">Anubis</option>
+                            <option value="Dust II">Dust II</option>
+                            <option value="Inferno">Inferno</option>
+                            <option value="Mirage">Mirage</option>
+                            <option value="Nuke">Nuke</option>
+                            <option value="Overpass">Overpass</option>
+                        </select>
+                    </div>
                     <div class="matches-table-container">
                         <table class="matches-table" id="winrate-match-length-table">
                             <thead>
@@ -2510,26 +2522,26 @@
                                     <th>Number of rounds</th>
                                     <th>Wins</th>
                                     <th>Losses</th>
-                                    <th>Ties</th>
-                                    <th>Winrate (excl. ties)</th>
+                                    <th>Winrate</th>
                                 </tr>
                             </thead>
                             <tbody id="winrate-match-length-tbody">
-                                <tr><td>13 (13:0)</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr><td>14 (13:1)</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr><td>15 (13:2)</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr><td>16 (13:3)</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr><td>17 (13:4)</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr><td>18 (13:5)</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr><td>19 (13:6)</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr><td>20 (13:7)</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr><td>21 (13:8)</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr><td>22 (13:9)</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr><td>23 (13:10)</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr><td>24 (13:11)</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr><td>28 (16:12)</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr><td>29 (16:13)</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                <tr><td>30 (16:14)</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                                <tr data-score="13:0"><td>13 (13:0)</td><td>-</td><td>-</td><td>-</td></tr>
+                                <tr data-score="13:1"><td>14 (13:1)</td><td>-</td><td>-</td><td>-</td></tr>
+                                <tr data-score="13:2"><td>15 (13:2)</td><td>-</td><td>-</td><td>-</td></tr>
+                                <tr data-score="13:3"><td>16 (13:3)</td><td>-</td><td>-</td><td>-</td></tr>
+                                <tr data-score="13:4"><td>17 (13:4)</td><td>-</td><td>-</td><td>-</td></tr>
+                                <tr data-score="13:5"><td>18 (13:5)</td><td>-</td><td>-</td><td>-</td></tr>
+                                <tr data-score="13:6"><td>19 (13:6)</td><td>-</td><td>-</td><td>-</td></tr>
+                                <tr data-score="13:7"><td>20 (13:7)</td><td>-</td><td>-</td><td>-</td></tr>
+                                <tr data-score="13:8"><td>21 (13:8)</td><td>-</td><td>-</td><td>-</td></tr>
+                                <tr data-score="13:9"><td>22 (13:9)</td><td>-</td><td>-</td><td>-</td></tr>
+                                <tr data-score="13:10"><td>23 (13:10)</td><td>-</td><td>-</td><td>-</td></tr>
+                                <tr data-score="13:11"><td>24 (13:11)</td><td>-</td><td>-</td><td>-</td></tr>
+                                <tr data-score="16:12"><td>28 (16:12)</td><td>-</td><td>-</td><td>-</td></tr>
+                                <tr data-score="16:13"><td>29 (16:13)</td><td>-</td><td>-</td><td>-</td></tr>
+                                <tr data-score="16:14"><td>30 (16:14)</td><td>-</td><td>-</td><td>-</td></tr>
+                                <tr id="winrate-ml-ties-row"><td colspan="4">Number of ties: <span id="winrate-ml-ties-count">-</span></td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -4715,6 +4727,72 @@
             });
         }
 
+        // Winrate by match length
+        async function loadWinrateMatchLength(mapFilter = 'all') {
+            const tbody = document.getElementById('winrate-match-length-tbody');
+            if (!tbody) return;
+
+            const data = await fetchSheetData(SHEET_GIDS.maps_data);
+            if (!data) {
+                console.error('Failed to load maps_data for winrate match length');
+                return;
+            }
+
+            // Accumulators keyed by winning-side score string "A:B" (A >= B)
+            const winCounts = {};   // matches the squad won at that score
+            const lossCounts = {};  // matches the squad lost at that score (mirror score)
+            let ties = 0;
+
+            data.forEach(row => {
+                const mapName = (row[2] || '').toString().trim();
+                if (!mapName) return;
+                if (mapFilter !== 'all' && mapName !== mapFilter) return;
+
+                const outcome = (row[3] || '').toString().toLowerCase().trim();
+
+                // Squad rounds won = CT won (idx 6) + T won (idx 8)
+                // Opponent rounds won = (CT played - CT won) + (T played - T won)
+                const ctPlayed = parseInt(row[5]) || 0;
+                const ctWon = parseInt(row[6]) || 0;
+                const tPlayed = parseInt(row[7]) || 0;
+                const tWon = parseInt(row[8]) || 0;
+
+                const squadScore = ctWon + tWon;
+                const oppScore = (ctPlayed - ctWon) + (tPlayed - tWon);
+
+                if (outcome === 'tie') {
+                    ties++;
+                    return;
+                }
+
+                // Winning-side score is the higher of the two -> used as the row key
+                const high = Math.max(squadScore, oppScore);
+                const low = Math.min(squadScore, oppScore);
+                const key = high + ':' + low;
+
+                if (outcome === 'win') {
+                    winCounts[key] = (winCounts[key] || 0) + 1;
+                } else if (outcome === 'loss') {
+                    lossCounts[key] = (lossCounts[key] || 0) + 1;
+                }
+            });
+
+            // Fill each score row
+            tbody.querySelectorAll('tr[data-score]').forEach(tr => {
+                const key = tr.getAttribute('data-score');
+                const wins = winCounts[key] || 0;
+                const losses = lossCounts[key] || 0;
+                const total = wins + losses;
+                const winrate = total > 0 ? ((wins / total) * 100).toFixed(1) + '%' : '-';
+                tr.cells[1].textContent = wins;
+                tr.cells[2].textContent = losses;
+                tr.cells[3].textContent = winrate;
+            });
+
+            const tiesEl = document.getElementById('winrate-ml-ties-count');
+            if (tiesEl) tiesEl.textContent = ties;
+        }
+
         // Load Game Records data
         let cachedRecordsData = null;
         let cachedPlayerNicknames = null;
@@ -5363,6 +5441,12 @@
                 if (pageId === 'records') {
                     loadGameRecords();
                 }
+                if (pageId === 'winrate') {
+                    const firstRow = document.querySelector('#winrate-match-length-tbody tr[data-score]');
+                    if (firstRow && firstRow.cells[1].textContent.trim() === '-') {
+                        loadWinrateMatchLength(document.getElementById('winrate-ml-map-filter').value);
+                    }
+                }
                 
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
@@ -5412,6 +5496,14 @@
         if (recordsStatFilter) {
             recordsStatFilter.addEventListener('change', () => {
                 loadGameRecords();
+            });
+        }
+
+        // Winrate match-length map filter
+        const winrateMlMapFilter = document.getElementById('winrate-ml-map-filter');
+        if (winrateMlMapFilter) {
+            winrateMlMapFilter.addEventListener('change', () => {
+                loadWinrateMatchLength(winrateMlMapFilter.value);
             });
         }
 
