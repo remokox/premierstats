@@ -796,6 +796,13 @@
             flex-wrap: wrap;
         }
 
+        .detail-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            flex: 1;
+        }
+
         .detail-tab-button {
             padding: 10px 20px;
             background: var(--bg-tertiary);
@@ -2034,6 +2041,7 @@
                     <button class="back-button" onclick="showPlayersPage()">
                         ← Back to Players
                     </button>
+                    <div class="detail-tabs">
                     <button class="detail-tab-button active" data-tab="overview">Overview</button>
                     <button class="detail-tab-button" data-tab="individual">Individual</button>
                     <button class="detail-tab-button" data-tab="matches">Matches</button>
@@ -2042,6 +2050,7 @@
                     <button class="detail-tab-button" data-tab="placements">Scoreboard placements</button>
                     <button class="detail-tab-button" data-tab="streaks">Streaks</button>
                     <button class="detail-tab-button" data-tab="score-stats">Stats by game score</button>
+                    </div>
                     
                     <div class="map-filter-container">
                         <label class="map-filter-label">Map:</label>
@@ -2403,7 +2412,37 @@
                     </div>
 
                     <div class="player-detail-content" id="detail-tab-placements" style="display:none;">
-                        <p style="color: var(--text-secondary);">Scoreboard placements — coming soon.</p>
+                        <div class="records-filters" style="margin-bottom: 16px;">
+                            <select class="records-filter-select" id="placements-map-filter">
+                                <option value="all">All Maps</option>
+                                <option value="Ancient">Ancient</option>
+                                <option value="Anubis">Anubis</option>
+                                <option value="Dust II">Dust II</option>
+                                <option value="Inferno">Inferno</option>
+                                <option value="Mirage">Mirage</option>
+                                <option value="Nuke">Nuke</option>
+                                <option value="Overpass">Overpass</option>
+                            </select>
+                        </div>
+                        <div style="margin-bottom: 12px; color: var(--text-secondary); font-weight: 600;">Games played: <span id="placements-games-played">-</span></div>
+                        <div class="matches-table-container">
+                            <table class="matches-table" id="placements-table">
+                                <thead>
+                                    <tr>
+                                        <th>Position</th>
+                                        <th>Placements</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="placements-tbody">
+                                    <tr><td>1st</td><td>-</td><td>-</td></tr>
+                                    <tr><td>2nd</td><td>-</td><td>-</td></tr>
+                                    <tr><td>3rd</td><td>-</td><td>-</td></tr>
+                                    <tr><td>4th</td><td>-</td><td>-</td></tr>
+                                    <tr><td>5th</td><td>-</td><td>-</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                     <div class="player-detail-content" id="detail-tab-streaks" style="display:none;">
