@@ -4568,6 +4568,8 @@
                 if (!tbody) return;
                 tbody.querySelectorAll('tr[data-score]').forEach(tr => {
                     const b = buckets[tr.getAttribute('data-score')];
+                    tr.cells[2].classList.remove('text-green', 'text-red');
+                    tr.cells[3].classList.remove('text-green', 'text-red');
                     if (!b || b.games === 0) {
                         tr.cells[1].textContent = 0;
                         tr.cells[2].textContent = '-';
@@ -4575,8 +4577,23 @@
                         return;
                     }
                     tr.cells[1].textContent = b.games;
-                    tr.cells[2].textContent = b.deaths > 0 ? (b.kills / b.deaths).toFixed(2) : (b.kills > 0 ? '∞' : '-');
-                    tr.cells[3].textContent = b.ratingCount > 0 ? (b.ratingSum / b.ratingCount).toFixed(2) : '-';
+
+                    if (b.deaths > 0) {
+                        const kd = b.kills / b.deaths;
+                        tr.cells[2].textContent = kd.toFixed(2);
+                        tr.cells[2].classList.add(kd >= 1.0 ? 'text-green' : 'text-red');
+                    } else {
+                        tr.cells[2].textContent = b.kills > 0 ? '∞' : '-';
+                        if (b.kills > 0) tr.cells[2].classList.add('text-green');
+                    }
+
+                    if (b.ratingCount > 0) {
+                        const avgR = b.ratingSum / b.ratingCount;
+                        tr.cells[3].textContent = avgR.toFixed(2);
+                        tr.cells[3].classList.add(avgR >= 1.0 ? 'text-green' : 'text-red');
+                    } else {
+                        tr.cells[3].textContent = '-';
+                    }
                 });
             };
 
