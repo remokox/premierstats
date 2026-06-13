@@ -2456,18 +2456,6 @@
                     </div>
 
                     <div class="player-detail-content" id="detail-tab-streaks" style="display:none;">
-                        <div class="records-filters" style="margin-bottom: 16px;">
-                            <select class="records-filter-select" id="streaks-map-filter">
-                                <option value="all">All Maps</option>
-                                <option value="Ancient">Ancient</option>
-                                <option value="Anubis">Anubis</option>
-                                <option value="Dust II">Dust II</option>
-                                <option value="Inferno">Inferno</option>
-                                <option value="Mirage">Mirage</option>
-                                <option value="Nuke">Nuke</option>
-                                <option value="Overpass">Overpass</option>
-                            </select>
-                        </div>
                         <div class="matches-table-container">
                             <table class="matches-table" id="streaks-table">
                                 <thead>
@@ -4217,6 +4205,9 @@
             
             // Load weapons data for Weapons tab
             await loadWeaponsData(mapName);
+
+            // Load streaks data for Streaks tab
+            await loadStreaksData(mapName);
         }
         
         // Get player attribute data from the "All" row
@@ -4371,6 +4362,93 @@
                 `;
                 tbody.appendChild(row);
             });
+        }
+
+        // Load streaks data for Streaks tab
+        async function loadStreaksData(mapName) {
+            if (!currentPlayerName) return;
+            const info = PLAYER_INFO[currentPlayerName];
+            if (!info) return;
+
+            const data = await fetchSheetData(SHEET_GIDS.maps);
+            if (!data) { console.error('Streaks: failed to load data'); return; }
+
+            const cols = MATCHES_COLUMNS[info.nickname];
+            if (!cols) { console.error('Streaks: no column mapping for', info.nickname); return; }
+
+            const mapFilter = (mapName || 'all').charAt(0).toUpperCase() + (mapName || 'all').slice(1).toLowerCase();
+            const searchString = info.nickname + mapFilter;
+            let startRow = -1;
+            for (let i = 0; i < data.length; i++) {
+                for (let j = 0; j < data[i].length; j++) {
+                    if (data[i][j] && data[i][j].trim() === searchString) { startRow = i + 2; break; }
+                }
+                if (startRow !== -1) break;
+            }
+
+            const tbody = document.getElementById('streaks-tbody');
+            const setRow = (key, count, dateText) => {
+                const tr = tbody.querySelector(`tr[data-streak="${key}"]`);
+                if (!tr) return;
+                tr.cells[1].textContent = count;
+                tr.cells[2].textContent = dateText;
+            };
+
+            if (startRow === -1) {
+                ['win','loss','rating-high','rating-low','kd-high','kd-low'].forEach(k => setRow(k, 0, '-'));
+                return;
+            }
+
+            // Collect matches (sheet is newest-first)
+            const matches = [];
+            for (let i = startRow; i < data.length; i++) {
+                const row = data[i];
+                const date = row[cols.date];
+                if (!date || date.trim() === '') break;
+                matches.push({
+                    date: date.trim(),
+                    result: (row[cols.result] || '').toString().toLowerCase().trim(),
+                    plusMinus: parseFloat(row[cols.plusMinus]),
+                    rating: parseFloat(row[cols.rating])
+                });
+            }
+
+            matches.reverse(); // chronological: oldest -> newest
+            const n = matches.length;
+
+            function longestRun(pred) {
+                let best = { len: 0, startIdx: -1, endIdx: -1 };
+                let curLen = 0, curStart = 0;
+                for (let i = 0; i < n; i++) {
+                    if (pred(matches[i])) {
+                        if (curLen === 0) curStart = i;
+                        curLen++;
+                        if (curLen > best.len) best = { len: curLen, startIdx: curStart, endIdx: i };
+                    } else {
+                        curLen = 0;
+                    }
+                }
+                return best;
+            }
+
+            function rangeText(run) {
+                if (run.len === 0) return '-';
+                const start = matches[run.startIdx].date;
+                const endsNow = run.endIdx === n - 1;
+                const end = endsNow ? 'now' : matches[run.endIdx].date;
+                return start === end ? start : `${start} – ${end}`;
+            }
+
+            const streaks = {
+                'win':         longestRun(m => m.result === 'win'),
+                'loss':        longestRun(m => m.result === 'loss'),
+                'rating-high': longestRun(m => !isNaN(m.rating) && m.rating >= 1.0),
+                'rating-low':  longestRun(m => !isNaN(m.rating) && m.rating < 1.0),
+                'kd-high':     longestRun(m => !isNaN(m.plusMinus) && m.plusMinus >= 0),
+                'kd-low':      longestRun(m => !isNaN(m.plusMinus) && m.plusMinus < 0)
+            };
+
+            Object.entries(streaks).forEach(([key, run]) => setRow(key, run.len, rangeText(run)));
         }
 
         // Load clutches data for Clutches tab
