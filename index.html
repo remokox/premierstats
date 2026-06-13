@@ -5229,11 +5229,86 @@
         function initGraphs() {
             if (graphsInitialized) return;
             graphsInitialized = true;
-            // Charts are added one at a time:
-            // buildRatingChart();
+            buildRatingChart();
             // buildFirepowerTradingChart();
             // buildOpeningClutchingChart();
             // buildTradesTradedChart();
+        }
+
+        // Shared point label plugin / options helper for scatter charts
+        function scatterPointLabels() {
+            return {
+                id: 'pointLabels',
+                afterDatasetsDraw(chart) {
+                    const { ctx } = chart;
+                    const meta = chart.getDatasetMeta(0);
+                    ctx.save();
+                    ctx.font = '600 11px Rajdhani, sans-serif';
+                    ctx.fillStyle = '#e8eaed';
+                    ctx.textAlign = 'center';
+                    meta.data.forEach((pt, i) => {
+                        const label = chart.data.datasets[0].data[i].label;
+                        if (label) ctx.fillText(label, pt.x, pt.y - 9);
+                    });
+                    ctx.restore();
+                }
+            };
+        }
+
+        async function buildRatingChart() {
+            const canvas = document.getElementById('graph-rating');
+            if (!canvas) return;
+
+            const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
+            if (!data) { console.error('Rating chart: no data'); return; }
+
+            const points = [];
+            for (let i = 7; i < 23 && i < data.length; i++) {
+                const row = data[i];
+                const name = row[OVERVIEW_COLUMNS.name - 1];
+                if (!name || name === '' || name.toString().includes('#DIV')) continue;
+                const games = parseInt(row[OVERVIEW_COLUMNS.matches - 1]) || 0;
+                const rating = parseFloat(row[OVERVIEW_COLUMNS.rating - 1]) || 0;
+                points.push({ x: games, y: rating, label: name });
+            }
+
+            new Chart(canvas.getContext('2d'), {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        data: points,
+                        backgroundColor: 'rgba(255, 107, 53, 0.85)',
+                        borderColor: '#ff6b35',
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (c) => `${c.raw.label}: ${c.raw.y.toFixed(2)} rating, ${c.raw.x} games`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Games played', color: '#9ba3af' },
+                            ticks: { color: '#9ba3af' },
+                            grid: { color: 'rgba(42, 48, 64, 0.6)' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Rating 3.0', color: '#9ba3af' },
+                            ticks: { color: '#9ba3af' },
+                            grid: { color: 'rgba(42, 48, 64, 0.6)' }
+                        }
+                    }
+                },
+                plugins: [scatterPointLabels()]
+            });
         }
 
         // Load Game Records data
