@@ -3436,97 +3436,113 @@
                 nickname: 'remokox',
                 realname: 'Remokox Dobraes',
                 flag: 'poland.png',
-                photo: 'remokox.png'
+                photo: 'remokox.png',
+                ecoName: 'Remo'
             },
             'Große Cigarette': {
                 nickname: 'Große Cigarette',
                 realname: 'Masny Nefer',
                 flag: 'poland.png',
-                photo: 'nefik.png'
+                photo: 'nefik.png',
+                ecoName: 'Nefik'
             },
             'MasnoPro Vulpes Wójcior': {
                 nickname: 'MasnoPro Vulpes Wójcior',
                 realname: 'Vulpes Wójcior',
                 flag: 'poland.png',
-                photo: 'vulpes.png'
+                photo: 'vulpes.png',
+                ecoName: 'Vulpes'
             },
             'Badum': {
                 nickname: 'Badum',
                 realname: 'Assassin Badum28',
                 flag: 'temeria.png',
-                photo: 'badum.png'
+                photo: 'badum.png',
+                ecoName: 'Badum'
             },
             'MasnoCoach THUNDER': {
                 nickname: 'MasnoCoach THUNDER',
                 realname: 'Krakers Piorun Miśka',
                 flag: 'poland.png',
-                photo: 'krakers.png'
+                photo: 'krakers.png',
+                ecoName: 'Krakers'
             },
             'Marnyr': {
                 nickname: 'Marnyr',
                 realname: 'Król Marcinek',
                 flag: 'poland.png',
-                photo: 'marcinek.png'
+                photo: 'marcinek.png',
+                ecoName: 'Marcinek'
             },
             'Torrek': {
                 nickname: 'Torrek',
                 realname: 'Bliźniak Baduma',
                 flag: 'poland.png',
-                photo: 'torrek.png'
+                photo: 'torrek.png',
+                ecoName: 'Torrek'
             },
             'Yao Ming': {
                 nickname: 'Yao Ming',
                 realname: 'Wuja Mingdon',
                 flag: 'poland.png',
-                photo: 'mingdon.png'
+                photo: 'mingdon.png',
+                ecoName: 'Mingdon'
             },
             'monke': {
                 nickname: 'monke',
                 realname: 'Jano Głośnik',
                 flag: 'canada.png',
-                photo: 'monke.png'
+                photo: 'monke.png',
+                ecoName: 'Jano'
             },
             'ołmi': {
                 nickname: 'ołmi',
                 realname: 'Ołmi Zyzik',
                 flag: 'israel.png',
-                photo: 'olmi.png'
+                photo: 'olmi.png',
+                ecoName: 'Ołmi'
             },
             'Minion 2': {
                 nickname: 'Minion 2',
                 realname: 'Tytan Mikjas',
                 flag: 'poland.png',
-                photo: 'tytan.png'
+                photo: 'tytan.png',
+                ecoName: 'Tytan'
             },
             'Twój Stary': {
                 nickname: 'Twój Stary',
                 realname: 'Kapi',
                 flag: 'poland.png',
-                photo: 'kapi.png'
+                photo: 'kapi.png',
+                ecoName: 'Kapi'
             },
             'kieik': {
                 nickname: 'kieik',
                 realname: 'Kiemon',
                 flag: 'poland.png',
-                photo: 'kiemon.png'
+                photo: 'kiemon.png',
+                ecoName: 'Kiemon'
             },
             'wuja': {
                 nickname: 'wuja',
                 realname: 'Nitaszek',
                 flag: 'poland.png',
-                photo: 'nitaszek.png'
+                photo: 'nitaszek.png',
+                ecoName: 'Nitaszek'
             },
             'Jeffrey Epstein': {
                 nickname: 'Jeffrey Epstein',
                 realname: 'Haha Pedau',
                 flag: 'pride.png',
-                photo: 'winiar.png'
+                photo: 'winiar.png',
+                ecoName: 'Winiar'
             },
             'Szymon Gwiazda Rocka': {
                 nickname: 'Szymon Gwiazda Rocka',
                 realname: 'Szymon Kolega Ołmiego',
                 flag: 'poland.png',
-                photo: 'szymon.png'
+                photo: 'szymon.png',
+                ecoName: 'Szymon'
             }
         };
 
@@ -4532,7 +4548,7 @@
             const buckets = {}; // score -> { games, kills, deaths, ratingSum, ratingCount }
             data.forEach(row => {
                 const name = (row[PLAYER] || '').toString().trim();
-                if (name !== info.nickname) return;
+                if (name !== info.ecoName) return;
                 if (wantMap && (row[MAP] || '').toString().trim() !== wantMap) return;
 
                 const score = (row[SCORE] || '').toString().trim();
