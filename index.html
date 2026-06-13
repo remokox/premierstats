@@ -1912,6 +1912,42 @@
         .winrate-content[hidden] {
             display: none;
         }
+        /* Graphs page 2x2 grid */
+        .graphs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .graph-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .graph-card-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--accent-primary);
+            margin-bottom: 14px;
+            text-align: center;
+        }
+
+        .graph-canvas-wrap {
+            position: relative;
+            height: 320px;
+        }
+
+        @media (max-width: 900px) {
+            .graphs-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -2642,8 +2678,25 @@
         <!-- GRAPHS PAGE -->
         <div id="graphs" class="page">
             <div class="section">
-                <h2 class="section-header">Graphs - Coming Soon</h2>
-                <p style="color: var(--text-secondary);">Graphs will be displayed here.</p>
+                <h2 class="section-header">Graphs</h2>
+                <div class="graphs-grid">
+                    <div class="graph-card">
+                        <div class="graph-card-title">Player rating</div>
+                        <div class="graph-canvas-wrap"><canvas id="graph-rating"></canvas></div>
+                    </div>
+                    <div class="graph-card">
+                        <div class="graph-card-title">Firepower × Trading</div>
+                        <div class="graph-canvas-wrap"><canvas id="graph-firepower-trading"></canvas></div>
+                    </div>
+                    <div class="graph-card">
+                        <div class="graph-card-title">Opening × Clutching</div>
+                        <div class="graph-canvas-wrap"><canvas id="graph-opening-clutching"></canvas></div>
+                    </div>
+                    <div class="graph-card">
+                        <div class="graph-card-title">Trades × Being Traded</div>
+                        <div class="graph-canvas-wrap"><canvas id="graph-trades-traded"></canvas></div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -5171,6 +5224,18 @@
             </tr>`;
         }
 
+        // Graphs page — build charts once, on first open
+        let graphsInitialized = false;
+        function initGraphs() {
+            if (graphsInitialized) return;
+            graphsInitialized = true;
+            // Charts are added one at a time:
+            // buildRatingChart();
+            // buildFirepowerTradingChart();
+            // buildOpeningClutchingChart();
+            // buildTradesTradedChart();
+        }
+
         // Load Game Records data
         let cachedRecordsData = null;
         let cachedPlayerNicknames = null;
@@ -5818,6 +5883,9 @@
                 }
                 if (pageId === 'records') {
                     loadGameRecords();
+                }
+                if (pageId === 'graphs') {
+                    initGraphs();
                 }
                 if (pageId === 'winrate') {
                     const firstRow = document.querySelector('#winrate-match-length-tbody tr[data-score]');
