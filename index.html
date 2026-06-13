@@ -5330,6 +5330,8 @@
             const points = [];
             rowsForMap(data, mapName || 'All').forEach(row => {
                 const name = row[PLAYER_COLUMNS.name - 1];
+                const games = parseInt(row[PLAYER_COLUMNS.matches - 1]);
+                if (!games) return; // player didn't play this map
                 const x = parseFloat(row[xCol - 1]);
                 const y = parseFloat(row[yCol - 1]);
                 if (isNaN(x) || isNaN(y)) return;
@@ -5410,8 +5412,10 @@
             const points = [];
             rowsForMap(data, mapName || 'All').forEach(row => {
                 const name = row[OVERVIEW_COLUMNS.name - 1];
-                const games = parseInt(row[OVERVIEW_COLUMNS.matches - 1]) || 0;
-                const rating = parseFloat(row[OVERVIEW_COLUMNS.rating - 1]) || 0;
+                const games = parseInt(row[OVERVIEW_COLUMNS.matches - 1]);
+                if (!games) return; // player didn't play this map
+                const rating = parseFloat(row[OVERVIEW_COLUMNS.rating - 1]);
+                if (isNaN(rating)) return;
                 points.push({ x: games, y: rating, label: name });
             });
 
