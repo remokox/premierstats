@@ -2679,6 +2679,18 @@
         <div id="graphs" class="page">
             <div class="section">
                 <h2 class="section-header">Graphs</h2>
+                <div class="records-filters" style="margin-bottom: 16px;">
+                    <select class="records-filter-select" id="graphs-map-filter">
+                        <option value="All">All Maps</option>
+                        <option value="Ancient">Ancient</option>
+                        <option value="Anubis">Anubis</option>
+                        <option value="Dust II">Dust II</option>
+                        <option value="Inferno">Inferno</option>
+                        <option value="Mirage">Mirage</option>
+                        <option value="Nuke">Nuke</option>
+                        <option value="Overpass">Overpass</option>
+                    </select>
+                </div>
                 <div class="graphs-grid">
                     <div class="graph-card">
                         <div class="graph-card-title">Player rating</div>
@@ -5226,17 +5238,30 @@
 
         // Graphs page — build charts once, on first open
         let graphsInitialized = false;
-        function initGraphs() {
-            if (graphsInitialized) return;
+        const MAP_COL = 2; // column B (1-based) = map name on sum_stats_maps tab
+        const graphChartInstances = {}; // canvasId -> Chart, so we can destroy on rebuild
+
+        // Rows belonging to a given map block (by column B), with a valid player name
+        function rowsForMap(data, mapName) {
+            return data.filter(row => {
+                const block = (row[MAP_COL - 1] || '').toString().trim();
+                if (block !== mapName) return false;
+                const name = row[PLAYER_COLUMNS.name - 1];
+                return name && name !== '' && !name.toString().includes('#DIV');
+            });
+        }
+
+        function initGraphs(mapName) {
+            const map = mapName || (document.getElementById('graphs-map-filter') ? document.getElementById('graphs-map-filter').value : 'All');
+            buildRatingChart(map);
+            buildAttributeScatter('graph-firepower-trading', PLAYER_COLUMNS.firepower, PLAYER_COLUMNS.trading, 'Firepower', 'Trading', true, map);
+            buildAttributeScatter('graph-opening-clutching', PLAYER_COLUMNS.opening, PLAYER_COLUMNS.clutching, 'Opening', 'Clutching', true, map);
+            buildPerGameScatter('graph-trades-traded', 30, 31, 'Trades per game', 'Deaths traded per game', map);
             graphsInitialized = true;
-            buildRatingChart();
-            buildAttributeScatter('graph-firepower-trading', PLAYER_COLUMNS.firepower, PLAYER_COLUMNS.trading, 'Firepower', 'Trading', true);
-            buildAttributeScatter('graph-opening-clutching', PLAYER_COLUMNS.opening, PLAYER_COLUMNS.clutching, 'Opening', 'Clutching', true);
-            buildPerGameScatter('graph-trades-traded', 30, 31, 'Trades per game', 'Deaths traded per game');
         }
 
         // Per-game scatter: x = xCol/games, y = yCol/games (1-based col numbers, games = col E/5)
-        async function buildPerGameScatter(canvasId, xCol, yCol, xLabel, yLabel) {
+        async function buildPerGameScatter(canvasId, xCol, yCol, xLabel, yLabel, mapName) {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
 
@@ -5244,19 +5269,18 @@
             if (!data) { console.error(canvasId + ': no data'); return; }
 
             const points = [];
-            for (let i = 7; i < 23 && i < data.length; i++) {
-                const row = data[i];
+            rowsForMap(data, mapName || 'All').forEach(row => {
                 const name = row[PLAYER_COLUMNS.name - 1];
-                if (!name || name === '' || name.toString().includes('#DIV')) continue;
                 const games = parseInt(row[PLAYER_COLUMNS.matches - 1]);
-                if (!games) continue; // avoid divide-by-zero / no games
+                if (!games) return; // avoid divide-by-zero / no games
                 const xNum = parseFloat(row[xCol - 1]);
                 const yNum = parseFloat(row[yCol - 1]);
-                if (isNaN(xNum) || isNaN(yNum)) continue;
+                if (isNaN(xNum) || isNaN(yNum)) return;
                 points.push({ x: xNum / games, y: yNum / games, label: name });
-            }
+            });
 
-            new Chart(canvas.getContext('2d'), {
+            if (graphChartInstances[canvasId]) graphChartInstances[canvasId].destroy();
+            graphChartInstances[canvasId] = new Chart(canvas.getContext('2d'), {
                 type: 'scatter',
                 data: {
                     datasets: [{
@@ -5296,7 +5320,7 @@
         }
 
         // Reusable per-player scatter for two attribute columns (1-based col numbers)
-        async function buildAttributeScatter(canvasId, xCol, yCol, xLabel, yLabel, fixed0to100) {
+        async function buildAttributeScatter(canvasId, xCol, yCol, xLabel, yLabel, fixed0to100, mapName) {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
 
@@ -5304,17 +5328,16 @@
             if (!data) { console.error(canvasId + ': no data'); return; }
 
             const points = [];
-            for (let i = 7; i < 23 && i < data.length; i++) {
-                const row = data[i];
+            rowsForMap(data, mapName || 'All').forEach(row => {
                 const name = row[PLAYER_COLUMNS.name - 1];
-                if (!name || name === '' || name.toString().includes('#DIV')) continue;
                 const x = parseFloat(row[xCol - 1]);
                 const y = parseFloat(row[yCol - 1]);
-                if (isNaN(x) || isNaN(y)) continue;
+                if (isNaN(x) || isNaN(y)) return;
                 points.push({ x, y, label: name });
-            }
+            });
 
-            new Chart(canvas.getContext('2d'), {
+            if (graphChartInstances[canvasId]) graphChartInstances[canvasId].destroy();
+            graphChartInstances[canvasId] = new Chart(canvas.getContext('2d'), {
                 type: 'scatter',
                 data: {
                     datasets: [{
@@ -5377,7 +5400,7 @@
             };
         }
 
-        async function buildRatingChart() {
+        async function buildRatingChart(mapName) {
             const canvas = document.getElementById('graph-rating');
             if (!canvas) return;
 
@@ -5385,16 +5408,15 @@
             if (!data) { console.error('Rating chart: no data'); return; }
 
             const points = [];
-            for (let i = 7; i < 23 && i < data.length; i++) {
-                const row = data[i];
+            rowsForMap(data, mapName || 'All').forEach(row => {
                 const name = row[OVERVIEW_COLUMNS.name - 1];
-                if (!name || name === '' || name.toString().includes('#DIV')) continue;
                 const games = parseInt(row[OVERVIEW_COLUMNS.matches - 1]) || 0;
                 const rating = parseFloat(row[OVERVIEW_COLUMNS.rating - 1]) || 0;
                 points.push({ x: games, y: rating, label: name });
-            }
+            });
 
-            new Chart(canvas.getContext('2d'), {
+            if (graphChartInstances['graph-rating']) graphChartInstances['graph-rating'].destroy();
+            graphChartInstances['graph-rating'] = new Chart(canvas.getContext('2d'), {
                 type: 'scatter',
                 data: {
                     datasets: [{
@@ -6082,7 +6104,7 @@
                     loadGameRecords();
                 }
                 if (pageId === 'graphs') {
-                    initGraphs();
+                    if (!graphsInitialized) initGraphs();
                 }
                 if (pageId === 'winrate') {
                     const firstRow = document.querySelector('#winrate-match-length-tbody tr[data-score]');
@@ -6147,6 +6169,14 @@
         if (winrateMlMapFilter) {
             winrateMlMapFilter.addEventListener('change', () => {
                 loadWinrateMatchLength(winrateMlMapFilter.value);
+            });
+        }
+
+        // Graphs map filter — rebuild all charts for the selected map
+        const graphsMapFilter = document.getElementById('graphs-map-filter');
+        if (graphsMapFilter) {
+            graphsMapFilter.addEventListener('change', () => {
+                initGraphs(graphsMapFilter.value);
             });
         }
 
