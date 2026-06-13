@@ -4491,39 +4491,56 @@
             matches.reverse(); // chronological: oldest -> newest
             const n = matches.length;
 
-            function longestRun(pred) {
-                let best = { len: 0, startIdx: -1, endIdx: -1 };
+            // Find all runs tied for the longest length for a predicate.
+            // Returns { len, runs: [{startIdx, endIdx}, ...] }.
+            function longestRuns(pred) {
+                const allRuns = [];
                 let curLen = 0, curStart = 0;
                 for (let i = 0; i < n; i++) {
                     if (pred(matches[i])) {
                         if (curLen === 0) curStart = i;
                         curLen++;
-                        if (curLen > best.len) best = { len: curLen, startIdx: curStart, endIdx: i };
                     } else {
+                        if (curLen > 0) allRuns.push({ start: curStart, end: i - 1, len: curLen });
                         curLen = 0;
                     }
                 }
-                return best;
+                if (curLen > 0) allRuns.push({ start: curStart, end: n - 1, len: curLen });
+
+                const maxLen = allRuns.reduce((m, r) => Math.max(m, r.len), 0);
+                return { len: maxLen, runs: allRuns.filter(r => r.len === maxLen) };
             }
 
-            function rangeText(run) {
-                if (run.len === 0) return '-';
-                const start = matches[run.startIdx].date;
-                const endsNow = run.endIdx === n - 1;
-                const end = endsNow ? 'now' : matches[run.endIdx].date;
+            // Date text for one run; "now" if it ends at the most recent match.
+            function oneRangeText(run) {
+                const start = matches[run.start].date;
+                const endsNow = run.end === n - 1;
+                const end = endsNow ? 'now' : matches[run.end].date;
                 return start === end ? start : `${start} – ${end}`;
             }
 
-            const streaks = {
-                'win':         longestRun(m => m.result === 'win'),
-                'loss':        longestRun(m => m.result === 'loss'),
-                'rating-high': longestRun(m => !isNaN(m.rating) && m.rating >= 1.0),
-                'rating-low':  longestRun(m => !isNaN(m.rating) && m.rating < 1.0),
-                'kd-high':     longestRun(m => !isNaN(m.plusMinus) && m.plusMinus >= 0),
-                'kd-low':      longestRun(m => !isNaN(m.plusMinus) && m.plusMinus < 0)
+            // Set a streak row: count = max length, date cell lists every max-length run stacked.
+            const setStreakRow = (key, result) => {
+                const tr = tbody.querySelector(`tr[data-streak="${key}"]`);
+                if (!tr) return;
+                tr.cells[1].textContent = result.len;
+                if (result.len === 0) {
+                    tr.cells[2].textContent = '-';
+                } else {
+                    tr.cells[2].innerHTML = result.runs.map(oneRangeText).join('<br>');
+                }
             };
 
-            Object.entries(streaks).forEach(([key, run]) => setRow(key, run.len, rangeText(run)));
+            const preds = {
+                'win':         m => m.result === 'win',
+                'loss':        m => m.result === 'loss',
+                'rating-high': m => !isNaN(m.rating) && m.rating >= 1.0,
+                'rating-low':  m => !isNaN(m.rating) && m.rating < 1.0,
+                'kd-high':     m => !isNaN(m.plusMinus) && m.plusMinus >= 0,
+                'kd-low':      m => !isNaN(m.plusMinus) && m.plusMinus < 0
+            };
+
+            Object.entries(preds).forEach(([key, pred]) => setStreakRow(key, longestRuns(pred)));
         }
 
         // Stats by game score (ecohunters tab)
