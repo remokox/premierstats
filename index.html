@@ -2456,7 +2456,37 @@
                     </div>
 
                     <div class="player-detail-content" id="detail-tab-streaks" style="display:none;">
-                        <p style="color: var(--text-secondary);">Streaks — coming soon.</p>
+                        <div class="records-filters" style="margin-bottom: 16px;">
+                            <select class="records-filter-select" id="streaks-map-filter">
+                                <option value="all">All Maps</option>
+                                <option value="Ancient">Ancient</option>
+                                <option value="Anubis">Anubis</option>
+                                <option value="Dust II">Dust II</option>
+                                <option value="Inferno">Inferno</option>
+                                <option value="Mirage">Mirage</option>
+                                <option value="Nuke">Nuke</option>
+                                <option value="Overpass">Overpass</option>
+                            </select>
+                        </div>
+                        <div class="matches-table-container">
+                            <table class="matches-table" id="streaks-table">
+                                <thead>
+                                    <tr>
+                                        <th>Streak</th>
+                                        <th>No. of games</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="streaks-tbody">
+                                    <tr data-streak="win"><td>Longest win streak</td><td>-</td><td>-</td></tr>
+                                    <tr data-streak="loss"><td>Longest loss streak</td><td>-</td><td>-</td></tr>
+                                    <tr data-streak="rating-high"><td>Longest &ge;1.00 rating streak</td><td>-</td><td>-</td></tr>
+                                    <tr data-streak="rating-low"><td>Longest &lt;1.00 rating streak</td><td>-</td><td>-</td></tr>
+                                    <tr data-streak="kd-high"><td>Longest K&minus;D &ge; 0 streak</td><td>-</td><td>-</td></tr>
+                                    <tr data-streak="kd-low"><td>Longest K&minus;D &lt; 0 streak</td><td>-</td><td>-</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                     <div class="player-detail-content" id="detail-tab-score-stats" style="display:none;">
