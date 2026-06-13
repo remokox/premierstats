@@ -1788,6 +1788,83 @@
                 grid-template-columns: 1fr;
             }
         }
+        /* AWARDS button (top-right of header) */
+        .awards-button {
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 1.25rem;
+            letter-spacing: 2px;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+            background: linear-gradient(160deg, #5b8fd6 0%, #2f5fa8 45%, #1b3a72 100%);
+            box-shadow:
+                inset 0 1px 1px rgba(255, 255, 255, 0.35),
+                inset 0 0 0 2px rgba(20, 40, 80, 0.6),
+                0 4px 12px rgba(0, 0, 0, 0.5);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            z-index: 5;
+        }
+
+        .awards-button:hover {
+            transform: translateY(-50%) scale(1.04);
+            box-shadow:
+                inset 0 1px 1px rgba(255, 255, 255, 0.45),
+                inset 0 0 0 2px rgba(20, 40, 80, 0.6),
+                0 6px 18px rgba(0, 0, 0, 0.6);
+        }
+
+        .awards-button:active {
+            transform: translateY(-50%) scale(0.98);
+        }
+
+        .awards-button .medal {
+            font-size: 1.3rem;
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+        }
+
+        .awards-message {
+            position: absolute;
+            top: calc(50% + 32px);
+            right: 20px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 14px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 500;
+            box-shadow: 0 4px 12px var(--shadow);
+            z-index: 5;
+        }
+
+        .awards-message[hidden] {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .awards-button {
+                position: static;
+                transform: none;
+                margin: 12px auto 0;
+            }
+            .awards-button:hover { transform: scale(1.04); }
+            .awards-message {
+                position: static;
+                margin: 8px auto 0;
+                text-align: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1795,6 +1872,12 @@
     
     <header>
         <div class="container">
+            <button class="awards-button" id="awards-button" type="button" aria-label="Awards">
+                <span class="medal">🥇</span>
+                AWARDS
+                <span class="medal">🥈</span>
+            </button>
+            <div class="awards-message" id="awards-message" role="status" hidden>No data yet</div>
             <div class="header-content">
                 <h1>🎯 CS2 Squad Stats</h1>
                 <p class="header-note">Showing data only for the games played in a 5-stack</p>
@@ -5223,6 +5306,15 @@
         if (recordsStatFilter) {
             recordsStatFilter.addEventListener('change', () => {
                 loadGameRecords();
+            });
+        }
+
+        // Awards button — placeholder until data exists
+        const awardsButton = document.getElementById('awards-button');
+        const awardsMessage = document.getElementById('awards-message');
+        if (awardsButton && awardsMessage) {
+            awardsButton.addEventListener('click', () => {
+                awardsMessage.hidden = !awardsMessage.hidden;
             });
         }
 
