@@ -2672,6 +2672,19 @@
             </div>
         </div>
 
+        <!-- AWARDS PAGE -->
+        <div id="awards" class="page">
+            <div class="section">
+                <h2 class="section-header">Awards</h2>
+                <div style="max-width: 480px; margin: 0 auto;">
+                    <div class="graph-card">
+                        <div class="graph-card-title">remokox</div>
+                        <div class="graph-canvas-wrap"><canvas id="awards-radar-remokox"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- WINRATE DETAILS PAGE -->
         <div id="winrate" class="page">
             <div class="section">
@@ -4436,6 +4449,101 @@
                     <td class="${ratingClass}">${match.rating.toFixed(2)}</td>
                 `;
                 tbody.appendChild(row);
+            });
+        }
+
+        // ===== Player radar chart (for Awards page — parked, not yet wired) =====
+        // HLTV-style: scaled rank vs the roster, bounds at 5th & 95th percentiles.
+        // Call later as: buildPlayerRadar('some-canvas-id', PLAYER_INFO[name].nickname)
+        const RADAR_METRICS = [
+            { label: 'Rating 3.0',   col: 184 }, // GC
+            { label: 'Round Swing',  col: 183 }, // GB
+            { label: 'KPR',          col: 53  }, // BB
+            { label: 'ADR',          col: 56  }, // BE
+            { label: 'KPRW',         col: 55  }, // BD
+            { label: 'Multikill %',  col: 62  }, // BK
+            { label: '1+ kill %',    col: 58  }, // BG
+            { label: 'KAST',         col: 25  }  // Z
+        ];
+
+        function percentile(sortedAsc, p) {
+            if (sortedAsc.length === 0) return 0;
+            if (sortedAsc.length === 1) return sortedAsc[0];
+            const idx = (p / 100) * (sortedAsc.length - 1);
+            const lo = Math.floor(idx), hi = Math.ceil(idx);
+            if (lo === hi) return sortedAsc[lo];
+            return sortedAsc[lo] + (sortedAsc[hi] - sortedAsc[lo]) * (idx - lo);
+        }
+
+        let radarChartInstances = {};
+        async function buildPlayerRadar(canvasId, playerNickname) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
+            if (!data) { console.error('Radar: no data'); return; }
+
+            const rosterRows = rowsForMap(data, 'All');
+
+            const bounds = RADAR_METRICS.map(metric => {
+                const vals = rosterRows
+                    .map(r => parseFloat(r[metric.col]))
+                    .filter(v => !isNaN(v))
+                    .sort((a, b) => a - b);
+                return { lo: percentile(vals, 5), hi: percentile(vals, 95) };
+            });
+
+            const playerRow = rosterRows.find(r => (r[PLAYER_COLUMNS.name - 1] || '').toString().trim() === playerNickname);
+            if (!playerRow) { console.error('Radar: player not found:', playerNickname); return; }
+
+            const scaled = RADAR_METRICS.map((metric, i) => {
+                const raw = parseFloat(playerRow[metric.col]);
+                if (isNaN(raw)) return 0;
+                const { lo, hi } = bounds[i];
+                if (hi === lo) return 0.5;
+                return Math.max(0, Math.min(1, (raw - lo) / (hi - lo)));
+            });
+
+            const rawVals = RADAR_METRICS.map(metric => {
+                const v = parseFloat(playerRow[metric.col]);
+                return isNaN(v) ? '-' : v;
+            });
+
+            if (radarChartInstances[canvasId]) radarChartInstances[canvasId].destroy();
+            radarChartInstances[canvasId] = new Chart(canvas.getContext('2d'), {
+                type: 'radar',
+                data: {
+                    labels: RADAR_METRICS.map(m => m.label),
+                    datasets: [{
+                        data: scaled,
+                        backgroundColor: 'rgba(255, 107, 53, 0.25)',
+                        borderColor: '#ff6b35',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#ff6b35',
+                        pointRadius: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (c) => `${RADAR_METRICS[c.dataIndex].label}: ${rawVals[c.dataIndex]}`
+                            }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            min: 0, max: 1,
+                            ticks: { display: false, stepSize: 0.2 },
+                            grid: { color: 'rgba(42, 48, 64, 0.8)' },
+                            angleLines: { color: 'rgba(42, 48, 64, 0.8)' },
+                            pointLabels: { color: '#e8eaed', font: { family: 'Rajdhani, sans-serif', size: 12, weight: '600' } }
+                        }
+                    }
+                }
             });
         }
 
@@ -6578,12 +6686,15 @@
             });
         });
 
-        // Awards button — placeholder until data exists
+        // Awards button — opens the Awards page and renders the radar
         const awardsButton = document.getElementById('awards-button');
-        const awardsMessage = document.getElementById('awards-message');
-        if (awardsButton && awardsMessage) {
+        if (awardsButton) {
             awardsButton.addEventListener('click', () => {
-                awardsMessage.hidden = !awardsMessage.hidden;
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById('awards').classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                buildPlayerRadar('awards-radar-remokox', 'remokox');
             });
         }
 
