@@ -1865,6 +1865,48 @@
                 text-align: center;
             }
         }
+        /* Winrate Details sub-tabs */
+        .winrate-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .winrate-tab-button {
+            flex: 1 1 auto;
+            min-width: 200px;
+            padding: 14px 20px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            font-size: 1.05rem;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .winrate-tab-button:hover {
+            color: var(--text-primary);
+            border-color: var(--accent-primary);
+        }
+
+        .winrate-tab-button.active {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .winrate-content {
+            color: var(--text-secondary);
+        }
+
+        .winrate-content[hidden] {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -2453,8 +2495,25 @@
         <!-- WINRATE DETAILS PAGE -->
         <div id="winrate" class="page">
             <div class="section">
-                <h2 class="section-header">Winrate Details - Coming Soon</h2>
-                <p style="color: var(--text-secondary);">Winrate details will be displayed here.</p>
+                <h2 class="section-header">Winrate Details</h2>
+                <div class="winrate-buttons">
+                    <button class="winrate-tab-button active" type="button" data-winrate-tab="match-length">Winrate by match length</button>
+                    <button class="winrate-tab-button" type="button" data-winrate-tab="five-stack">Five Stack Winrates</button>
+                    <button class="winrate-tab-button" type="button" data-winrate-tab="duo-synergy">Duo Synergy Winrate</button>
+                    <button class="winrate-tab-button" type="button" data-winrate-tab="session-length">Session Length Winrate</button>
+                </div>
+                <div class="winrate-content" id="winrate-match-length">
+                    <p style="color: var(--text-secondary);">No data yet.</p>
+                </div>
+                <div class="winrate-content" id="winrate-five-stack" hidden>
+                    <p style="color: var(--text-secondary);">No data yet.</p>
+                </div>
+                <div class="winrate-content" id="winrate-duo-synergy" hidden>
+                    <p style="color: var(--text-secondary);">No data yet.</p>
+                </div>
+                <div class="winrate-content" id="winrate-session-length" hidden>
+                    <p style="color: var(--text-secondary);">No data yet.</p>
+                </div>
             </div>
         </div>
 
@@ -5326,6 +5385,18 @@
                 loadGameRecords();
             });
         }
+
+        // Winrate Details sub-tab switching
+        document.querySelectorAll('.winrate-tab-button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.getAttribute('data-winrate-tab');
+                document.querySelectorAll('.winrate-tab-button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.querySelectorAll('.winrate-content').forEach(c => {
+                    c.hidden = (c.id !== 'winrate-' + tab);
+                });
+            });
+        });
 
         // Awards button — placeholder until data exists
         const awardsButton = document.getElementById('awards-button');
