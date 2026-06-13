@@ -2583,7 +2583,42 @@
                     </div>
                 </div>
                 <div class="winrate-content" id="winrate-duo-synergy" hidden>
-                    <p style="color: var(--text-secondary);">No data yet.</p>
+                    <div class="records-filters" style="margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 12px;">
+                        <select class="records-filter-select" id="duo-player1">
+                            <option value="">Player 1…</option>
+                        </select>
+                        <select class="records-filter-select" id="duo-player2">
+                            <option value="">Player 2…</option>
+                        </select>
+                        <select class="records-filter-select" id="duo-map-filter">
+                            <option value="all">All Maps</option>
+                            <option value="Ancient">Ancient</option>
+                            <option value="Anubis">Anubis</option>
+                            <option value="Dust II">Dust II</option>
+                            <option value="Inferno">Inferno</option>
+                            <option value="Mirage">Mirage</option>
+                            <option value="Nuke">Nuke</option>
+                            <option value="Overpass">Overpass</option>
+                        </select>
+                    </div>
+                    <div class="matches-table-container">
+                        <table class="matches-table" id="winrate-duo-table">
+                            <thead>
+                                <tr>
+                                    <th>Matches</th>
+                                    <th>Wins</th>
+                                    <th>Losses</th>
+                                    <th>Ties</th>
+                                    <th>Winrate (excl. ties)</th>
+                                    <th id="duo-p1-rating-header">Player 1 Rating 3.0</th>
+                                    <th id="duo-p2-rating-header">Player 2 Rating 3.0</th>
+                                </tr>
+                            </thead>
+                            <tbody id="winrate-duo-tbody">
+                                <tr><td colspan="7" style="color: var(--text-secondary);">Select two players to see their duo stats.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 <div class="winrate-content" id="winrate-session-length" hidden>
                     <div class="matches-table-container">
@@ -5023,6 +5058,120 @@
             tbody.innerHTML = html;
         }
 
+        // Duo Synergy Winrate
+        // NOTE: confirm the Rating 3.0 column index on the ecohunters tab.
+        const ECO_RATING_COL = 18; // <-- set to the real Rating 3.0 column index
+
+        let duoNamesPopulated = false;
+        async function populateDuoPlayers() {
+            if (duoNamesPopulated) return;
+            const sel1 = document.getElementById('duo-player1');
+            const sel2 = document.getElementById('duo-player2');
+            if (!sel1 || !sel2) return;
+
+            const data = await fetchSheetData(SHEET_GIDS.ecohunters);
+            if (!data) return;
+
+            const names = [...new Set(data.map(row => (row[6] || '').toString().trim()).filter(name => {
+                const n = name.toLowerCase();
+                return name !== '' && n !== 'player' && n !== 'player details';
+            }))].sort((a, b) => a.localeCompare(b));
+
+            names.forEach(name => {
+                const o1 = document.createElement('option'); o1.value = name; o1.textContent = name; sel1.appendChild(o1);
+                const o2 = document.createElement('option'); o2.value = name; o2.textContent = name; sel2.appendChild(o2);
+            });
+            duoNamesPopulated = true;
+        }
+
+        async function loadDuoSynergy() {
+            const tbody = document.getElementById('winrate-duo-tbody');
+            if (!tbody) return;
+
+            const p1 = document.getElementById('duo-player1').value;
+            const p2 = document.getElementById('duo-player2').value;
+            const mapFilter = document.getElementById('duo-map-filter').value;
+
+            // Update dynamic headers
+            document.getElementById('duo-p1-rating-header').textContent = (p1 || 'Player 1') + ' Rating 3.0';
+            document.getElementById('duo-p2-rating-header').textContent = (p2 || 'Player 2') + ' Rating 3.0';
+
+            if (!p1 || !p2) {
+                tbody.innerHTML = '<tr><td colspan="7" style="color: var(--text-secondary);">Select two players to see their duo stats.</td></tr>';
+                return;
+            }
+            if (p1 === p2) {
+                tbody.innerHTML = '<tr><td colspan="7" style="color: var(--text-secondary);">Please pick two different players.</td></tr>';
+                return;
+            }
+
+            const data = await fetchSheetData(SHEET_GIDS.ecohunters);
+            if (!data) {
+                tbody.innerHTML = '<tr><td colspan="7" style="color: var(--danger);">Failed to load data.</td></tr>';
+                return;
+            }
+
+            const dataRows = data.filter(row => {
+                const name = (row[6] || '').toString().trim();
+                const n = name.toLowerCase();
+                return name !== '' && n !== 'player' && n !== 'player details';
+            });
+
+            let wins = 0, losses = 0, ties = 0;
+            let p1RatingSum = 0, p1RatingCount = 0;
+            let p2RatingSum = 0, p2RatingCount = 0;
+
+            for (let i = 0; i + 5 <= dataRows.length; i += 5) {
+                const chunk = dataRows.slice(i, i + 5);
+                const sig = r => (r[1] || '') + '|' + (r[2] || '') + '|' + (r[4] || '');
+                if (!chunk.every(r => sig(r) === sig(chunk[0]))) continue;
+
+                const mapName = (chunk[0][2] || '').toString().trim();
+                if (mapFilter !== 'all' && mapName !== mapFilter) continue;
+
+                const rowFor = nick => chunk.find(r => (r[6] || '').toString().trim() === nick);
+                const r1 = rowFor(p1);
+                const r2 = rowFor(p2);
+                if (!r1 || !r2) continue; // both must be in this match
+
+                const outcome = (chunk[0][3] || '').toString().toLowerCase().trim();
+                if (outcome === 'win') wins++;
+                else if (outcome === 'loss') losses++;
+                else if (outcome === 'tie') ties++;
+
+                const rt1 = parseFloat(r1[ECO_RATING_COL]);
+                if (!isNaN(rt1)) { p1RatingSum += rt1; p1RatingCount++; }
+                const rt2 = parseFloat(r2[ECO_RATING_COL]);
+                if (!isNaN(rt2)) { p2RatingSum += rt2; p2RatingCount++; }
+            }
+
+            const matches = wins + losses + ties;
+            if (matches === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="color: var(--text-secondary);">No matches found with both players together' + (mapFilter !== 'all' ? ' on ' + mapFilter : '') + '.</td></tr>';
+                return;
+            }
+
+            const decisive = wins + losses;
+            let winrate = '-', cls = '';
+            if (decisive > 0) {
+                const pct = wins / decisive * 100;
+                winrate = pct.toFixed(1) + '%';
+                cls = pct > 50 ? 'text-green' : pct < 50 ? 'text-red' : 'text-yellow';
+            }
+            const avg1 = p1RatingCount > 0 ? (p1RatingSum / p1RatingCount).toFixed(2) : '-';
+            const avg2 = p2RatingCount > 0 ? (p2RatingSum / p2RatingCount).toFixed(2) : '-';
+
+            tbody.innerHTML = `<tr>
+                <td>${matches}</td>
+                <td>${wins}</td>
+                <td>${losses}</td>
+                <td>${ties}</td>
+                <td class="${cls}">${winrate}</td>
+                <td>${avg1}</td>
+                <td>${avg2}</td>
+            </tr>`;
+        }
+
         // Load Game Records data
         let cachedRecordsData = null;
         let cachedPlayerNicknames = null;
@@ -5737,6 +5886,12 @@
             });
         }
 
+        // Duo synergy selectors
+        ['duo-player1', 'duo-player2', 'duo-map-filter'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('change', loadDuoSynergy);
+        });
+
         // Five Stack map filter
         const winrateFsMapFilter = document.getElementById('winrate-fs-map-filter');
         if (winrateFsMapFilter) {
@@ -5776,6 +5931,10 @@
                     if (slBody && slBody.textContent.trim() === 'No data yet.') {
                         loadWinrateSessionLength();
                     }
+                }
+
+                if (tab === 'duo-synergy') {
+                    populateDuoPlayers();
                 }
             });
         });
