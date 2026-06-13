@@ -4845,7 +4845,7 @@
                 const chunk = dataRows.slice(i, i + 5);
 
                 // Validate the 5 rows belong to the same match (date|map|score)
-                const sig = r => (r[0] || '') + '|' + (r[1] || '') + '|' + (r[3] || '');
+                const sig = r => (r[1] || '') + '|' + (r[2] || '') + '|' + (r[4] || '');
                 const matchSig = sig(chunk[0]);
                 if (!chunk.every(r => sig(r) === matchSig)) {
                     console.warn('Five stack: chunk at row', i, 'does not share date/map/score; skipping');
@@ -4854,7 +4854,7 @@
 
                 const names = chunk.map(r => (r[6] || '').toString().trim()).sort();
                 const key = names.join(' | ');
-                const outcome = (chunk[0][2] || '').toString().toLowerCase().trim();
+                const outcome = (chunk[0][3] || '').toString().toLowerCase().trim();
 
                 if (!lineups[key]) lineups[key] = { names, wins: 0, losses: 0, ties: 0 };
                 if (outcome === 'win') lineups[key].wins++;
