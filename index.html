@@ -5230,9 +5230,67 @@
             if (graphsInitialized) return;
             graphsInitialized = true;
             buildRatingChart();
-            // buildFirepowerTradingChart();
-            // buildOpeningClutchingChart();
-            // buildTradesTradedChart();
+            buildAttributeScatter('graph-firepower-trading', PLAYER_COLUMNS.firepower, PLAYER_COLUMNS.trading, 'Firepower', 'Trading');
+            // buildAttributeScatter('graph-opening-clutching', PLAYER_COLUMNS.opening, PLAYER_COLUMNS.clutching, 'Opening', 'Clutching');
+            // buildAttributeScatter('graph-trades-traded', ...);
+        }
+
+        // Reusable per-player scatter for two attribute columns (1-based col numbers)
+        async function buildAttributeScatter(canvasId, xCol, yCol, xLabel, yLabel) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
+            if (!data) { console.error(canvasId + ': no data'); return; }
+
+            const points = [];
+            for (let i = 7; i < 23 && i < data.length; i++) {
+                const row = data[i];
+                const name = row[PLAYER_COLUMNS.name - 1];
+                if (!name || name === '' || name.toString().includes('#DIV')) continue;
+                const x = parseFloat(row[xCol - 1]);
+                const y = parseFloat(row[yCol - 1]);
+                if (isNaN(x) || isNaN(y)) continue;
+                points.push({ x, y, label: name });
+            }
+
+            new Chart(canvas.getContext('2d'), {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        data: points,
+                        backgroundColor: 'rgba(255, 107, 53, 0.85)',
+                        borderColor: '#ff6b35',
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (c) => `${c.raw.label}: ${xLabel} ${c.raw.x}, ${yLabel} ${c.raw.y}`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: xLabel, color: '#9ba3af' },
+                            ticks: { color: '#9ba3af' },
+                            grid: { color: 'rgba(42, 48, 64, 0.6)' }
+                        },
+                        y: {
+                            title: { display: true, text: yLabel, color: '#9ba3af' },
+                            ticks: { color: '#9ba3af' },
+                            grid: { color: 'rgba(42, 48, 64, 0.6)' }
+                        }
+                    }
+                },
+                plugins: [scatterPointLabels()]
+            });
         }
 
         // Shared point label plugin / options helper for scatter charts
