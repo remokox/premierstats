@@ -2552,19 +2552,32 @@
                     </div>
                 </div>
                 <div class="winrate-content" id="winrate-five-stack" hidden>
+                    <div class="records-filters" style="margin-bottom: 16px;">
+                        <select class="records-filter-select" id="winrate-fs-map-filter">
+                            <option value="all">All Maps</option>
+                            <option value="Ancient">Ancient</option>
+                            <option value="Anubis">Anubis</option>
+                            <option value="Dust II">Dust II</option>
+                            <option value="Inferno">Inferno</option>
+                            <option value="Mirage">Mirage</option>
+                            <option value="Nuke">Nuke</option>
+                            <option value="Overpass">Overpass</option>
+                        </select>
+                    </div>
                     <div class="matches-table-container">
                         <table class="matches-table" id="winrate-five-stack-table">
                             <thead>
                                 <tr>
-                                    <th>Lineup</th>
-                                    <th>Wins</th>
-                                    <th>Losses</th>
-                                    <th>Ties</th>
-                                    <th>Winrate (excl. ties)</th>
+                                    <th class="sortable" data-col="0" data-type="text">Lineup</th>
+                                    <th class="sortable" data-col="1" data-type="num">Matches</th>
+                                    <th class="sortable" data-col="2" data-type="num">Wins</th>
+                                    <th class="sortable" data-col="3" data-type="num">Losses</th>
+                                    <th class="sortable" data-col="4" data-type="num">Ties</th>
+                                    <th class="sortable" data-col="5" data-type="num">Winrate (excl. ties)</th>
                                 </tr>
                             </thead>
                             <tbody id="winrate-five-stack-tbody">
-                                <tr><td colspan="5" style="color: var(--text-secondary);">No data yet.</td></tr>
+                                <tr><td colspan="6" style="color: var(--text-secondary);">No data yet.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -4821,14 +4834,14 @@
         }
 
         // Five Stack Winrates — winrate per unique 5-player lineup
-        async function loadWinrateFiveStack() {
+        async function loadWinrateFiveStack(mapFilter = 'all') {
             const tbody = document.getElementById('winrate-five-stack-tbody');
             if (!tbody) return;
 
             const data = await fetchSheetData(SHEET_GIDS.ecohunters);
             if (!data) {
                 console.error('Failed to load data for five stack winrates');
-                tbody.innerHTML = '<tr><td colspan="5" style="color: var(--danger);">Failed to load data.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="color: var(--danger);">Failed to load data.</td></tr>';
                 return;
             }
 
@@ -4852,6 +4865,10 @@
                     continue;
                 }
 
+                // Map filter (map name at index 2)
+                const mapName = (chunk[0][2] || '').toString().trim();
+                if (mapFilter !== 'all' && mapName !== mapFilter) continue;
+
                 const names = chunk.map(r => (r[6] || '').toString().trim()).sort();
                 const key = names.join(' | ');
                 const outcome = (chunk[0][3] || '').toString().toLowerCase().trim();
@@ -4862,22 +4879,15 @@
                 else if (outcome === 'tie') lineups[key].ties++;
             }
 
-            // Sort lineups by games played (desc), then winrate (desc)
-            const rows = Object.values(lineups).sort((a, b) => {
-                const ga = a.wins + a.losses + a.ties;
-                const gb = b.wins + b.losses + b.ties;
-                if (gb !== ga) return gb - ga;
-                const wa = (a.wins + a.losses) ? a.wins / (a.wins + a.losses) : 0;
-                const wb = (b.wins + b.losses) ? b.wins / (b.wins + b.losses) : 0;
-                return wb - wa;
-            });
+            const rows = Object.values(lineups);
 
             if (rows.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="color: var(--text-secondary);">No data yet.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="color: var(--text-secondary);">No data yet.</td></tr>';
                 return;
             }
 
             tbody.innerHTML = rows.map(lu => {
+                const matches = lu.wins + lu.losses + lu.ties;
                 const decisive = lu.wins + lu.losses;
                 let winrate = '-';
                 let cls = '';
@@ -4888,12 +4898,52 @@
                 }
                 return `<tr>
                     <td>${lu.names.join(' - ')}</td>
+                    <td>${matches}</td>
                     <td>${lu.wins}</td>
                     <td>${lu.losses}</td>
                     <td>${lu.ties}</td>
                     <td class="${cls}">${winrate}</td>
                 </tr>`;
             }).join('');
+
+            // Default sort: Matches (col 1) descending
+            sortFiveStackTable(1, false);
+        }
+
+        // Sort the five-stack table by a column index; type from th[data-type]
+        let fiveStackSort = { col: 1, ascending: false };
+        function sortFiveStackTable(col, ascending) {
+            const table = document.getElementById('winrate-five-stack-table');
+            if (!table) return;
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            if (rows.length === 0 || (rows.length === 1 && rows[0].cells.length === 1)) return;
+
+            const th = table.querySelector(`th[data-col="${col}"]`);
+            const type = th ? th.getAttribute('data-type') : 'num';
+
+            rows.sort((a, b) => {
+                let av = a.cells[col].textContent.trim();
+                let bv = b.cells[col].textContent.trim();
+                if (type === 'text') {
+                    return ascending ? av.localeCompare(bv) : bv.localeCompare(av);
+                }
+                // numeric: strip % and treat '-' as -1 so empty winrates sink
+                const an = av === '-' ? -1 : parseFloat(av.replace('%', ''));
+                const bn = bv === '-' ? -1 : parseFloat(bv.replace('%', ''));
+                return ascending ? an - bn : bn - an;
+            });
+
+            tbody.innerHTML = '';
+            rows.forEach(r => tbody.appendChild(r));
+            fiveStackSort = { col, ascending };
+
+            // Update header arrows
+            table.querySelectorAll('th.sortable').forEach(h => {
+                const base = h.textContent.replace(/ [↑↓↕]$/, '');
+                const hc = parseInt(h.getAttribute('data-col'));
+                h.textContent = base + (hc === col ? (ascending ? ' ↑' : ' ↓') : ' ↕');
+            });
         }
 
         // Load Game Records data
@@ -5609,6 +5659,23 @@
                 loadWinrateMatchLength(winrateMlMapFilter.value);
             });
         }
+
+        // Five Stack map filter
+        const winrateFsMapFilter = document.getElementById('winrate-fs-map-filter');
+        if (winrateFsMapFilter) {
+            winrateFsMapFilter.addEventListener('change', () => {
+                loadWinrateFiveStack(winrateFsMapFilter.value);
+            });
+        }
+
+        // Five Stack sortable headers
+        document.querySelectorAll('#winrate-five-stack-table th.sortable').forEach(th => {
+            th.addEventListener('click', () => {
+                const col = parseInt(th.getAttribute('data-col'));
+                const ascending = (fiveStackSort.col === col) ? !fiveStackSort.ascending : false;
+                sortFiveStackTable(col, ascending);
+            });
+        });
 
         // Winrate Details sub-tab switching
         document.querySelectorAll('.winrate-tab-button').forEach(btn => {
