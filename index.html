@@ -2801,7 +2801,7 @@
                             <option value="Overpass">Overpass</option>
                         </select>
                     </div>
-                    <div class="matches-table-container">
+                    <div class="matches-table-container" id="duo-single-wrap" style="display:none;">
                         <table class="matches-table" id="winrate-duo-table">
                             <thead>
                                 <tr>
@@ -2818,6 +2818,23 @@
                                 <tr><td colspan="7" style="color: var(--text-secondary);">Select two players to see their duo stats.</td></tr>
                             </tbody>
                         </table>
+                    </div>
+                    <div id="duo-leaderboard">
+                        <h3 style="color: var(--accent-primary); margin: 0 0 10px;">Best duos</h3>
+                        <div class="matches-table-container">
+                            <table class="matches-table">
+                                <thead><tr><th>Duo</th><th>Matches</th><th>Wins</th><th>Losses</th><th>Ties</th><th>Winrate (excl. ties)</th></tr></thead>
+                                <tbody id="duo-best-tbody"></tbody>
+                            </table>
+                        </div>
+                        <h3 style="color: var(--accent-primary); margin: 24px 0 10px;">Worst duos</h3>
+                        <div class="matches-table-container">
+                            <table class="matches-table">
+                                <thead><tr><th>Duo</th><th>Matches</th><th>Wins</th><th>Losses</th><th>Ties</th><th>Winrate (excl. ties)</th></tr></thead>
+                                <tbody id="duo-worst-tbody"></tbody>
+                            </table>
+                        </div>
+                        <p id="duo-leaderboard-note" style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 10px;">Duos with at least 10 games together overall. Winrate shown for the selected map.</p>
                     </div>
                 </div>
                 <div class="winrate-content" id="winrate-session-length" hidden>
@@ -5753,14 +5770,27 @@
             document.getElementById('duo-p1-rating-header').textContent = (p1 || 'Player 1') + ' Rating 3.0';
             document.getElementById('duo-p2-rating-header').textContent = (p2 || 'Player 2') + ' Rating 3.0';
 
-            if (!p1 || !p2) {
-                tbody.innerHTML = '<tr><td colspan="7" style="color: var(--text-secondary);">Select two players to see their duo stats.</td></tr>';
+            const singleWrap = document.getElementById('duo-single-wrap');
+            const leaderboard = document.getElementById('duo-leaderboard');
+
+            if (!p1 || !p2 || p1 === p2) {
+                // Default view: best/worst duos leaderboard
+                if (singleWrap) singleWrap.style.display = 'none';
+                if (leaderboard) leaderboard.style.display = 'block';
+                if (p1 === p2 && p1) {
+                    // both selected but same — show a hint inside single table instead
+                    if (singleWrap) singleWrap.style.display = 'block';
+                    if (leaderboard) leaderboard.style.display = 'none';
+                    tbody.innerHTML = '<tr><td colspan="7" style="color: var(--text-secondary);">Please pick two different players.</td></tr>';
+                    return;
+                }
+                await renderDuoLeaderboard(mapFilter);
                 return;
             }
-            if (p1 === p2) {
-                tbody.innerHTML = '<tr><td colspan="7" style="color: var(--text-secondary);">Please pick two different players.</td></tr>';
-                return;
-            }
+
+            // A specific duo is selected: show the single-duo table
+            if (singleWrap) singleWrap.style.display = 'block';
+            if (leaderboard) leaderboard.style.display = 'none';
 
             const data = await fetchSheetData(SHEET_GIDS.ecohunters);
             if (!data) {
@@ -5827,6 +5857,115 @@
                 <td>${avg1}</td>
                 <td>${avg2}</td>
             </tr>`;
+        }
+
+        // Best/worst duo leaderboard (default view before a duo is picked)
+        async function renderDuoLeaderboard(mapFilter) {
+            const bestBody = document.getElementById('duo-best-tbody');
+            const worstBody = document.getElementById('duo-worst-tbody');
+            if (!bestBody || !worstBody) return;
+
+            const data = await fetchSheetData(SHEET_GIDS.ecohunters);
+            if (!data) {
+                bestBody.innerHTML = worstBody.innerHTML = '<tr><td colspan="6" style="color: var(--danger);">Failed to load data.</td></tr>';
+                return;
+            }
+
+            const dataRows = data.filter(row => {
+                const name = (row[6] || '').toString().trim();
+                const n = name.toLowerCase();
+                return name !== '' && n !== 'player' && n !== 'player details';
+            });
+
+            // pair key -> { names:[a,b], overallGames, mapWins, mapLosses, mapTies }
+            const pairs = {};
+            for (let i = 0; i + 5 <= dataRows.length; i += 5) {
+                const chunk = dataRows.slice(i, i + 5);
+                const sig = r => (r[1] || '') + '|' + (r[2] || '') + '|' + (r[4] || '');
+                if (!chunk.every(r => sig(r) === sig(chunk[0]))) continue;
+
+                const mapName = (chunk[0][2] || '').toString().trim();
+                const outcome = (chunk[0][3] || '').toString().toLowerCase().trim();
+                const names = chunk.map(r => (r[6] || '').toString().trim()).filter(Boolean);
+                const onSelectedMap = (mapFilter === 'all') || (mapName === mapFilter);
+
+                // every unordered pair in this match
+                for (let a = 0; a < names.length; a++) {
+                    for (let b = a + 1; b < names.length; b++) {
+                        const pair = [names[a], names[b]].sort();
+                        const key = pair.join(' | ');
+                        if (!pairs[key]) pairs[key] = { names: pair, overallGames: 0, mapWins: 0, mapLosses: 0, mapTies: 0 };
+                        const p = pairs[key];
+                        p.overallGames++; // counts every game together, all maps
+                        if (onSelectedMap) {
+                            if (outcome === 'win') p.mapWins++;
+                            else if (outcome === 'loss') p.mapLosses++;
+                            else if (outcome === 'tie') p.mapTies++;
+                        }
+                    }
+                }
+            }
+
+            // Qualify:
+            //  - All Maps: >= 10 games together overall
+            //  - Specific map: >= 5 games on that map
+            const qualified = Object.values(pairs).filter(p => {
+                const mapGames = p.mapWins + p.mapLosses + p.mapTies;
+                if (mapFilter === 'all') return p.overallGames >= 10;
+                return mapGames >= 5;
+            }).map(p => {
+                const decisive = p.mapWins + p.mapLosses;
+                const wr = decisive > 0 ? (p.mapWins / decisive) : null;
+                return { ...p, mapGames: p.mapWins + p.mapLosses + p.mapTies, wr };
+            });
+
+            // Rank by winrate (null winrate — all ties — sinks to bottom). Tie-break: more map games.
+            const sorted = qualified.slice().sort((a, b) => {
+                const wa = a.wr === null ? -1 : a.wr;
+                const wb = b.wr === null ? -1 : b.wr;
+                if (wb !== wa) return wb - wa;
+                return b.mapGames - a.mapGames;
+            });
+
+            const rowHtml = (p) => {
+                let wr = '-', cls = '';
+                if (p.wr !== null) {
+                    const pct = p.wr * 100;
+                    wr = pct.toFixed(1) + '%';
+                    cls = pct > 50 ? 'text-green' : pct < 50 ? 'text-red' : 'text-yellow';
+                }
+                return `<tr>
+                    <td>${p.names.join(' - ')}</td>
+                    <td>${p.mapGames}</td>
+                    <td>${p.mapWins}</td>
+                    <td>${p.mapLosses}</td>
+                    <td>${p.mapTies}</td>
+                    <td class="${cls}">${wr}</td>
+                </tr>`;
+            };
+
+            if (sorted.length === 0) {
+                const empty = '<tr><td colspan="6" style="color: var(--text-secondary);">' +
+                    (mapFilter === 'all'
+                        ? 'No duos with 10+ games together.'
+                        : 'No duos with 5+ games together on ' + mapFilter + '.') +
+                    '</td></tr>';
+                bestBody.innerHTML = empty;
+                worstBody.innerHTML = empty;
+                return;
+            }
+
+            const best = sorted.slice(0, 5);
+            const worst = sorted.slice(-5).reverse(); // worst first
+            bestBody.innerHTML = best.map(rowHtml).join('');
+            worstBody.innerHTML = worst.map(rowHtml).join('');
+
+            const note = document.getElementById('duo-leaderboard-note');
+            if (note) {
+                note.textContent = (mapFilter === 'all')
+                    ? 'Duos with at least 10 games together overall.'
+                    : 'Duos with at least 5 games together on ' + mapFilter + '.';
+            }
         }
 
         // Graphs page — build charts once, on first open
@@ -6826,6 +6965,7 @@
 
                 if (tab === 'duo-synergy') {
                     populateDuoPlayers();
+                    loadDuoSynergy();
                 }
             });
         });
