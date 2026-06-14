@@ -3106,6 +3106,12 @@
             return special[m] || (m.charAt(0).toUpperCase() + m.slice(1));
         }
 
+        // Normalize a cell/string for matching: convert non-breaking spaces to
+        // regular spaces and trim. JS .trim() does NOT strip U+00A0 on its own.
+        function normLabel(s) {
+            return (s || '').toString().replace(/\u00A0/g, ' ').trim();
+        }
+
         // Column mappings (1-indexed)
         const OVERVIEW_COLUMNS = {
             name: 3,        // C
@@ -4391,7 +4397,7 @@
             for (let i = 0; i < data.length; i++) {
                 // Check all columns for the search string
                 for (let j = 0; j < data[i].length; j++) {
-                    if (data[i][j] && data[i][j].trim() === searchString) {
+                    if (data[i][j] && normLabel(data[i][j]) === normLabel(searchString)) {
                         startRow = i + 2; // Start from 2 rows below (skip merged empty row)
                         console.log('Found section at row', i, 'starting matches from row', startRow);
                         break;
@@ -4603,7 +4609,7 @@
             let startRow = -1;
             for (let i = 0; i < data.length; i++) {
                 for (let j = 0; j < data[i].length; j++) {
-                    if (data[i][j] && data[i][j].trim() === searchString) { startRow = i + 2; break; }
+                    if (data[i][j] && normLabel(data[i][j]) === normLabel(searchString)) { startRow = i + 2; break; }
                 }
                 if (startRow !== -1) break;
             }
@@ -4697,7 +4703,7 @@
             let startRow = -1;
             for (let i = 0; i < data.length; i++) {
                 for (let j = 0; j < data[i].length; j++) {
-                    if (data[i][j] && data[i][j].trim() === searchString) { startRow = i + 2; break; }
+                    if (data[i][j] && normLabel(data[i][j]) === normLabel(searchString)) { startRow = i + 2; break; }
                 }
                 if (startRow !== -1) break;
             }
@@ -4891,7 +4897,7 @@
             for (let i = 0; i < data.length; i++) {
                 // Check all columns for the search string
                 for (let j = 0; j < data[i].length; j++) {
-                    if (data[i][j] && data[i][j].trim() === searchString) {
+                    if (data[i][j] && normLabel(data[i][j]) === normLabel(searchString)) {
                         startRow = i + 2; // Start from 2 rows below (skip merged empty row)
                         console.log('Found clutches section at row', i, 'starting from row', startRow);
                         break;
