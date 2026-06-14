@@ -4028,11 +4028,15 @@
             }
             
             if (!playerRow) {
-                console.error(`No data found for ${info.nickname} in rows ${startRow + 1} to ${endRow + 1}`);
-                console.log('Available players in this range:');
-                for (let i = startRow; i <= endRow && i < data.length; i++) {
-                    console.log(`Row ${i + 1}: "${data[i][2]}"`);
-                }
+                console.error(`No overview row for ${info.nickname} in rows ${startRow + 1} to ${endRow + 1}; loading other tabs anyway`);
+                // Overview sidebar can't be filled for this map, but the other tabs
+                // read from different sheets — load them regardless.
+                await loadMatchesData(mapName);
+                await loadClutchesData(mapName);
+                await loadWeaponsData(mapName);
+                await loadStreaksData(mapName);
+                await loadScoreStatsData(mapName);
+                await loadSessionPerfData(mapName);
                 return;
             }
             
@@ -4381,6 +4385,8 @@
             
             if (startRow === -1) {
                 console.error('Could not find section for:', searchString);
+                const tb = document.getElementById('matches-tbody');
+                if (tb) tb.innerHTML = '<tr><td colspan="5" style="color: var(--text-secondary);">No match data for this map.</td></tr>';
                 return;
             }
             
@@ -4879,6 +4885,11 @@
             
             if (startRow === -1) {
                 console.error('Could not find clutches section for:', searchString);
+                const tb = document.getElementById('clutches-tbody');
+                if (tb) tb.innerHTML = '<tr><td colspan="5" style="color: var(--text-secondary);">No clutch data for this map.</td></tr>';
+                const w = document.getElementById('clutches-wins'); if (w) w.textContent = '0';
+                const l = document.getElementById('clutches-losses'); if (l) l.textContent = '0';
+                const d = document.getElementById('clutches-difference'); if (d) d.textContent = '0';
                 return;
             }
             
