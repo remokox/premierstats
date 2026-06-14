@@ -2061,6 +2061,7 @@
                     <button class="detail-tab-button" data-tab="placements">Scoreboard placements</button>
                     <button class="detail-tab-button" data-tab="streaks">Streaks</button>
                     <button class="detail-tab-button" data-tab="score-stats">Stats by game score</button>
+                    <button class="detail-tab-button" data-tab="session-perf">Performance by game of day</button>
                     </div>
                     
                     <div class="map-filter-container">
@@ -2532,6 +2533,17 @@
                                 <thead><tr><th>Tie score</th><th>Games</th><th>Average K/D</th><th>Average rating</th></tr></thead>
                                 <tbody id="score-ties-tbody">
                                     <tr data-score="15:15"><td>15:15</td><td>-</td><td>-</td><td>-</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="player-detail-content" id="detail-tab-session-perf" style="display:none;">
+                        <div class="matches-table-container">
+                            <table class="matches-table" id="session-perf-table">
+                                <thead><tr><th>Game of the day</th><th>Games</th><th>Average K/D</th><th>Average rating</th></tr></thead>
+                                <tbody id="session-perf-tbody">
+                                    <tr><td colspan="4" style="color: var(--text-secondary);">No data yet.</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -4296,6 +4308,9 @@
 
             // Load stats-by-score data for Stats by game score tab
             await loadScoreStatsData(mapName);
+
+            // Load performance-by-game-of-day tab
+            await loadSessionPerfData(mapName);
         }
         
         // Get player attribute data from the "All" row
@@ -4545,6 +4560,101 @@
                     }
                 }
             });
+        }
+
+        // Performance by game-of-the-day (maps tab)
+        async function loadSessionPerfData(mapName) {
+            if (!currentPlayerName) return;
+            const info = PLAYER_INFO[currentPlayerName];
+            if (!info) return;
+
+            const data = await fetchSheetData(SHEET_GIDS.maps);
+            if (!data) { console.error('Session perf: failed to load data'); return; }
+
+            const cols = MATCHES_COLUMNS[info.nickname];
+            const tbody = document.getElementById('session-perf-tbody');
+            if (!cols) { tbody.innerHTML = '<tr><td colspan="4" style="color: var(--danger);">No column mapping.</td></tr>'; return; }
+
+            const mapFilter = (mapName || 'all').charAt(0).toUpperCase() + (mapName || 'all').slice(1).toLowerCase();
+            const searchString = info.nickname + mapFilter;
+            let startRow = -1;
+            for (let i = 0; i < data.length; i++) {
+                for (let j = 0; j < data[i].length; j++) {
+                    if (data[i][j] && data[i][j].trim() === searchString) { startRow = i + 2; break; }
+                }
+                if (startRow !== -1) break;
+            }
+            if (startRow === -1) {
+                tbody.innerHTML = '<tr><td colspan="4" style="color: var(--text-secondary);">No data yet.</td></tr>';
+                return;
+            }
+
+            // Collect this player's games (sheet is newest-date-first; within a date, bottom row = first game)
+            const games = [];
+            for (let i = startRow; i < data.length; i++) {
+                const row = data[i];
+                const date = row[cols.date];
+                if (!date || date.trim() === '') break;
+                // parse "29-17" -> kills, deaths
+                let kills = NaN, deaths = NaN;
+                const kdStr = (row[cols.kd] || '').toString().trim();
+                const m = kdStr.match(/^(\d+)\s*-\s*(\d+)$/);
+                if (m) { kills = parseInt(m[1]); deaths = parseInt(m[2]); }
+                games.push({
+                    date: date.trim(),
+                    kills, deaths,
+                    rating: parseFloat(row[cols.rating])
+                });
+            }
+
+            // Reverse the whole block so it reads oldest -> newest.
+            // After this, within each date the FIRST game encountered is that day's 1st game.
+            games.reverse();
+
+            // Assign position-in-day by walking chronologically and resetting on date change.
+            const buckets = {}; // position -> { games, kills, deaths, ratingSum, ratingCount }
+            let lastDate = null, pos = 0;
+            games.forEach(g => {
+                if (g.date !== lastDate) { pos = 1; lastDate = g.date; }
+                else { pos++; }
+                if (!buckets[pos]) buckets[pos] = { games: 0, kills: 0, deaths: 0, ratingSum: 0, ratingCount: 0 };
+                const b = buckets[pos];
+                b.games++;
+                if (!isNaN(g.kills)) b.kills += g.kills;
+                if (!isNaN(g.deaths)) b.deaths += g.deaths;
+                if (!isNaN(g.rating)) { b.ratingSum += g.rating; b.ratingCount++; }
+            });
+
+            const maxPos = Object.keys(buckets).reduce((m, k) => Math.max(m, parseInt(k)), 0);
+            if (maxPos === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="color: var(--text-secondary);">No data yet.</td></tr>';
+                return;
+            }
+
+            const ordinal = (n) => {
+                const s = ['th','st','nd','rd'], v = n % 100;
+                return n + (s[(v - 20) % 10] || s[v] || s[0]);
+            };
+
+            let html = '';
+            for (let p = 1; p <= maxPos; p++) {
+                const b = buckets[p];
+                if (!b) { html += `<tr><td>${ordinal(p)}</td><td>0</td><td>-</td><td>-</td></tr>`; continue; }
+                let kdTxt = '-', kdCls = '';
+                if (b.deaths > 0) {
+                    const kd = b.kills / b.deaths;
+                    kdTxt = kd.toFixed(2);
+                    kdCls = kd >= 1.0 ? 'text-green' : 'text-red';
+                } else if (b.kills > 0) { kdTxt = '∞'; kdCls = 'text-green'; }
+                let rTxt = '-', rCls = '';
+                if (b.ratingCount > 0) {
+                    const r = b.ratingSum / b.ratingCount;
+                    rTxt = r.toFixed(2);
+                    rCls = r >= 1.0 ? 'text-green' : 'text-red';
+                }
+                html += `<tr><td>${ordinal(p)}</td><td>${b.games}</td><td class="${kdCls}">${kdTxt}</td><td class="${rCls}">${rTxt}</td></tr>`;
+            }
+            tbody.innerHTML = html;
         }
 
         // Load streaks data for Streaks tab
