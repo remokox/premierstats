@@ -4309,8 +4309,8 @@
             // Load stats-by-score data for Stats by game score tab
             await loadScoreStatsData(mapName);
 
-            // Load performance-by-game-of-day tab (always all maps, ignores filter)
-            await loadSessionPerfData('all');
+            // Load performance-by-game-of-day tab
+            await loadSessionPerfData(mapName);
         }
         
         // Get player attribute data from the "All" row
