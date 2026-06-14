@@ -1130,6 +1130,93 @@
             font-weight: 600;
         }
 
+        /* Reusable info tooltip ("i" in a circle, hover to reveal) */
+        .info-tip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 15px;
+            height: 15px;
+            margin-left: 6px;
+            border-radius: 50%;
+            border: 1px solid var(--accent-tertiary);
+            color: var(--accent-tertiary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-style: italic;
+            font-weight: 700;
+            line-height: 1;
+            cursor: help;
+            position: relative;
+            vertical-align: middle;
+            flex: 0 0 auto;
+            user-select: none;
+        }
+
+        .info-tip::after {
+            content: attr(data-tip);
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: max-content;
+            max-width: 260px;
+            padding: 8px 12px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--accent-tertiary);
+            border-radius: 8px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.85rem;
+            font-style: normal;
+            font-weight: 500;
+            line-height: 1.4;
+            text-align: left;
+            text-transform: none;
+            letter-spacing: normal;
+            white-space: normal;
+            box-shadow: 0 4px 15px var(--shadow);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.15s ease;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        /* little arrow under the bubble */
+        .info-tip::before {
+            content: '';
+            position: absolute;
+            bottom: calc(100% + 3px);
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: var(--accent-tertiary);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.15s ease;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .info-tip:hover::after,
+        .info-tip:hover::before {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Downward variant: bubble appears below the icon (for elements near the top of a clipping container) */
+        .info-tip--down::after {
+            bottom: auto;
+            top: calc(100% + 8px);
+        }
+        .info-tip--down::before {
+            bottom: auto;
+            top: calc(100% + 3px);
+            border-top-color: transparent;
+            border-bottom-color: var(--accent-tertiary);
+        }
+
         /* Ecohunters Page Styles */
         .ecohunters-explanation {
             background: var(--bg-secondary);
@@ -2104,7 +2191,7 @@
                                 <span class="player-detail-stat-value" id="detail-dpr">0.00</span>
                             </div>
                             <div class="player-detail-stat-row">
-                                <span class="player-detail-stat-label">KAST</span>
+                                <span class="player-detail-stat-label">KAST<span class="info-tip" data-tip="Rounds in which a player killed, assisted, survived or was traded">i</span></span>
                                 <span class="player-detail-stat-value" id="detail-kast">0.00%</span>
                             </div>
                             <div class="player-detail-stat-row">
@@ -2193,7 +2280,7 @@
                                 <tr><td>Traded deaths percentage</td><td>-</td></tr>
                                 <tr><td>Opening deaths traded percentage</td><td>-</td></tr>
                                 <tr><td>Assists per round</td><td>-</td></tr>
-                                <tr><td>Support rounds</td><td>-</td></tr>
+                                <tr><td>Support rounds<span class="info-tip" data-tip="Rounds in which a player assisted, survived or was traded and did NOT get a kill">i</span></td><td>-</td></tr>
                             </tbody>
                         </table>
 
@@ -2224,8 +2311,8 @@
                         <div class="player-detail-section-title">Clutching <span style="float: right; color: var(--accent-primary);" id="detail-clutching-score">0/100</span></div>
                         <table class="player-detail-table">
                             <tbody>
-                                <tr><td>Clutch points per round</td><td>-</td></tr>
-                                <tr><td>Last alive percentage</td><td>-</td></tr>
+                                <tr><td>Clutch points per round<span class="info-tip" data-tip="1 clutch point for a 1v1, 2 for a 1v2, 4 for a 1v3, 8 for a 1v4 and 16 for a 1v5">i</span></td><td>-</td></tr>
+                                <tr><td>Last alive percentage<span class="info-tip" data-tip="Rounds where a player was the only player surviving">i</span></td><td>-</td></tr>
                                 <tr><td>1on1 win percentage</td><td>-</td></tr>
                                 <tr><td>Time alive per round [s]</td><td>-</td></tr>
                                 <tr><td>Saves per round loss</td><td>-</td></tr>
@@ -2963,7 +3050,7 @@
                             <td id="stat-apr">0.00</td>
                         </tr>
                         <tr>
-                            <td>Support rounds</td>
+                            <td>Support rounds<span class="info-tip" data-tip="Rounds in which a player assisted, survived or was traded and did NOT get a kill">i</span></td>
                             <td id="stat-sr">0.00%</td>
                         </tr>
                     </table>
@@ -3028,7 +3115,7 @@
                             <td id="stat-crpr">0.00</td>
                         </tr>
                         <tr>
-                            <td>Last alive percentage</td>
+                            <td>Last alive percentage<span class="info-tip" data-tip="Rounds where a player was the only player surviving">i</span></td>
                             <td id="stat-lap">0.00%</td>
                         </tr>
                         <tr>
@@ -6514,7 +6601,7 @@
                             <th>A</th>
                             <th>ADR</th>
                             <th>HS%</th>
-                            <th>KAST</th>
+                            <th>KAST<span class="info-tip info-tip--down" data-tip="Rounds in which a player killed, assisted, survived or was traded">i</span></th>
                             <th>Round Swing</th>
                             <th>Rating 3.0</th>
                             ${showExtraColumn ? `<th>${selectedStatLabel}</th>` : ''}
