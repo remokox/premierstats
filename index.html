@@ -3089,6 +3089,23 @@
             'ecohunters': '1037802432'
         };
 
+        // Convert a nav-filter map value (e.g. "dust2", "ancient", "all") to the
+        // exact map-name string used in the sheet block labels (e.g. "Dust II").
+        function mapNameForBlock(mapName) {
+            const m = (mapName || 'all').toLowerCase();
+            const special = {
+                'all': 'All',
+                'dust2': 'Dust II',
+                'ancient': 'Ancient',
+                'anubis': 'Anubis',
+                'inferno': 'Inferno',
+                'mirage': 'Mirage',
+                'nuke': 'Nuke',
+                'overpass': 'Overpass'
+            };
+            return special[m] || (m.charAt(0).toUpperCase() + m.slice(1));
+        }
+
         // Column mappings (1-indexed)
         const OVERVIEW_COLUMNS = {
             name: 3,        // C
@@ -4365,7 +4382,7 @@
             
             // Find the row with player name + map filter
             // Format: "PlayerNameMapName" e.g., "Große CigaretteAll", "Große CigaretteAncient"
-            const mapFilter = mapName.charAt(0).toUpperCase() + mapName.slice(1).toLowerCase();
+            const mapFilter = mapNameForBlock(mapName);
             const searchString = info.nickname + mapFilter;
             
             console.log('Searching for:', searchString);
@@ -4581,7 +4598,7 @@
             const tbody = document.getElementById('session-perf-tbody');
             if (!cols) { tbody.innerHTML = '<tr><td colspan="4" style="color: var(--danger);">No column mapping.</td></tr>'; return; }
 
-            const mapFilter = (mapName || 'all').charAt(0).toUpperCase() + (mapName || 'all').slice(1).toLowerCase();
+            const mapFilter = mapNameForBlock(mapName);
             const searchString = info.nickname + mapFilter;
             let startRow = -1;
             for (let i = 0; i < data.length; i++) {
@@ -4675,7 +4692,7 @@
             const cols = MATCHES_COLUMNS[info.nickname];
             if (!cols) { console.error('Streaks: no column mapping for', info.nickname); return; }
 
-            const mapFilter = (mapName || 'all').charAt(0).toUpperCase() + (mapName || 'all').slice(1).toLowerCase();
+            const mapFilter = mapNameForBlock(mapName);
             const searchString = info.nickname + mapFilter;
             let startRow = -1;
             for (let i = 0; i < data.length; i++) {
@@ -4865,7 +4882,7 @@
             
             // Find the row with player name + map filter
             // Format: "PlayerNameMapName" e.g., "remokoxAll", "Große CigaretteAncient"
-            const mapFilter = mapName.charAt(0).toUpperCase() + mapName.slice(1).toLowerCase();
+            const mapFilter = mapNameForBlock(mapName);
             const searchString = info.nickname + mapFilter;
             
             console.log('Searching for clutches section:', searchString);
