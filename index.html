@@ -2238,7 +2238,7 @@
                             <tbody>
                                 <tr><td>Sniper kills per round</td><td>-</td></tr>
                                 <tr><td>Sniper kills percentage</td><td>-</td></tr>
-                                <tr><td>Sniper multikill rounds</td><td>-</td></tr>
+                                <tr><td>Sniper multikills per round</td><td>-</td></tr>
                                 <tr><td>Sniper opening kills per round</td><td>-</td></tr>
                             </tbody>
                         </table>
@@ -6644,8 +6644,9 @@
                     opLowbuy: opLowbuy.toFixed(0) + '%',
                     opFull: opFull.toFixed(0) + '%',
                     opRatio: opRatio.toFixed(0) + '%',
+                    opRatioNum: opRatio, // Keep numeric value for color thresholds
                     kLowbuy: kLowbuy.toFixed(0) + '%',
-                    kLowbuyNum: kLowbuy // Keep numeric value for average calculation
+                    kLowbuyNum: kLowbuy // Keep numeric value for average calculation and color thresholds
                 });
             });
             
@@ -6672,15 +6673,27 @@
                         </tr>
                     </thead>
                     <tbody>
-                        ${playersStats.map(player => `
+                        ${playersStats.map(player => {
+                            // Op% lowbuy / Op% full ratio: >105% red, <95% green, else uncolored
+                            let opRatioClass = '';
+                            if (player.opRatioNum > 105) opRatioClass = 'text-red';
+                            else if (player.opRatioNum < 95) opRatioClass = 'text-green';
+
+                            // K% lowbuy vs average: > avg+2 red, < avg-2 green, else uncolored
+                            let kLowbuyClass = '';
+                            if (player.kLowbuyNum > avgKLowbuy + 2) kLowbuyClass = 'text-red';
+                            else if (player.kLowbuyNum < avgKLowbuy - 2) kLowbuyClass = 'text-green';
+
+                            return `
                             <tr>
                                 <td>${player.name}</td>
                                 <td>${player.opLowbuy}</td>
                                 <td>${player.opFull}</td>
-                                <td>${player.opRatio}</td>
-                                <td>${player.kLowbuy}</td>
+                                <td class="${opRatioClass}">${player.opRatio}</td>
+                                <td class="${kLowbuyClass}">${player.kLowbuy}</td>
                             </tr>
-                        `).join('')}
+                        `;
+                        }).join('')}
                     </tbody>
                 </table>
             `;
