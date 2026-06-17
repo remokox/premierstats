@@ -4107,7 +4107,12 @@
             }
             
             console.log('Loading data for player:', info.nickname);
-            
+
+            // Immediately show a loading message in the per-map panels that rebuild
+            // their tbody. Each loader replaces this with real rows when its own
+            // fetch finishes, so no separate "hide" step is needed for these.
+            showPanelLoading(['matches-tbody', 'clutches-tbody', 'weapons-tbody', 'session-perf-tbody']);
+
             // Fetch data from Google Sheets
             const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
             if (!data) {
@@ -4470,6 +4475,26 @@
             return null;
         }
 
+        // Show a "Loading stats…" message inside one or more tbody containers.
+        // Each loader overwrites its tbody with real rows when its fetch completes,
+        // which clears the message automatically. colspans maps a tbodyId to the
+        // number of columns in that table so the message row spans the full width.
+        function showPanelLoading(targets) {
+            const defaultColspan = 5;
+            const colspans = {
+                'matches-tbody': 5,
+                'clutches-tbody': 5,
+                'weapons-tbody': 3,
+                'session-perf-tbody': 4
+            };
+            targets.forEach(id => {
+                const tb = document.getElementById(id);
+                if (!tb) return;
+                const span = colspans[id] || defaultColspan;
+                tb.innerHTML = `<tr><td colspan="${span}" class="loading" style="padding: 24px;">Loading stats…</td></tr>`;
+            });
+        }
+
         // Load matches data for Matches tab
         async function loadMatchesData(mapName) {
             if (!currentPlayerName) return;
@@ -4480,6 +4505,8 @@
             const data = await fetchSheetData(SHEET_GIDS.maps);
             if (!data) {
                 console.error('Failed to load matches data');
+                const tb = document.getElementById('matches-tbody');
+                if (tb) tb.innerHTML = '<tr><td colspan="5" style="color: var(--danger);">Failed to load stats. Please refresh.</td></tr>';
                 return;
             }
             
@@ -4702,7 +4729,7 @@
             if (!info) return;
 
             const data = await fetchSheetData(SHEET_GIDS.maps);
-            if (!data) { console.error('Session perf: failed to load data'); return; }
+            if (!data) { console.error('Session perf: failed to load data'); const tb = document.getElementById('session-perf-tbody'); if (tb) tb.innerHTML = '<tr><td colspan="4" style="color: var(--danger);">Failed to load stats. Please refresh.</td></tr>'; return; }
 
             const cols = MATCHES_COLUMNS[info.nickname];
             const tbody = document.getElementById('session-perf-tbody');
@@ -4980,6 +5007,8 @@
             const data = await fetchSheetData(SHEET_GIDS.clutches);
             if (!data) {
                 console.error('Failed to load clutches data');
+                const tb = document.getElementById('clutches-tbody');
+                if (tb) tb.innerHTML = '<tr><td colspan="5" style="color: var(--danger);">Failed to load stats. Please refresh.</td></tr>';
                 return;
             }
             
@@ -5091,6 +5120,8 @@
             const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
             if (!data) {
                 console.error('Failed to load weapons data');
+                const tb = document.getElementById('weapons-tbody');
+                if (tb) tb.innerHTML = '<tr><td colspan="3" style="color: var(--danger);">Failed to load stats. Please refresh.</td></tr>';
                 return;
             }
             
