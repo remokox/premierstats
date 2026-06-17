@@ -480,6 +480,22 @@
             margin: 20px auto;
         }
 
+        /* Overlay loading state for panels that update in place (cell-filler tables,
+           chart canvases) and can't host a "Loading" row without breaking structure. */
+        .loading-host { position: relative; }
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            z-index: 5;
+            border-radius: 8px;
+        }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -4113,6 +4129,11 @@
             // fetch finishes, so no separate "hide" step is needed for these.
             showPanelLoading(['matches-tbody', 'clutches-tbody', 'weapons-tbody', 'session-perf-tbody']);
 
+            // The streaks and stats-by-score tabs update existing rows in place, so
+            // they get an overlay instead (cleared by their loaders on completion).
+            showPanelOverlay('detail-tab-streaks');
+            showPanelOverlay('detail-tab-score-stats');
+
             // Fetch data from Google Sheets
             const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
             if (!data) {
@@ -4485,7 +4506,12 @@
                 'matches-tbody': 5,
                 'clutches-tbody': 5,
                 'weapons-tbody': 3,
-                'session-perf-tbody': 4
+                'session-perf-tbody': 4,
+                'winrate-five-stack-tbody': 6,
+                'winrate-session-tbody': 3,
+                'winrate-duo-tbody': 7,
+                'duo-best-tbody': 6,
+                'duo-worst-tbody': 6
             };
             targets.forEach(id => {
                 const tb = document.getElementById(id);
@@ -4493,6 +4519,43 @@
                 const span = colspans[id] || defaultColspan;
                 tb.innerHTML = `<tr><td colspan="${span}" class="loading" style="padding: 24px;">Loading stats…</td></tr>`;
             });
+        }
+
+        // Overlay loading for panels that update in place (cell-filler tables and
+        // chart canvases). Pass the id of a wrapper element to cover. Must be paired
+        // with hidePanelOverlay() in the loader's completion/early-exit paths.
+        function showPanelOverlay(hostId) {
+            const host = document.getElementById(hostId);
+            if (!host) return;
+            host.classList.add('loading-host');
+            if (host.querySelector(':scope > .loading-overlay')) return; // already shown
+            const ov = document.createElement('div');
+            ov.className = 'loading-overlay';
+            ov.textContent = 'Loading stats…';
+            host.appendChild(ov);
+        }
+
+        function hidePanelOverlay(hostId) {
+            const host = document.getElementById(hostId);
+            if (!host) return;
+            const ov = host.querySelector(':scope > .loading-overlay');
+            if (ov) ov.remove();
+        }
+
+        // Same as above but takes an element directly (for chart wrappers without ids).
+        function showOverlayOn(host) {
+            if (!host) return;
+            host.classList.add('loading-host');
+            if (host.querySelector(':scope > .loading-overlay')) return;
+            const ov = document.createElement('div');
+            ov.className = 'loading-overlay';
+            ov.textContent = 'Loading stats…';
+            host.appendChild(ov);
+        }
+        function hideOverlayOn(host) {
+            if (!host) return;
+            const ov = host.querySelector(':scope > .loading-overlay');
+            if (ov) ov.remove();
         }
 
         // Load matches data for Matches tab
@@ -4654,9 +4717,11 @@
         async function buildPlayerRadar(canvasId, playerNickname) {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
+            const host = canvas.parentElement;
+            showOverlayOn(host);
 
             const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
-            if (!data) { console.error('Radar: no data'); return; }
+            if (!data) { console.error('Radar: no data'); hideOverlayOn(host); return; }
 
             const rosterRows = rowsForMap(data, 'All');
 
@@ -4669,7 +4734,7 @@
             });
 
             const playerRow = rosterRows.find(r => (r[PLAYER_COLUMNS.name - 1] || '').toString().trim() === playerNickname);
-            if (!playerRow) { console.error('Radar: player not found:', playerNickname); return; }
+            if (!playerRow) { console.error('Radar: player not found:', playerNickname); hideOverlayOn(host); return; }
 
             const scaled = RADAR_METRICS.map((metric, i) => {
                 const raw = parseFloat(playerRow[metric.col]);
@@ -4824,10 +4889,10 @@
             if (!info) return;
 
             const data = await fetchSheetData(SHEET_GIDS.maps);
-            if (!data) { console.error('Streaks: failed to load data'); return; }
+            if (!data) { console.error('Streaks: failed to load data'); hidePanelOverlay('detail-tab-streaks'); return; }
 
             const cols = MATCHES_COLUMNS[info.nickname];
-            if (!cols) { console.error('Streaks: no column mapping for', info.nickname); return; }
+            if (!cols) { console.error('Streaks: no column mapping for', info.nickname); hidePanelOverlay('detail-tab-streaks'); return; }
 
             const mapFilter = mapNameForBlock(mapName);
             const searchString = info.nickname + mapFilter;
@@ -4849,6 +4914,7 @@
 
             if (startRow === -1) {
                 ['win','loss','rating-high','rating-low','kd-high','kd-low'].forEach(k => setRow(k, 0, '-'));
+                hidePanelOverlay('detail-tab-streaks');
                 return;
             }
 
@@ -4919,6 +4985,7 @@
             };
 
             Object.entries(preds).forEach(([key, pred]) => setStreakRow(key, longestRuns(pred)));
+            hidePanelOverlay('detail-tab-streaks');
         }
 
         // Stats by game score (ecohunters tab)
@@ -4928,7 +4995,7 @@
             if (!info) return;
 
             const data = await fetchSheetData(SHEET_GIDS.ecohunters);
-            if (!data) { console.error('Score stats: failed to load data'); return; }
+            if (!data) { console.error('Score stats: failed to load data'); hidePanelOverlay('detail-tab-score-stats'); return; }
 
             // Map nav filter value -> sheet map-name string
             const MAP_NAMES = {
@@ -4995,6 +5062,7 @@
             fill('score-wins-tbody');
             fill('score-losses-tbody');
             fill('score-ties-tbody');
+            hidePanelOverlay('detail-tab-score-stats');
         }
 
         // Load clutches data for Clutches tab
@@ -5606,9 +5674,12 @@
             const tbody = document.getElementById('winrate-match-length-tbody');
             if (!tbody) return;
 
+            showPanelOverlay('winrate-match-length-table');
+
             const data = await fetchSheetData(SHEET_GIDS.maps_data);
             if (!data) {
                 console.error('Failed to load maps_data for winrate match length');
+                hidePanelOverlay('winrate-match-length-table');
                 return;
             }
 
@@ -5672,12 +5743,15 @@
 
             const tiesEl = document.getElementById('winrate-ml-ties-count');
             if (tiesEl) tiesEl.textContent = ties;
+            hidePanelOverlay('winrate-match-length-table');
         }
 
         // Five Stack Winrates — winrate per unique 5-player lineup
         async function loadWinrateFiveStack(mapFilter = 'all') {
             const tbody = document.getElementById('winrate-five-stack-tbody');
             if (!tbody) return;
+
+            showPanelLoading(['winrate-five-stack-tbody']);
 
             const data = await fetchSheetData(SHEET_GIDS.ecohunters);
             if (!data) {
@@ -5791,6 +5865,8 @@
         async function loadWinrateSessionLength() {
             const tbody = document.getElementById('winrate-session-tbody');
             if (!tbody) return;
+
+            showPanelLoading(['winrate-session-tbody']);
 
             const data = await fetchSheetData(SHEET_GIDS.maps_data);
             if (!data) {
@@ -5910,6 +5986,8 @@
             if (singleWrap) singleWrap.style.display = 'block';
             if (leaderboard) leaderboard.style.display = 'none';
 
+            showPanelLoading(['winrate-duo-tbody']);
+
             const data = await fetchSheetData(SHEET_GIDS.ecohunters);
             if (!data) {
                 tbody.innerHTML = '<tr><td colspan="7" style="color: var(--danger);">Failed to load data.</td></tr>';
@@ -5982,6 +6060,8 @@
             const bestBody = document.getElementById('duo-best-tbody');
             const worstBody = document.getElementById('duo-worst-tbody');
             if (!bestBody || !worstBody) return;
+
+            showPanelLoading(['duo-best-tbody', 'duo-worst-tbody']);
 
             const data = await fetchSheetData(SHEET_GIDS.ecohunters);
             if (!data) {
@@ -6114,9 +6194,11 @@
         async function buildPerGameScatter(canvasId, xCol, yCol, xLabel, yLabel, mapName) {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
+            const host = canvas.parentElement;
+            showOverlayOn(host);
 
             const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
-            if (!data) { console.error(canvasId + ': no data'); return; }
+            if (!data) { console.error(canvasId + ': no data'); hideOverlayOn(host); return; }
 
             const points = [];
             rowsForMap(data, mapName || 'All').forEach(row => {
@@ -6167,15 +6249,18 @@
                 },
                 plugins: [scatterPointLabels()]
             });
+            hideOverlayOn(host);
         }
 
         // Reusable per-player scatter for two attribute columns (1-based col numbers)
         async function buildAttributeScatter(canvasId, xCol, yCol, xLabel, yLabel, fixed0to100, mapName) {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
+            const host = canvas.parentElement;
+            showOverlayOn(host);
 
             const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
-            if (!data) { console.error(canvasId + ': no data'); return; }
+            if (!data) { console.error(canvasId + ': no data'); hideOverlayOn(host); return; }
 
             const points = [];
             rowsForMap(data, mapName || 'All').forEach(row => {
@@ -6230,6 +6315,7 @@
                 },
                 plugins: [scatterPointLabels()]
             });
+            hideOverlayOn(host);
         }
 
         // Shared point label plugin / options helper for scatter charts
@@ -6255,9 +6341,11 @@
         async function buildRatingChart(mapName) {
             const canvas = document.getElementById('graph-rating');
             if (!canvas) return;
+            const host = canvas.parentElement;
+            showOverlayOn(host);
 
             const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
-            if (!data) { console.error('Rating chart: no data'); return; }
+            if (!data) { console.error('Rating chart: no data'); hideOverlayOn(host); return; }
 
             const points = [];
             rowsForMap(data, mapName || 'All').forEach(row => {
@@ -6307,6 +6395,7 @@
                 },
                 plugins: [scatterPointLabels()]
             });
+            hideOverlayOn(host);
         }
 
         // Load Game Records data
@@ -6322,8 +6411,8 @@
             const worstContainer = document.getElementById('worst-records-container');
             
             // Show loading
-            bestContainer.innerHTML = '<div class="records-empty">Loading...</div>';
-            worstContainer.innerHTML = '<div class="records-empty">Loading...</div>';
+            bestContainer.innerHTML = '<div class="records-empty">Loading stats…</div>';
+            worstContainer.innerHTML = '<div class="records-empty">Loading stats…</div>';
             
             // Fetch data if not cached
             if (!cachedRecordsData) {
