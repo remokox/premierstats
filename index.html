@@ -4133,11 +4133,21 @@
             // they get an overlay instead (cleared by their loaders on completion).
             showPanelOverlay('detail-tab-streaks');
             showPanelOverlay('detail-tab-score-stats');
+            showPanelOverlay('detail-tab-individual');
+            showPanelOverlay('detail-tab-overview');
 
             // Fetch data from Google Sheets
             const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
             if (!data) {
                 console.error('Failed to load player detail data');
+                // Clear every loading state we just set, so nothing hangs on error.
+                ['detail-tab-streaks', 'detail-tab-score-stats', 'detail-tab-individual', 'detail-tab-overview']
+                    .forEach(hidePanelOverlay);
+                [['matches-tbody', 5], ['clutches-tbody', 5], ['weapons-tbody', 3], ['session-perf-tbody', 4]]
+                    .forEach(([id, span]) => {
+                        const tb = document.getElementById(id);
+                        if (tb) tb.innerHTML = `<tr><td colspan="${span}" style="color: var(--danger);">Failed to load stats. Please refresh.</td></tr>`;
+                    });
                 return;
             }
             
@@ -4182,6 +4192,11 @@
             
             if (!playerRow) {
                 console.error(`No overview row for ${info.nickname} in rows ${startRow + 1} to ${endRow + 1}; loading other tabs anyway`);
+                // The individual tab is filled from the overview row, which is missing
+                // here — clear its overlay so it doesn't hang. (Streaks/score-stats are
+                // loaded below and clear their own overlays.)
+                hidePanelOverlay('detail-tab-individual');
+                hidePanelOverlay('detail-tab-overview');
                 // Overview sidebar can't be filled for this map, but the other tabs
                 // read from different sheets — load them regardless.
                 await loadMatchesData(mapName);
@@ -4376,6 +4391,7 @@
             utilityRows[1].children[1].textContent = formatValue(playerRow[cols.utilityKillsPer100]);
             utilityRows[2].children[1].textContent = formatValue(playerRow[cols.flashAssistsPerRound]);
             utilityRows[3].children[1].textContent = formatValue(playerRow[cols.timeOpponentFlashed]);
+            hidePanelOverlay('detail-tab-overview');
             
             // Update Individual tab
             const indCols = INDIVIDUAL_COLUMNS;
@@ -4427,6 +4443,7 @@
             document.getElementById('ind-pistol-kills').textContent = formatInt(playerRow[indCols.pistolKills]);
             document.getElementById('ind-grenade-kills').textContent = formatInt(playerRow[indCols.grenadeKills]);
             document.getElementById('ind-other-kills').textContent = formatInt(playerRow[indCols.otherKills]);
+            hidePanelOverlay('detail-tab-individual');
             
             // Update attribute scores above each section and in sidebar
             // Note: These come from the "All" row for this player
