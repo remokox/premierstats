@@ -2564,6 +2564,8 @@
                                     <tr data-streak="rating-low"><td>Longest &lt;1.00 rating streak</td><td>-</td><td>-</td></tr>
                                     <tr data-streak="kd-high"><td>Longest K&minus;D &ge; 0 streak</td><td>-</td><td>-</td></tr>
                                     <tr data-streak="kd-low"><td>Longest K&minus;D &lt; 0 streak</td><td>-</td><td>-</td></tr>
+                                    <tr data-streak="clutch-win"><td>Most clutches won in a row</td><td>-</td><td>-</td></tr>
+                                    <tr data-streak="clutch-loss"><td>Most clutches lost in a row</td><td>-</td><td>-</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -4922,7 +4924,7 @@
             };
 
             if (startRow === -1) {
-                ['win','loss','rating-high','rating-low','kd-high','kd-low'].forEach(k => setRow(k, 0, '-'));
+                ['win','loss','rating-high','rating-low','kd-high','kd-low','clutch-win','clutch-loss'].forEach(k => setRow(k, 0, '-'));
                 hidePanelOverlay('detail-tab-streaks');
                 return;
             }
@@ -4994,6 +4996,84 @@
             };
 
             Object.entries(preds).forEach(([key, pred]) => setStreakRow(key, longestRuns(pred)));
+
+            // --- Clutch streaks (separate sheet, same player+map block lookup) ---
+            // Independent of the match data above: if the clutches block is missing
+            // for this map, only the two clutch rows are zero-filled.
+            const clutchCols = (typeof CLUTCHES_COLUMNS !== 'undefined') ? CLUTCHES_COLUMNS[info.nickname] : null;
+            const clutchData = await fetchSheetData(SHEET_GIDS.clutches);
+            const setClutchZero = () => { setRow('clutch-win', 0, '-'); setRow('clutch-loss', 0, '-'); };
+
+            if (!clutchData || !clutchCols) {
+                setClutchZero();
+                hidePanelOverlay('detail-tab-streaks');
+                return;
+            }
+
+            // Find the player+map block the same way the match block was found.
+            let cStart = -1;
+            for (let i = 0; i < clutchData.length; i++) {
+                for (let j = 0; j < clutchData[i].length; j++) {
+                    if (clutchData[i][j] && normLabel(clutchData[i][j]) === normLabel(searchString)) { cStart = i + 2; break; }
+                }
+                if (cStart !== -1) break;
+            }
+
+            if (cStart === -1) {
+                setClutchZero();
+                hidePanelOverlay('detail-tab-streaks');
+                return;
+            }
+
+            // Collect dated clutch results until the block ends (empty date cell).
+            const clutchSeq = [];
+            for (let i = cStart; i < clutchData.length; i++) {
+                const row = clutchData[i];
+                const date = row[clutchCols.date];
+                if (!date || date.toString().trim() === '') break;
+                clutchSeq.push({
+                    date: date.toString().trim(),
+                    status: (row[clutchCols.status] || '').toString().toLowerCase().trim()
+                });
+            }
+            clutchSeq.reverse(); // chronological: oldest -> newest, matching the match logic
+            const cn = clutchSeq.length;
+
+            // Longest tied runs over the clutch sequence (parallel to longestRuns above).
+            function clutchLongestRuns(pred) {
+                const allRuns = [];
+                let curLen = 0, curStart = 0;
+                for (let i = 0; i < cn; i++) {
+                    if (pred(clutchSeq[i])) {
+                        if (curLen === 0) curStart = i;
+                        curLen++;
+                    } else {
+                        if (curLen > 0) allRuns.push({ start: curStart, end: i - 1, len: curLen });
+                        curLen = 0;
+                    }
+                }
+                if (curLen > 0) allRuns.push({ start: curStart, end: cn - 1, len: curLen });
+                const maxLen = allRuns.reduce((m, r) => Math.max(m, r.len), 0);
+                return { len: maxLen, runs: allRuns.filter(r => r.len === maxLen) };
+            }
+
+            function clutchRangeText(run) {
+                const start = clutchSeq[run.start].date;
+                const endsNow = run.end === cn - 1;
+                const end = endsNow ? 'now' : clutchSeq[run.end].date;
+                return start === end ? start : `${start} – ${end}`;
+            }
+
+            const setClutchRow = (key, result) => {
+                const tr = tbody.querySelector(`tr[data-streak="${key}"]`);
+                if (!tr) return;
+                tr.cells[1].textContent = result.len;
+                tr.cells[2].innerHTML = result.len === 0 ? '-' : result.runs.map(clutchRangeText).join('<br>');
+            };
+
+            setClutchRow('clutch-win',  clutchLongestRuns(c => c.status === 'won'));
+            setClutchRow('clutch-loss', clutchLongestRuns(c => c.status === 'lost'));
+
             hidePanelOverlay('detail-tab-streaks');
         }
 
