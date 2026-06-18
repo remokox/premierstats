@@ -4205,6 +4205,7 @@
                 await loadStreaksData(mapName);
                 await loadScoreStatsData(mapName);
                 await loadSessionPerfData(mapName);
+                await loadPlacementsData(document.getElementById('placements-map-filter').value);
                 return;
             }
             
@@ -4485,6 +4486,9 @@
 
             // Load performance-by-game-of-day tab
             await loadSessionPerfData(mapName);
+
+            // Load scoreboard placements (uses its own independent map filter)
+            await loadPlacementsData(document.getElementById('placements-map-filter').value);
         }
         
         // Get player attribute data from the "All" row
@@ -5080,6 +5084,76 @@
             fill('score-losses-tbody');
             fill('score-ties-tbody');
             hidePanelOverlay('detail-tab-score-stats');
+        }
+
+        // Scoreboard placements: for each game (a block of 5 consecutive player rows
+        // in the ecohunters tab), rank the 5 players by ADR (col P, idx 15) descending,
+        // ties broken by kills (col M, idx 12). Record where the current player landed
+        // (1st–5th) and tally the distribution across all their games.
+        async function loadPlacementsData(mapFilter = 'all') {
+            if (!currentPlayerName) return;
+            const info = PLAYER_INFO[currentPlayerName];
+            if (!info) return;
+
+            showPanelOverlay('detail-tab-placements');
+
+            const data = await fetchSheetData(SHEET_GIDS.ecohunters);
+            const tbody = document.getElementById('placements-tbody');
+            const gamesEl = document.getElementById('placements-games-played');
+            if (!data) {
+                console.error('Placements: failed to load data');
+                if (tbody) tbody.innerHTML = '<tr><td colspan="3" style="color: var(--danger);">Failed to load stats. Please refresh.</td></tr>';
+                hidePanelOverlay('detail-tab-placements');
+                return;
+            }
+
+            const PLAYER = 6, MAP = 2, ADR = 15, KILLS = 12;
+            const DATA_START = 3;        // rows 1–3 are headers; first player row is sheet row 4
+            const BLOCK = 5;             // 5 players per game
+
+            const counts = [0, 0, 0, 0, 0]; // index 0 = 1st place … index 4 = 5th
+            let gamesPlayed = 0;
+
+            for (let i = DATA_START; i + BLOCK - 1 < data.length; i += BLOCK) {
+                const block = data.slice(i, i + BLOCK);
+
+                // A complete game needs 5 rows that each carry a player name; a short or
+                // blank trailing block means we've run past the data, so stop.
+                if (block.some(r => !r || !(r[PLAYER] || '').toString().trim())) break;
+
+                // Map filter: every row in a block shares the same map, so check the first.
+                if (mapFilter !== 'all' && (block[0][MAP] || '').toString().trim() !== mapFilter) continue;
+
+                // Locate the current player within this game.
+                const meIndex = block.findIndex(r => (r[PLAYER] || '').toString().trim() === info.ecoName);
+                if (meIndex === -1) continue; // player didn't feature in this game
+
+                // Rank by ADR desc, tie-break by kills desc.
+                const ranked = block
+                    .map((r, idx) => ({
+                        idx,
+                        adr: parseFloat(r[ADR]) || 0,
+                        kills: parseInt(r[KILLS]) || 0
+                    }))
+                    .sort((a, b) => (b.adr - a.adr) || (b.kills - a.kills));
+
+                const place = ranked.findIndex(p => p.idx === meIndex); // 0-based placement
+                if (place >= 0 && place < BLOCK) {
+                    counts[place]++;
+                    gamesPlayed++;
+                }
+            }
+
+            // Render
+            if (gamesEl) gamesEl.textContent = gamesPlayed;
+            const ordinals = ['1st', '2nd', '3rd', '4th', '5th'];
+            tbody.innerHTML = ordinals.map((ord, k) => {
+                const c = counts[k];
+                const pct = gamesPlayed > 0 ? (c / gamesPlayed * 100).toFixed(1) + '%' : '-';
+                return `<tr><td>${ord}</td><td>${c}</td><td>${gamesPlayed > 0 ? pct : '-'}</td></tr>`;
+            }).join('');
+
+            hidePanelOverlay('detail-tab-placements');
         }
 
         // Load clutches data for Clutches tab
@@ -7142,6 +7216,14 @@
         if (winrateMlMapFilter) {
             winrateMlMapFilter.addEventListener('change', () => {
                 loadWinrateMatchLength(winrateMlMapFilter.value);
+            });
+        }
+
+        // Scoreboard placements map filter
+        const placementsMapFilter = document.getElementById('placements-map-filter');
+        if (placementsMapFilter) {
+            placementsMapFilter.addEventListener('change', () => {
+                loadPlacementsData(placementsMapFilter.value);
             });
         }
 
