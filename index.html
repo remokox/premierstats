@@ -2526,18 +2526,6 @@
                     </div>
 
                     <div class="player-detail-content" id="detail-tab-placements" style="display:none;">
-                        <div class="records-filters" style="margin-bottom: 16px;">
-                            <select class="records-filter-select" id="placements-map-filter">
-                                <option value="all">All Maps</option>
-                                <option value="Ancient">Ancient</option>
-                                <option value="Anubis">Anubis</option>
-                                <option value="Dust II">Dust II</option>
-                                <option value="Inferno">Inferno</option>
-                                <option value="Mirage">Mirage</option>
-                                <option value="Nuke">Nuke</option>
-                                <option value="Overpass">Overpass</option>
-                            </select>
-                        </div>
                         <div style="margin-bottom: 12px; color: var(--text-secondary); font-weight: 600;">Games played: <span id="placements-games-played">-</span></div>
                         <div class="matches-table-container">
                             <table class="matches-table" id="placements-table">
@@ -4205,7 +4193,7 @@
                 await loadStreaksData(mapName);
                 await loadScoreStatsData(mapName);
                 await loadSessionPerfData(mapName);
-                await loadPlacementsData(document.getElementById('placements-map-filter').value);
+                await loadPlacementsData(mapName);
                 return;
             }
             
@@ -4487,8 +4475,8 @@
             // Load performance-by-game-of-day tab
             await loadSessionPerfData(mapName);
 
-            // Load scoreboard placements (uses its own independent map filter)
-            await loadPlacementsData(document.getElementById('placements-map-filter').value);
+            // Load scoreboard placements (now uses the global map filter)
+            await loadPlacementsData(mapName);
         }
         
         // Get player attribute data from the "All" row
@@ -5094,6 +5082,20 @@
             if (!currentPlayerName) return;
             const info = PLAYER_INFO[currentPlayerName];
             if (!info) return;
+
+            // The global #map-filter uses code values (e.g. "dust2"); the ecohunters
+            // sheet stores display names (e.g. "Dust II"). Translate before comparing.
+            const PLACEMENTS_MAP_NAMES = {
+                all: 'all',
+                ancient: 'Ancient',
+                anubis: 'Anubis',
+                dust2: 'Dust II',
+                inferno: 'Inferno',
+                mirage: 'Mirage',
+                nuke: 'Nuke',
+                overpass: 'Overpass'
+            };
+            mapFilter = PLACEMENTS_MAP_NAMES[(mapFilter || 'all').toString().toLowerCase()] || mapFilter;
 
             showPanelOverlay('detail-tab-placements');
 
@@ -7216,14 +7218,6 @@
         if (winrateMlMapFilter) {
             winrateMlMapFilter.addEventListener('change', () => {
                 loadWinrateMatchLength(winrateMlMapFilter.value);
-            });
-        }
-
-        // Scoreboard placements map filter
-        const placementsMapFilter = document.getElementById('placements-map-filter');
-        if (placementsMapFilter) {
-            placementsMapFilter.addEventListener('change', () => {
-                loadPlacementsData(placementsMapFilter.value);
             });
         }
 
