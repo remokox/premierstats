@@ -2799,6 +2799,7 @@
                     <button class="winrate-tab-button" type="button" data-winrate-tab="five-stack">Five Stack Winrates</button>
                     <button class="winrate-tab-button" type="button" data-winrate-tab="duo-synergy">Duo Synergy Winrate</button>
                     <button class="winrate-tab-button" type="button" data-winrate-tab="session-length">Session Length Winrate</button>
+                    <button class="winrate-tab-button" type="button" data-winrate-tab="with-without">Winrate with and without a player</button>
                 </div>
                 <div class="winrate-content" id="winrate-match-length">
                     <div class="records-filters" style="margin-bottom: 16px;">
@@ -2945,6 +2946,38 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+                <div class="winrate-content" id="winrate-with-without" hidden>
+                    <div class="records-filters" style="margin-bottom: 16px;">
+                        <select class="records-filter-select" id="winrate-ww-map-filter">
+                            <option value="all">All Maps</option>
+                            <option value="Ancient">Ancient</option>
+                            <option value="Anubis">Anubis</option>
+                            <option value="Dust II">Dust II</option>
+                            <option value="Inferno">Inferno</option>
+                            <option value="Mirage">Mirage</option>
+                            <option value="Nuke">Nuke</option>
+                            <option value="Overpass">Overpass</option>
+                        </select>
+                    </div>
+                    <div class="matches-table-container">
+                        <table class="matches-table" id="winrate-with-without-table">
+                            <thead>
+                                <tr>
+                                    <th>Player</th>
+                                    <th>Matches with</th>
+                                    <th>Winrate with</th>
+                                    <th>Matches without</th>
+                                    <th>Winrate without</th>
+                                    <th>Winrate swing</th>
+                                </tr>
+                            </thead>
+                            <tbody id="winrate-with-without-tbody">
+                                <tr><td colspan="6" style="color: var(--text-secondary);">No data yet.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 10px;">Winrate excludes ties. Swing = winrate with − winrate without.</p>
                 </div>
             </div>
         </div>
@@ -5998,6 +6031,103 @@
             sortFiveStackTable(1, false);
         }
 
+        async function loadWinrateWithWithout(mapFilter = 'all') {
+            const tbody = document.getElementById('winrate-with-without-tbody');
+            if (!tbody) return;
+
+            showPanelLoading(['winrate-with-without-tbody']);
+
+            const data = await fetchSheetData(SHEET_GIDS.ecohunters);
+            if (!data) {
+                tbody.innerHTML = '<tr><td colspan="6" style="color: var(--danger);">Failed to load data.</td></tr>';
+                return;
+            }
+
+            // Keep only real player data rows (player name in column G / index 6)
+            const dataRows = data.filter(row => {
+                const name = (row[6] || '').toString().trim();
+                const n = name.toLowerCase();
+                return name !== '' && n !== 'player' && n !== 'player details';
+            });
+
+            // First pass: collect the set of every known player.
+            const allPlayers = new Set();
+            dataRows.forEach(r => allPlayers.add((r[6] || '').toString().trim()));
+
+            // Each player gets a "with" and "without" tally (decisive games only;
+            // ties are excluded from winrate so we don't count them).
+            const stats = {};
+            allPlayers.forEach(p => { stats[p] = { wWins: 0, wDec: 0, oWins: 0, oDec: 0 }; });
+
+            // Walk in sequential chunks of 5 (one match = 5 player rows)
+            for (let i = 0; i + 5 <= dataRows.length; i += 5) {
+                const chunk = dataRows.slice(i, i + 5);
+
+                // Validate the 5 rows belong to the same match (date|map|score)
+                const sig = r => (r[1] || '') + '|' + (r[2] || '') + '|' + (r[4] || '');
+                const matchSig = sig(chunk[0]);
+                if (!chunk.every(r => sig(r) === matchSig)) continue;
+
+                // Map filter (map name at index 2)
+                const mapName = (chunk[0][2] || '').toString().trim();
+                if (mapFilter !== 'all' && mapName !== mapFilter) continue;
+
+                const outcome = (chunk[0][3] || '').toString().toLowerCase().trim();
+                const isWin = outcome === 'win';
+                const isDecisive = isWin || outcome === 'loss';
+                if (!isDecisive) continue; // ties contribute nothing to winrate
+
+                const present = new Set(chunk.map(r => (r[6] || '').toString().trim()));
+
+                allPlayers.forEach(p => {
+                    if (present.has(p)) {
+                        stats[p].wDec++;
+                        if (isWin) stats[p].wWins++;
+                    } else {
+                        stats[p].oDec++;
+                        if (isWin) stats[p].oWins++;
+                    }
+                });
+            }
+
+            // Build rows: every player with at least one decisive match with AND without.
+            const rows = [];
+            Object.entries(stats).forEach(([player, s]) => {
+                if (s.wDec === 0 || s.oDec === 0) return;
+                const wPct = s.wWins / s.wDec * 100;
+                const oPct = s.oWins / s.oDec * 100;
+                rows.push({
+                    player,
+                    wDec: s.wDec,
+                    oDec: s.oDec,
+                    wPct,
+                    oPct,
+                    swing: wPct - oPct
+                });
+            });
+
+            if (rows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="color: var(--text-secondary);">No data yet.</td></tr>';
+                return;
+            }
+
+            // Sort by swing descending (biggest positive impact first).
+            rows.sort((a, b) => b.swing - a.swing);
+
+            tbody.innerHTML = rows.map(r => {
+                const swingCls = r.swing > 2 ? 'text-green' : r.swing < -2 ? 'text-red' : '';
+                const sign = r.swing > 0 ? '+' : '';
+                return `<tr>
+                    <td>${r.player}</td>
+                    <td>${r.wDec}</td>
+                    <td>${r.wPct.toFixed(1)}%</td>
+                    <td>${r.oDec}</td>
+                    <td>${r.oPct.toFixed(1)}%</td>
+                    <td class="${swingCls}">${sign}${r.swing.toFixed(1)}%</td>
+                </tr>`;
+            }).join('');
+        }
+
         // Sort the five-stack table by a column index; type from th[data-type]
         let fiveStackSort = { col: 1, ascending: false };
         function sortFiveStackTable(col, ascending) {
@@ -7323,6 +7453,14 @@
             });
         }
 
+        // With/without map filter
+        const winrateWwMapFilter = document.getElementById('winrate-ww-map-filter');
+        if (winrateWwMapFilter) {
+            winrateWwMapFilter.addEventListener('change', () => {
+                loadWinrateWithWithout(winrateWwMapFilter.value);
+            });
+        }
+
         // Five Stack sortable headers
         document.querySelectorAll('#winrate-five-stack-table th.sortable').forEach(th => {
             th.addEventListener('click', () => {
@@ -7359,6 +7497,13 @@
                 if (tab === 'duo-synergy') {
                     populateDuoPlayers();
                     loadDuoSynergy();
+                }
+
+                if (tab === 'with-without') {
+                    const wwBody = document.getElementById('winrate-with-without-tbody');
+                    if (wwBody && wwBody.textContent.trim() === 'No data yet.') {
+                        loadWinrateWithWithout();
+                    }
                 }
             });
         });
