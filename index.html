@@ -2153,6 +2153,42 @@
             font-style: italic;
         }
 
+        .notable-stats-table {
+            width: 100%;
+            background: transparent;
+            border-collapse: collapse;
+        }
+
+        .notable-stats-table td {
+            padding: 8px 4px;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.95rem;
+        }
+
+        .notable-stats-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .notable-stats-table .ns-name {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .notable-stats-table .ns-value {
+            text-align: right;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+        }
+
+        .notable-stats-table .ns-place {
+            text-align: right;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-primary);
+            font-weight: 600;
+            width: 3.5em;
+        }
+
         @media (max-width: 900px) {
             .awards-card {
                 grid-template-columns: 1fr;
@@ -7711,6 +7747,99 @@
             }
 
             // Performance graph — to be remade.
+
+            // Notable stats (map fixed to 'All' for now; per-award map scope later)
+            renderNotableStats(playerName, 'All');
+        }
+
+        // ===== Awards: Notable stats =====
+        // Renders 5 rows (stat name | value | place among the 16 roster players).
+        // Ranking is standard competition ranking (ties share a place, next skips),
+        // higher value = better = 1st, computed over the given map block ('All' now).
+        // mapName is parameterized so a future award like "Best rating on Nuke"
+        // can rank over the Nuke block with no change to this function.
+        const NOTABLE_STATS = [
+            { label: 'K/D',        col: 13, fmt: 'dec2' },   // N
+            { label: 'ADR',        col: 22, fmt: 'dec1' },   // V
+            { label: 'HS%',        col: 24, fmt: 'pct1' },   // X
+            { label: 'KAST',       col: 26, fmt: 'pct1' },   // Z
+            { label: 'Rating 2.0', col: 45, fmt: 'dec2' }    // AS
+        ];
+
+        function formatStatValue(raw, fmt) {
+            // raw is a string from the sheet; strip a trailing % so "52.4" and
+            // "52.4%" both parse. Assumes HS%/KAST are stored as whole percentages.
+            const num = parseFloat(String(raw).replace('%', '').trim());
+            if (isNaN(num)) return '-';
+            switch (fmt) {
+                case 'dec2': return num.toFixed(2);
+                case 'dec1': return num.toFixed(1);
+                case 'pct1': return num.toFixed(1) + '%';
+                default:     return String(num);
+            }
+        }
+
+        function ordinal(n) {
+            const s = ['th', 'st', 'nd', 'rd'];
+            const v = n % 100;
+            return n + (s[(v - 20) % 10] || s[v] || s[0]);
+        }
+
+        // Standard competition rank of `value` within `allValues` (desc; higher=1st).
+        // Ties share the rank; the next distinct value's rank skips past the tie.
+        function competitionRank(value, allValues) {
+            let strictlyGreater = 0;
+            for (const v of allValues) {
+                if (v > value) strictlyGreater++;
+            }
+            return strictlyGreater + 1;
+        }
+
+        async function renderNotableStats(playerName, mapName = 'All') {
+            const container = document.getElementById('awards-notable');
+            if (!container) return;
+            container.classList.remove('awards-placeholder');
+            container.innerHTML = 'Loading…';
+
+            const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
+            if (!data) {
+                container.innerHTML = '<span style="color: var(--danger);">Failed to load stats.</span>';
+                return;
+            }
+
+            // Rows for this map block, restricted to the 16 known roster players.
+            const rows = rowsForMap(data, mapName).filter(r => {
+                const name = (r[PLAYER_COLUMNS.name - 1] || '').toString().trim();
+                return PLAYER_INFO[name] !== undefined;
+            });
+
+            const playerRow = rows.find(r =>
+                (r[PLAYER_COLUMNS.name - 1] || '').toString().trim() === playerName);
+            if (!playerRow) {
+                container.innerHTML = '<span style="color: var(--danger);">No stats for this player.</span>';
+                return;
+            }
+
+            const rowsHtml = NOTABLE_STATS.map(stat => {
+                const rawSelf = playerRow[stat.col - 1];
+                const selfNum = parseFloat(String(rawSelf).replace('%', '').trim());
+
+                let placeText = '-';
+                if (!isNaN(selfNum)) {
+                    const allNums = rows
+                        .map(r => parseFloat(String(r[stat.col - 1]).replace('%', '').trim()))
+                        .filter(v => !isNaN(v));
+                    placeText = ordinal(competitionRank(selfNum, allNums));
+                }
+
+                return `<tr>
+                    <td class="ns-name">${stat.label}</td>
+                    <td class="ns-value">${formatStatValue(rawSelf, stat.fmt)}</td>
+                    <td class="ns-place">${placeText}</td>
+                </tr>`;
+            }).join('');
+
+            container.innerHTML = `<table class="notable-stats-table"><tbody>${rowsHtml}</tbody></table>`;
         }
 
         (function initAwardsSelector() {
