@@ -2189,6 +2189,61 @@
             width: 3.5em;
         }
 
+        /* Boosters grid: two rows of seven */
+        .boosters-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 14px;
+        }
+
+        .booster-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 4px;
+        }
+
+        .booster-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent-tertiary);
+            background: var(--bg-primary);
+            margin-bottom: 4px;
+        }
+
+        .booster-name {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.92rem;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .booster-count {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .booster-rank {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+        }
+
+        @media (max-width: 1100px) {
+            .boosters-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .boosters-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
         @media (max-width: 900px) {
             .awards-card {
                 grid-template-columns: 1fr;
@@ -7748,8 +7803,54 @@
 
             // Performance graph — to be remade.
 
+            // Boosters (placeholder shell — real per-booster computation added one at a time)
+            renderBoosters(playerName);
+
             // Notable stats (map fixed to 'All' for now; per-award map scope later)
             renderNotableStats(playerName, 'All');
+        }
+
+        // ===== Awards: Boosters (SHELL ONLY) =====
+        // Fixed set of 14 boosters, identical for every player; two rows of seven.
+        // Each cell: icon, name + blue "i" tooltip, match-count, rank among the 16.
+        // This is a VISUAL SHELL fed by placeholder data — no computation yet.
+        // Real values get filled in one booster at a time by replacing the
+        // count/rank for each entry with a computed match-count + competition rank.
+        const BOOSTERS_PLACEHOLDER = [
+            { name: 'Carry',            tip: 'The player gets 20 or more kills on a map.' },
+            { name: 'Avenger',          tip: 'Player gets 4 or more trade kills on a map.' },
+            { name: 'Bait',             tip: 'Player is traded 4 times or more on a map.' },
+            { name: 'Assist',           tip: 'The player gets 4 or more damage assists on a map.' },
+            { name: 'Best pistol round',tip: 'Player is best in any pistol round based on kills, then assists, then deaths.' },
+            { name: 'Top of scoreboard',tip: 'The player ends at the top of the scoreboard on a map.' },
+            { name: 'Clutch',           tip: 'Player makes a 1on2, 1on3, 1on4 or 1on5 clutch.' },
+            { name: 'Quad',             tip: 'The player makes a quad kill.' },
+            { name: 'Aim bot',          tip: 'The player gets the highest headshot percentage on a map.' },
+            { name: 'Mister consistent',tip: 'The player gets KAST above 85% on a map.' },
+            { name: 'Farmer',           tip: 'The player makes 3 or more SMG kills on a map.' },
+            { name: 'Kobe',             tip: 'The player gets 1 or more grenade kills on a map.' },
+            { name: 'Cannon fodder',    tip: 'The player survives 5 rounds or fewer on a map.' },
+            { name: 'Bottom of scoreboard', tip: 'The player ends at the bottom of the scoreboard on a map.' }
+        ];
+
+        function renderBoosters(playerName) {
+            const container = document.getElementById('awards-boosters');
+            if (!container) return;
+            container.classList.remove('awards-placeholder');
+
+            const cells = BOOSTERS_PLACEHOLDER.map(b => {
+                // Placeholder values only — not computed.
+                const count = '00 times';
+                const rank = '0th';
+                return `<div class="booster-cell">
+                    <div class="booster-icon"></div>
+                    <span class="booster-name">${b.name}<span class="info-tip" data-tip="${b.tip}">i</span></span>
+                    <span class="booster-count">${count}</span>
+                    <span class="booster-rank">${rank}</span>
+                </div>`;
+            }).join('');
+
+            container.innerHTML = `<div class="boosters-grid">${cells}</div>`;
         }
 
         // ===== Awards: Notable stats =====
