@@ -2800,6 +2800,7 @@
                     <button class="winrate-tab-button" type="button" data-winrate-tab="duo-synergy">Duo Synergy Winrate</button>
                     <button class="winrate-tab-button" type="button" data-winrate-tab="session-length">Session Length Winrate</button>
                     <button class="winrate-tab-button" type="button" data-winrate-tab="with-without">Winrate with and without a player</button>
+                    <button class="winrate-tab-button" type="button" data-winrate-tab="day-of-week">Winrate by day of the week</button>
                 </div>
                 <div class="winrate-content" id="winrate-match-length">
                     <div class="records-filters" style="margin-bottom: 16px;">
@@ -2978,6 +2979,42 @@
                         </table>
                     </div>
                     <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 10px;">Winrate excludes ties. Swing = winrate with − winrate without.</p>
+                </div>
+                <div class="winrate-content" id="winrate-day-of-week" hidden>
+                    <div class="records-filters" style="margin-bottom: 16px;">
+                        <select class="records-filter-select" id="winrate-dow-map-filter">
+                            <option value="all">All Maps</option>
+                            <option value="Ancient">Ancient</option>
+                            <option value="Anubis">Anubis</option>
+                            <option value="Dust II">Dust II</option>
+                            <option value="Inferno">Inferno</option>
+                            <option value="Mirage">Mirage</option>
+                            <option value="Nuke">Nuke</option>
+                            <option value="Overpass">Overpass</option>
+                        </select>
+                    </div>
+                    <div class="matches-table-container">
+                        <table class="matches-table" id="winrate-day-of-week-table">
+                            <thead>
+                                <tr>
+                                    <th>Day</th>
+                                    <th>Wins</th>
+                                    <th>Losses</th>
+                                    <th>Ties</th>
+                                    <th>Winrate (excl. ties)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="winrate-day-of-week-tbody">
+                                <tr data-dow="Monday"><td>Monday</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                                <tr data-dow="Tuesday"><td>Tuesday</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                                <tr data-dow="Wednesday"><td>Wednesday</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                                <tr data-dow="Thursday"><td>Thursday</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                                <tr data-dow="Friday"><td>Friday</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                                <tr data-dow="Saturday"><td>Saturday</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                                <tr data-dow="Sunday"><td>Sunday</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -6128,7 +6165,79 @@
             }).join('');
         }
 
-        // Sort the five-stack table by a column index; type from th[data-type]
+        async function loadWinrateDayOfWeek(mapFilter = 'all') {
+            const tbody = document.getElementById('winrate-day-of-week-tbody');
+            if (!tbody) return;
+
+            const data = await fetchSheetData(SHEET_GIDS.maps_data);
+            if (!data) {
+                console.error('Failed to load maps_data for day-of-week winrate');
+                return;
+            }
+
+            // Monday-first ordering. JS getDay() is 0=Sun..6=Sat, so remap explicitly.
+            const DOW_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const buckets = {
+                Monday:    { wins: 0, losses: 0, ties: 0 },
+                Tuesday:   { wins: 0, losses: 0, ties: 0 },
+                Wednesday: { wins: 0, losses: 0, ties: 0 },
+                Thursday:  { wins: 0, losses: 0, ties: 0 },
+                Friday:    { wins: 0, losses: 0, ties: 0 },
+                Saturday:  { wins: 0, losses: 0, ties: 0 },
+                Sunday:    { wins: 0, losses: 0, ties: 0 }
+            };
+
+            data.forEach(row => {
+                const dateStr = (row[1] || '').toString().trim();
+                const mapName = (row[2] || '').toString().trim();
+                const outcome = (row[3] || '').toString().toLowerCase().trim();
+
+                if (!dateStr) return;
+                if (outcome !== 'win' && outcome !== 'loss' && outcome !== 'tie') return;
+
+                // Map filter: map names are consistent across sheets, so compare directly.
+                if (mapFilter !== 'all' && mapName !== mapFilter) return;
+
+                // Parse dd.mm.yyyy explicitly; skip anything that doesn't fit.
+                const parts = dateStr.split('.');
+                if (parts.length !== 3) return;
+                const day = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10);
+                const year = parseInt(parts[2], 10);
+                if (isNaN(day) || isNaN(month) || isNaN(year)) return;
+
+                // Build the date with explicit fields (no string-parsing ambiguity).
+                const d = new Date(year, month - 1, day);
+                // Guard against invalid dates (e.g. 31.02) rolling over silently.
+                if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) return;
+
+                const dowName = DOW_NAMES[d.getDay()];
+                const b = buckets[dowName];
+                if (!b) return;
+
+                if (outcome === 'win') b.wins++;
+                else if (outcome === 'loss') b.losses++;
+                else b.ties++;
+            });
+
+            Object.entries(buckets).forEach(([dow, b]) => {
+                const tr = tbody.querySelector(`tr[data-dow="${dow}"]`);
+                if (!tr) return;
+                const decisive = b.wins + b.losses;
+                let winrate = '-';
+                let cls = '';
+                if (decisive > 0) {
+                    const pct = b.wins / decisive * 100;
+                    winrate = pct.toFixed(1) + '%';
+                    cls = pct > 50 ? 'text-green' : pct < 50 ? 'text-red' : 'text-yellow';
+                }
+                tr.cells[1].textContent = b.wins;
+                tr.cells[2].textContent = b.losses;
+                tr.cells[3].textContent = b.ties;
+                tr.cells[4].textContent = winrate;
+                tr.cells[4].className = cls;
+            });
+        }
         let fiveStackSort = { col: 1, ascending: false };
         function sortFiveStackTable(col, ascending) {
             const table = document.getElementById('winrate-five-stack-table');
@@ -7461,6 +7570,14 @@
             });
         }
 
+        // Day-of-week map filter
+        const winrateDowMapFilter = document.getElementById('winrate-dow-map-filter');
+        if (winrateDowMapFilter) {
+            winrateDowMapFilter.addEventListener('change', () => {
+                loadWinrateDayOfWeek(winrateDowMapFilter.value);
+            });
+        }
+
         // Five Stack sortable headers
         document.querySelectorAll('#winrate-five-stack-table th.sortable').forEach(th => {
             th.addEventListener('click', () => {
@@ -7503,6 +7620,13 @@
                     const wwBody = document.getElementById('winrate-with-without-tbody');
                     if (wwBody && wwBody.textContent.trim() === 'No data yet.') {
                         loadWinrateWithWithout();
+                    }
+                }
+
+                if (tab === 'day-of-week') {
+                    const dowRow = document.querySelector('#winrate-day-of-week-tbody tr[data-dow="Monday"]');
+                    if (dowRow && dowRow.cells[1].textContent.trim() === '-') {
+                        loadWinrateDayOfWeek();
                     }
                 }
             });
