@@ -7834,24 +7834,129 @@
             { name: 'Kobe',              icon: 'kobe.png',            tip: 'The player gets 1 or more grenade kills on a map.' }
         ];
 
-        function renderBoosters(playerName) {
+        // ecoName -> playerKey lookup, built once from PLAYER_INFO.
+        // The ecohunters sheet identifies players by ecoName (e.g. "Remo"),
+        // NOT by the PLAYER_INFO nickname key (e.g. "remokox").
+        const ECONAME_TO_PLAYER = (function () {
+            const m = {};
+            Object.keys(PLAYER_INFO).forEach(key => {
+                const eco = normLabel(PLAYER_INFO[key].ecoName).toLowerCase();
+                m[eco] = key;
+            });
+            return m;
+        })();
+
+        // Columns on the ecohunters sheet (gid 1037802432), 1-based.
+        // Blank column A shifts everything right by one vs. the visible headers.
+        const ECO_COL = { player: 7, kills: 13, deaths: 14, assists: 15 }; // G, M, N, O
+
+        // Slice ecohunters data into consecutive 5-row match blocks starting at
+        // row 4 (0-based index 3). Only complete 5-row blocks with all names
+        // resolvable are yielded; anything else is skipped and logged.
+        function ecoMatchBlocks(data) {
+            const blocks = [];
+            for (let i = 3; i + 5 <= data.length; i += 5) {
+                const rows = data.slice(i, i + 5);
+                const resolved = rows.map(r => {
+                    const eco = normLabel(r[ECO_COL.player - 1]).toLowerCase();
+                    return { row: r, player: ECONAME_TO_PLAYER[eco] || null, ecoRaw: r[ECO_COL.player - 1] };
+                });
+                const unresolved = resolved.filter(x => !x.player);
+                if (unresolved.length > 0) {
+                    console.warn('Boosters: skipping match block at sheet row ' + (i + 1) +
+                        ' — unresolved player name(s):', unresolved.map(x => x.ecoRaw));
+                    continue;
+                }
+                blocks.push(resolved);
+            }
+            return blocks;
+        }
+
+        // --- Per-booster computations ---
+        // Each returns { playerKey: count } across all 16 players. Reads the
+        // ecohunters match blocks. Only implemented boosters have a compute fn.
+
+        // Top of scoreboard: within each 5-player match, the player(s) with the
+        // most kills win the scoreboard; ties broken by more assists, then fewer
+        // deaths. A full tie at the very top credits every tied player (+1 each).
+        function computeTopOfScoreboard(blocks) {
+            const counts = {};
+            Object.keys(PLAYER_INFO).forEach(k => counts[k] = 0);
+
+            blocks.forEach(block => {
+                const stats = block.map(x => ({
+                    player: x.player,
+                    kills: parseInt(x.row[ECO_COL.kills - 1], 10),
+                    assists: parseInt(x.row[ECO_COL.assists - 1], 10),
+                    deaths: parseInt(x.row[ECO_COL.deaths - 1], 10)
+                }));
+
+                // Determine the top by kills desc, assists desc, deaths asc.
+                const better = (a, b) => {
+                    if (a.kills !== b.kills) return a.kills > b.kills;
+                    if (a.assists !== b.assists) return a.assists > b.assists;
+                    return a.deaths < b.deaths;
+                };
+                // Find the best stat-tuple, then credit everyone equal to it.
+                let best = stats[0];
+                stats.forEach(s => { if (better(s, best)) best = s; });
+                const equalToBest = s =>
+                    s.kills === best.kills && s.assists === best.assists && s.deaths === best.deaths;
+                stats.forEach(s => { if (equalToBest(s)) counts[s.player]++; });
+            });
+
+            return counts;
+        }
+
+        // Attach compute functions to the relevant BOOSTERS entries.
+        // (Boosters without a compute fn render with placeholder count/rank.)
+        BOOSTERS.find(b => b.name === 'Top of scoreboard').compute = computeTopOfScoreboard;
+
+        async function renderBoosters(playerName) {
             const container = document.getElementById('awards-boosters');
             if (!container) return;
             container.classList.remove('awards-placeholder');
 
-            const cells = BOOSTERS.map(b => {
-                // Count and rank are placeholder only — not computed yet.
-                const count = '00 times';
-                const rank = '0th';
-                return `<div class="booster-cell">
+            // Render the grid immediately with placeholders so it appears at once.
+            const cells = BOOSTERS.map((b, idx) => {
+                const count = b.compute ? '…' : '– times';
+                const rank = b.compute ? '…' : '–';
+                return `<div class="booster-cell" data-booster-idx="${idx}">
                     <img class="booster-icon" src="${AWARDS_PHOTO_BASE + b.icon}" alt="${b.name}" onerror="this.style.visibility='hidden'">
                     <span class="booster-name">${b.name}<span class="info-tip" data-tip="${b.tip}">i</span></span>
                     <span class="booster-count">${count}</span>
                     <span class="booster-rank">${rank}</span>
                 </div>`;
             }).join('');
-
             container.innerHTML = `<div class="boosters-grid">${cells}</div>`;
+
+            // If no booster needs data, we're done.
+            if (!BOOSTERS.some(b => b.compute)) return;
+
+            const data = await fetchSheetData(SHEET_GIDS.ecohunters);
+            if (!data) {
+                container.querySelectorAll('.booster-cell[data-booster-idx] .booster-count').forEach(el => {
+                    if (el.textContent === '…') el.textContent = 'error';
+                });
+                return;
+            }
+
+            const blocks = ecoMatchBlocks(data);
+
+            BOOSTERS.forEach((b, idx) => {
+                if (!b.compute) return;
+                const counts = b.compute(blocks);
+                const myCount = counts[playerName] || 0;
+
+                // Competition rank of this player's count among all 16 (higher = 1st).
+                const allCounts = Object.keys(PLAYER_INFO).map(k => counts[k] || 0);
+                const rankNum = competitionRank(myCount, allCounts);
+
+                const cell = container.querySelector(`.booster-cell[data-booster-idx="${idx}"]`);
+                if (!cell) return;
+                cell.querySelector('.booster-count').textContent = myCount + ' times';
+                cell.querySelector('.booster-rank').textContent = ordinal(rankNum);
+            });
         }
 
         // ===== Awards: Notable stats =====
