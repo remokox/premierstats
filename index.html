@@ -7876,10 +7876,18 @@
         // Each returns { playerKey: count } across all 16 players. Reads the
         // ecohunters match blocks. Only implemented boosters have a compute fn.
 
-        // Top of scoreboard: within each 5-player match, the player(s) with the
-        // most kills win the scoreboard; ties broken by more assists, then fewer
-        // deaths. A full tie at the very top credits every tied player (+1 each).
-        function computeTopOfScoreboard(blocks) {
+        // --- Per-booster compute contract ---
+        // Each compute fn has signature (data, blocks) and returns
+        // { playerKey: count } for all 16 players.
+        //   data   = raw ecohunters rows (for per-row threshold boosters)
+        //   blocks = data pre-sliced into 5-row match blocks with resolved
+        //            players (for boosters that compare within a match)
+        // A booster uses whichever it needs and ignores the other.
+
+        // Top of scoreboard (per-match comparison): within each 5-player match,
+        // the player(s) with the most kills win; ties broken by more assists,
+        // then fewer deaths. A full tie at the top credits every tied player.
+        function computeTopOfScoreboard(data, blocks) {
             const counts = {};
             Object.keys(PLAYER_INFO).forEach(k => counts[k] = 0);
 
@@ -7908,9 +7916,29 @@
             return counts;
         }
 
+        // Carry (per-row threshold): count each player's matches with >= 20 kills.
+        // Reads raw rows directly (no match grouping needed); resolves each row's
+        // player by ecoName and counts rows meeting the threshold.
+        function computeCarry(data, blocks) {
+            const counts = {};
+            Object.keys(PLAYER_INFO).forEach(k => counts[k] = 0);
+
+            for (let i = 3; i < data.length; i++) {
+                const row = data[i];
+                const eco = normLabel(row[ECO_COL.player - 1]).toLowerCase();
+                const player = ECONAME_TO_PLAYER[eco];
+                if (!player) continue; // non-roster / blank / trailing row
+                const kills = parseInt(row[ECO_COL.kills - 1], 10);
+                if (!isNaN(kills) && kills >= 20) counts[player]++;
+            }
+
+            return counts;
+        }
+
         // Attach compute functions to the relevant BOOSTERS entries.
         // (Boosters without a compute fn render with placeholder count/rank.)
         BOOSTERS.find(b => b.name === 'Top of scoreboard').compute = computeTopOfScoreboard;
+        BOOSTERS.find(b => b.name === 'Carry').compute = computeCarry;
 
         async function renderBoosters(playerName) {
             const container = document.getElementById('awards-boosters');
@@ -7945,7 +7973,7 @@
 
             BOOSTERS.forEach((b, idx) => {
                 if (!b.compute) return;
-                const counts = b.compute(blocks);
+                const counts = b.compute(data, blocks);
                 const myCount = counts[playerName] || 0;
 
                 // Competition rank of this player's count among all 16 (higher = 1st).
