@@ -2192,7 +2192,7 @@
         /* Boosters grid: two rows of seven */
         .boosters-grid {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(9, 1fr);
             gap: 14px;
         }
 
@@ -2241,6 +2241,37 @@
         }
         @media (max-width: 600px) {
             .boosters-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        /* Totals / Per game toggle (placeholder — not yet functional) */
+        .booster-toggle-cell {
+            justify-content: center;
+        }
+
+        .booster-toggle {
+            display: inline-flex;
+            flex-direction: column;
+            border: 1px solid var(--accent-tertiary);
+            border-radius: 8px;
+            overflow: hidden;
+            width: 100%;
+            max-width: 92px;
+            cursor: pointer;
+        }
+
+        .booster-toggle-opt {
+            padding: 6px 8px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-align: center;
+            color: var(--text-secondary);
+            background: var(--bg-tertiary);
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+
+        .booster-toggle-opt.is-active {
+            background: var(--accent-tertiary);
+            color: var(--bg-primary);
         }
 
         @media (max-width: 900px) {
@@ -7816,7 +7847,7 @@
         // Names, tips, icons, and order are REAL. Only count/rank are still
         // placeholder — those get computed one booster at a time.
         const BOOSTERS = [
-            // --- Top row ---
+            // --- Top row (9) ---
             { name: 'Top of scoreboard', icon: 'topscoreboard.png',   tip: 'The player ends at the top of the scoreboard on a map.' },
             { name: 'Carry',             icon: 'carry.png',           tip: 'The player gets 20 or more kills on a map.' },
             { name: 'Quad',              icon: 'quad.png',            tip: 'The player makes a quad kill.' },
@@ -7824,13 +7855,16 @@
             { name: 'Clutch',            icon: 'clutch.png',          tip: 'Player makes a 1on2, 1on3, 1on4 or 1on5 clutch.' },
             { name: 'Mister consistent', icon: 'mrconsistent.png',    tip: 'The player gets KAST above 85% on a map.' },
             { name: 'Avenger',           icon: 'avenger.png',         tip: 'Player gets 4 or more trade kills on a map.' },
-            // --- Bottom row ---
+            { name: 'Aim bot',           icon: 'hsmachine.png',       tip: 'The player gets the highest headshot percentage on a map.' },
+            { name: 'Farmer',            icon: 'farmer.png',          tip: 'The player makes 3 or more SMG kills on a map.' },
+            // --- Bottom row (8 boosters; a toggle button fills the 9th cell) ---
             { name: 'Bottom of scoreboard', icon: 'bottomscoreboard.png', tip: 'The player ends at the bottom of the scoreboard on a map.' },
             { name: 'Cannon fodder',     icon: 'cannonfodder.png',    tip: 'The player survives 5 rounds or fewer on a map.' },
             { name: 'Bait',              icon: 'bait.png',            tip: 'Player is traded 4 times or more on a map.' },
             { name: 'Assist',            icon: 'assist.png',          tip: 'The player gets 4 or more damage assists on a map.' },
-            { name: 'Farmer',            icon: 'farmer.png',          tip: 'The player makes 3 or more SMG kills on a map.' },
-            { name: 'Aim bot',           icon: 'hsmachine.png',       tip: 'The player gets the highest headshot percentage on a map.' },
+            { name: 'Flash',             icon: 'flash.png',           tip: 'The player gets 4 or more flash assists on a map.' },
+            { name: 'Saver',             icon: 'saver.png',           tip: 'The player survives 3 or more lost rounds on a map.' },
+            { name: 'Rambo',             icon: 'rambo.png',           tip: 'The player makes a knife, zeus or shotgun kill.' },
             { name: 'Kobe',              icon: 'kobe.png',            tip: 'The player gets 1 or more grenade kills on a map.' }
         ];
 
@@ -7956,7 +7990,17 @@
                     <span class="booster-rank">${rank}</span>
                 </div>`;
             }).join('');
-            container.innerHTML = `<div class="boosters-grid">${cells}</div>`;
+
+            // Static placeholder for the global Totals / Per game toggle.
+            // Fills the 18th cell (bottom-right). Not yet functional.
+            const toggleCell = `<div class="booster-cell booster-toggle-cell">
+                <div class="booster-toggle" role="group" aria-label="Totals or per game">
+                    <span class="booster-toggle-opt is-active">Totals</span>
+                    <span class="booster-toggle-opt">Per game</span>
+                </div>
+            </div>`;
+
+            container.innerHTML = `<div class="boosters-grid">${cells}${toggleCell}</div>`;
 
             // If no booster needs data, we're done.
             if (!BOOSTERS.some(b => b.compute)) return;
