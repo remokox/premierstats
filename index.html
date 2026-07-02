@@ -7813,24 +7813,26 @@
         // ===== Awards: Boosters (SHELL ONLY) =====
         // Fixed set of 14 boosters, identical for every player; two rows of seven.
         // Each cell: icon, name + blue "i" tooltip, match-count, rank among the 16.
-        // This is a VISUAL SHELL fed by placeholder data — no computation yet.
-        // Real values get filled in one booster at a time by replacing the
-        // count/rank for each entry with a computed match-count + competition rank.
-        const BOOSTERS_PLACEHOLDER = [
-            { name: 'Carry',            tip: 'The player gets 20 or more kills on a map.' },
-            { name: 'Avenger',          tip: 'Player gets 4 or more trade kills on a map.' },
-            { name: 'Bait',             tip: 'Player is traded 4 times or more on a map.' },
-            { name: 'Assist',           tip: 'The player gets 4 or more damage assists on a map.' },
-            { name: 'Best pistol round',tip: 'Player is best in any pistol round based on kills, then assists, then deaths.' },
-            { name: 'Top of scoreboard',tip: 'The player ends at the top of the scoreboard on a map.' },
-            { name: 'Clutch',           tip: 'Player makes a 1on2, 1on3, 1on4 or 1on5 clutch.' },
-            { name: 'Quad',             tip: 'The player makes a quad kill.' },
-            { name: 'Aim bot',          tip: 'The player gets the highest headshot percentage on a map.' },
-            { name: 'Mister consistent',tip: 'The player gets KAST above 85% on a map.' },
-            { name: 'Farmer',           tip: 'The player makes 3 or more SMG kills on a map.' },
-            { name: 'Kobe',             tip: 'The player gets 1 or more grenade kills on a map.' },
-            { name: 'Cannon fodder',    tip: 'The player survives 5 rounds or fewer on a map.' },
-            { name: 'Bottom of scoreboard', tip: 'The player ends at the bottom of the scoreboard on a map.' }
+        // Order below is the fixed grid order (top row = first 7, bottom row = next 7).
+        // Names, tips, icons, and order are REAL. Only count/rank are still
+        // placeholder — those get computed one booster at a time.
+        const BOOSTERS = [
+            // --- Top row ---
+            { name: 'Top of scoreboard', icon: 'topscoreboard.png',   tip: 'The player ends at the top of the scoreboard on a map.' },
+            { name: 'Carry',             icon: 'carry.png',           tip: 'The player gets 20 or more kills on a map.' },
+            { name: 'Quad',              icon: 'quad.png',            tip: 'The player makes a quad kill.' },
+            { name: 'Best pistol round', icon: 'bestpistolround.png', tip: 'Player is best in any pistol round based on kills, then assists, then deaths.' },
+            { name: 'Clutch',            icon: 'clutch.png',          tip: 'Player makes a 1on2, 1on3, 1on4 or 1on5 clutch.' },
+            { name: 'Mister consistent', icon: 'mrconsistent.png',    tip: 'The player gets KAST above 85% on a map.' },
+            { name: 'Avenger',           icon: 'avenger.png',         tip: 'Player gets 4 or more trade kills on a map.' },
+            // --- Bottom row ---
+            { name: 'Bottom of scoreboard', icon: 'bottomscoreboard.png', tip: 'The player ends at the bottom of the scoreboard on a map.' },
+            { name: 'Cannon fodder',     icon: 'cannonfodder.png',    tip: 'The player survives 5 rounds or fewer on a map.' },
+            { name: 'Bait',              icon: 'bait.png',            tip: 'Player is traded 4 times or more on a map.' },
+            { name: 'Assist',            icon: 'assist.png',          tip: 'The player gets 4 or more damage assists on a map.' },
+            { name: 'Farmer',            icon: 'farmer.png',          tip: 'The player makes 3 or more SMG kills on a map.' },
+            { name: 'Aim bot',           icon: 'hsmachine.png',       tip: 'The player gets the highest headshot percentage on a map.' },
+            { name: 'Kobe',              icon: 'kobe.png',            tip: 'The player gets 1 or more grenade kills on a map.' }
         ];
 
         function renderBoosters(playerName) {
@@ -7838,12 +7840,12 @@
             if (!container) return;
             container.classList.remove('awards-placeholder');
 
-            const cells = BOOSTERS_PLACEHOLDER.map(b => {
-                // Placeholder values only — not computed.
+            const cells = BOOSTERS.map(b => {
+                // Count and rank are placeholder only — not computed yet.
                 const count = '00 times';
                 const rank = '0th';
                 return `<div class="booster-cell">
-                    <div class="booster-icon"></div>
+                    <img class="booster-icon" src="${AWARDS_PHOTO_BASE + b.icon}" alt="${b.name}" onerror="this.style.visibility='hidden'">
                     <span class="booster-name">${b.name}<span class="info-tip" data-tip="${b.tip}">i</span></span>
                     <span class="booster-count">${count}</span>
                     <span class="booster-rank">${rank}</span>
