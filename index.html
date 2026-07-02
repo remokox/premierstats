@@ -2069,6 +2069,111 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* ===== AWARDS CARD ===== */
+        .awards-selector-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .awards-selector-row label {
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        #awards-player-select {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            min-width: 220px;
+        }
+
+        .awards-card {
+            display: grid;
+            grid-template-columns: 1fr 1.4fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 18px;
+            grid-template-areas:
+                "photo spider right"
+                "boosters boosters notable";
+        }
+
+        .awards-box {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .awards-box-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .aw-photo   { grid-area: photo; display: flex; flex-direction: column; }
+        .aw-spider  { grid-area: spider; }
+        .aw-right   { grid-area: right; display: flex; flex-direction: column; gap: 18px; }
+        .aw-award-name { flex: 0 0 auto; }
+        .aw-summary { flex: 1 1 auto; }
+        .aw-boosters { grid-area: boosters; }
+        .aw-notable  { grid-area: notable; }
+
+        .awards-photo-img {
+            width: 100%;
+            flex: 1 1 auto;
+            min-height: 0;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid var(--accent-primary);
+            background: var(--bg-primary);
+        }
+
+        .aw-award-name .award-title-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            text-align: center;
+        }
+
+        .aw-summary .summary-text {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .awards-placeholder {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        @media (max-width: 900px) {
+            .awards-card {
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "photo"
+                    "spider"
+                    "right"
+                    "boosters"
+                    "notable";
+            }
+            .awards-photo-img { max-height: 360px; }
+        }
     </style>
 </head>
 <body>
@@ -2781,10 +2886,51 @@
         <div id="awards" class="page">
             <div class="section">
                 <h2 class="section-header">Awards</h2>
-                <div style="max-width: 480px; margin: 0 auto;">
-                    <div class="graph-card">
-                        <div class="graph-card-title">remokox</div>
-                        <div class="graph-canvas-wrap"><canvas id="awards-radar-remokox"></canvas></div>
+
+                <div class="awards-selector-row">
+                    <label for="awards-player-select">Player</label>
+                    <select id="awards-player-select"></select>
+                </div>
+
+                <div id="awards-empty-prompt" class="awards-placeholder" style="padding: 40px 0; text-align: center; font-size: 1.1rem;">
+                    Select a player to view their awards.
+                </div>
+
+                <div class="awards-card">
+                    <!-- Player photo -->
+                    <div class="awards-box aw-photo">
+                        <div class="awards-box-label">Player</div>
+                        <img id="awards-photo" class="awards-photo-img" alt="Player photo">
+                    </div>
+
+                    <!-- Spider graph (computed, existing radar) -->
+                    <div class="awards-box aw-spider">
+                        <div class="awards-box-label">Performance</div>
+                        <div class="graph-canvas-wrap"><canvas id="awards-radar"></canvas></div>
+                    </div>
+
+                    <!-- Award name + Text summary (both manual) -->
+                    <div class="aw-right">
+                        <div class="awards-box aw-award-name">
+                            <div class="awards-box-label">Award</div>
+                            <div id="awards-award-name" class="award-title-text awards-placeholder">Award name — coming later</div>
+                        </div>
+                        <div class="awards-box aw-summary">
+                            <div class="awards-box-label">Summary</div>
+                            <div id="awards-summary" class="summary-text awards-placeholder">Text summary — coming later</div>
+                        </div>
+                    </div>
+
+                    <!-- Boosters (computed + one manual — logic TBD) -->
+                    <div class="awards-box aw-boosters">
+                        <div class="awards-box-label">Boosters</div>
+                        <div id="awards-boosters" class="awards-placeholder">Boosters — computation rules coming later</div>
+                    </div>
+
+                    <!-- Notable stats (computed values, manually selected — TBD) -->
+                    <div class="awards-box aw-notable">
+                        <div class="awards-box-label">Notable stats</div>
+                        <div id="awards-notable" class="awards-placeholder">Notable stats — selection coming later</div>
                     </div>
                 </div>
             </div>
@@ -7633,7 +7779,7 @@
             });
         });
 
-        // Awards button — opens the Awards page and renders the radar
+        // Awards button — opens the Awards page (no player selected by default)
         const awardsButton = document.getElementById('awards-button');
         if (awardsButton) {
             awardsButton.addEventListener('click', () => {
@@ -7641,9 +7787,73 @@
                 document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
                 document.getElementById('awards').classList.add('active');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
-                buildPlayerRadar('awards-radar-remokox', 'remokox');
+                resetAwardsSelection();
             });
         }
+
+        // ===== Awards page: player selector =====
+        // Populates the dropdown with a leading prompt option, keeps the card
+        // hidden until a real player is chosen, then renders photo + radar.
+        // Award name, summary, boosters, and notable stats are placeholders
+        // pending their rules — this function deliberately does not touch them.
+        const AWARDS_PHOTO_BASE = 'https://raw.githubusercontent.com/remokox/premierstats/main/';
+
+        function resetAwardsSelection() {
+            const select = document.getElementById('awards-player-select');
+            const card = document.querySelector('#awards .awards-card');
+            const prompt = document.getElementById('awards-empty-prompt');
+            if (select) select.value = '';
+            if (card) card.style.display = 'none';
+            if (prompt) prompt.style.display = 'block';
+        }
+
+        function renderAwards(playerName) {
+            const info = PLAYER_INFO[playerName];
+            if (!info) return;
+
+            const card = document.querySelector('#awards .awards-card');
+            const prompt = document.getElementById('awards-empty-prompt');
+            if (prompt) prompt.style.display = 'none';
+            if (card) card.style.display = 'grid';
+
+            // Player photo (same remote source convention as player detail)
+            const photo = document.getElementById('awards-photo');
+            if (photo) {
+                photo.src = AWARDS_PHOTO_BASE + info.photo;
+                photo.alt = info.nickname;
+            }
+
+            // Spider graph — reuse existing computed radar (keys ARE nicknames)
+            buildPlayerRadar('awards-radar', playerName);
+        }
+
+        (function initAwardsSelector() {
+            const select = document.getElementById('awards-player-select');
+            if (!select) return;
+
+            // Leading prompt option (empty value = no player selected)
+            const promptOpt = document.createElement('option');
+            promptOpt.value = '';
+            promptOpt.textContent = '— Select a player —';
+            select.appendChild(promptOpt);
+
+            Object.keys(PLAYER_INFO).forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                select.appendChild(opt);
+            });
+
+            select.addEventListener('change', () => {
+                if (select.value) {
+                    renderAwards(select.value);
+                } else {
+                    resetAwardsSelection();
+                }
+            });
+
+            resetAwardsSelection();
+        })();
 
         // Load data on page load
         window.addEventListener('DOMContentLoaded', () => {
