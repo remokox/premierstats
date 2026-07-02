@@ -2998,9 +2998,9 @@
                             <thead>
                                 <tr>
                                     <th>Day</th>
+                                    <th>Matches</th>
                                     <th>Wins</th>
                                     <th>Losses</th>
-                                    <th>Ties</th>
                                     <th>Winrate (excl. ties)</th>
                                 </tr>
                             </thead>
@@ -6224,6 +6224,7 @@
                 const tr = tbody.querySelector(`tr[data-dow="${dow}"]`);
                 if (!tr) return;
                 const decisive = b.wins + b.losses;
+                const matches = b.wins + b.losses + b.ties; // total games incl. ties
                 let winrate = '-';
                 let cls = '';
                 if (decisive > 0) {
@@ -6231,9 +6232,9 @@
                     winrate = pct.toFixed(1) + '%';
                     cls = pct > 50 ? 'text-green' : pct < 50 ? 'text-red' : 'text-yellow';
                 }
-                tr.cells[1].textContent = b.wins;
-                tr.cells[2].textContent = b.losses;
-                tr.cells[3].textContent = b.ties;
+                tr.cells[1].textContent = matches;
+                tr.cells[2].textContent = b.wins;
+                tr.cells[3].textContent = b.losses;
                 tr.cells[4].textContent = winrate;
                 tr.cells[4].className = cls;
             });
