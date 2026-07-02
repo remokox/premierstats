@@ -7851,12 +7851,13 @@
             renderNotableStats(playerName, 'All');
         }
 
-        // ===== Awards: Boosters (SHELL ONLY) =====
-        // Fixed set of 14 boosters, identical for every player; two rows of seven.
-        // Each cell: icon, name + blue "i" tooltip, match-count, rank among the 16.
-        // Order below is the fixed grid order (top row = first 7, bottom row = next 7).
-        // Names, tips, icons, and order are REAL. Only count/rank are still
-        // placeholder — those get computed one booster at a time.
+        // ===== Awards: Boosters =====
+        // Fixed set of 17 boosters, identical for every player; top row = first 9,
+        // bottom row = next 8 (a Totals/Per game toggle fills the 18th grid cell).
+        // Each cell: icon, name + blue "i" tooltip, then count + rank among the 16
+        // (rank is by count in Totals view, by rate among 30+ match players in Per
+        // game view). Names, tips, icons, and order are REAL. Boosters gain live
+        // values once their compute fn is written; the rest show placeholders.
         const BOOSTERS = [
             // --- Top row (9) ---
             { name: 'Top of scoreboard', icon: 'topscoreboard.png',   tip: 'The player ends at the top of the scoreboard on a map.' },
@@ -7893,7 +7894,7 @@
 
         // Columns on the ecohunters sheet (gid 1037802432), 1-based.
         // Blank column A shifts everything right by one vs. the visible headers.
-        const ECO_COL = { player: 7, kills: 13, deaths: 14, assists: 15 }; // G, M, N, O
+        const ECO_COL = { player: 7, kills: 13, deaths: 14, assists: 15, quad: 35 }; // G, M, N, O, AI(4k)
 
         // Slice ecohunters data into consecutive 5-row match blocks starting at
         // row 4 (0-based index 3). Only complete 5-row blocks with all names
@@ -7980,10 +7981,30 @@
             return counts;
         }
 
+        // Quad (per-row threshold): count each player's matches with >= 1 quad kill.
+        // The 4k column (AI) holds the number of quad kills that match; we count the
+        // match once if it's >= 1 (matches-with-a-quad, NOT total quad kills).
+        function computeQuad(data, blocks) {
+            const counts = {};
+            Object.keys(PLAYER_INFO).forEach(k => counts[k] = 0);
+
+            for (let i = 3; i < data.length; i++) {
+                const row = data[i];
+                const eco = normLabel(row[ECO_COL.player - 1]).toLowerCase();
+                const player = ECONAME_TO_PLAYER[eco];
+                if (!player) continue;
+                const quads = parseInt(row[ECO_COL.quad - 1], 10);
+                if (!isNaN(quads) && quads >= 1) counts[player]++;
+            }
+
+            return counts;
+        }
+
         // Attach compute functions to the relevant BOOSTERS entries.
         // (Boosters without a compute fn render with placeholder count/rank.)
         BOOSTERS.find(b => b.name === 'Top of scoreboard').compute = computeTopOfScoreboard;
         BOOSTERS.find(b => b.name === 'Carry').compute = computeCarry;
+        BOOSTERS.find(b => b.name === 'Quad').compute = computeQuad;
 
         // ===== Boosters render state =====
         // View toggle: 'totals' shows raw match-counts ranked by count;
