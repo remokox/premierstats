@@ -7954,7 +7954,8 @@
 
                 const cell = container.querySelector(`.booster-cell[data-booster-idx="${idx}"]`);
                 if (!cell) return;
-                cell.querySelector('.booster-count').textContent = myCount + ' times';
+                cell.querySelector('.booster-count').textContent =
+                    myCount + (myCount === 1 ? ' time' : ' times');
                 cell.querySelector('.booster-rank').textContent = ordinal(rankNum);
             });
         }
