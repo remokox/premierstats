@@ -2275,6 +2275,16 @@
             color: var(--bg-primary);
         }
 
+        .booster-toggle-note {
+            display: block;
+            margin-top: 6px;
+            font-size: 0.6rem;
+            line-height: 1.2;
+            color: var(--text-muted);
+            text-align: center;
+            max-width: 92px;
+        }
+
         @media (max-width: 900px) {
             .awards-card {
                 grid-template-columns: 1fr;
@@ -7975,35 +7985,69 @@
         BOOSTERS.find(b => b.name === 'Top of scoreboard').compute = computeTopOfScoreboard;
         BOOSTERS.find(b => b.name === 'Carry').compute = computeCarry;
 
+        // ===== Boosters render state =====
+        // View toggle: 'totals' shows raw match-counts ranked by count;
+        // 'pergame' shows the achievement rate (count / matches played) ranked
+        // by rate among players with >= 30 matches. Sub-30 players show their
+        // rate but "<30 games" instead of a rank, and are excluded from the pool.
+        let boostersView = 'totals';
+        const BOOSTERS_MIN_GAMES = 30;
+
+        // Cache populated once per player-render so toggling doesn't refetch.
+        // { matchesPlayed: {playerKey:int},
+        //   perBooster: { idx: { count, pct, rankByCount, rankByPct(or null) } } }
+        let boostersCache = null;
+
+        // Count resolved ecohunters rows per player = matches played.
+        function computeMatchesPlayed(data) {
+            const mp = {};
+            Object.keys(PLAYER_INFO).forEach(k => mp[k] = 0);
+            for (let i = 3; i < data.length; i++) {
+                const eco = normLabel(data[i][ECO_COL.player - 1]).toLowerCase();
+                const player = ECONAME_TO_PLAYER[eco];
+                if (player) mp[player]++;
+            }
+            return mp;
+        }
+
         async function renderBoosters(playerName) {
             const container = document.getElementById('awards-boosters');
             if (!container) return;
             container.classList.remove('awards-placeholder');
+            boostersCache = null; // reset for the newly selected player
 
-            // Render the grid immediately with placeholders so it appears at once.
+            // Render the grid shell immediately with placeholders.
             const cells = BOOSTERS.map((b, idx) => {
-                const count = b.compute ? '…' : '– times';
-                const rank = b.compute ? '…' : '–';
                 return `<div class="booster-cell" data-booster-idx="${idx}">
                     <img class="booster-icon" src="${AWARDS_PHOTO_BASE + b.icon}" alt="${b.name}" onerror="this.style.visibility='hidden'">
                     <span class="booster-name">${b.name}<span class="info-tip" data-tip="${b.tip}">i</span></span>
-                    <span class="booster-count">${count}</span>
-                    <span class="booster-rank">${rank}</span>
+                    <span class="booster-count">${b.compute ? '…' : '– times'}</span>
+                    <span class="booster-rank">${b.compute ? '…' : '–'}</span>
                 </div>`;
             }).join('');
 
-            // Static placeholder for the global Totals / Per game toggle.
-            // Fills the 18th cell (bottom-right). Not yet functional.
             const toggleCell = `<div class="booster-cell booster-toggle-cell">
                 <div class="booster-toggle" role="group" aria-label="Totals or per game">
-                    <span class="booster-toggle-opt is-active">Totals</span>
-                    <span class="booster-toggle-opt">Per game</span>
+                    <span class="booster-toggle-opt${boostersView === 'totals' ? ' is-active' : ''}" data-view="totals">Totals</span>
+                    <span class="booster-toggle-opt${boostersView === 'pergame' ? ' is-active' : ''}" data-view="pergame">Per game</span>
                 </div>
+                <span class="booster-toggle-note">* per-game rank needs ${BOOSTERS_MIN_GAMES}+ matches</span>
             </div>`;
 
             container.innerHTML = `<div class="boosters-grid">${cells}${toggleCell}</div>`;
 
-            // If no booster needs data, we're done.
+            // Wire the toggle (re-paints from cache; no refetch).
+            container.querySelectorAll('.booster-toggle-opt').forEach(opt => {
+                opt.addEventListener('click', () => {
+                    const view = opt.getAttribute('data-view');
+                    if (view === boostersView) return;
+                    boostersView = view;
+                    container.querySelectorAll('.booster-toggle-opt').forEach(o =>
+                        o.classList.toggle('is-active', o.getAttribute('data-view') === view));
+                    paintBoosterCells(container, playerName);
+                });
+            });
+
             if (!BOOSTERS.some(b => b.compute)) return;
 
             const data = await fetchSheetData(SHEET_GIDS.ecohunters);
@@ -8015,21 +8059,69 @@
             }
 
             const blocks = ecoMatchBlocks(data);
+            const matchesPlayed = computeMatchesPlayed(data);
+            const allPlayers = Object.keys(PLAYER_INFO);
 
+            // Compute each booster's data for all 16 players, once.
+            const perBooster = {};
             BOOSTERS.forEach((b, idx) => {
                 if (!b.compute) return;
                 const counts = b.compute(data, blocks);
-                const myCount = counts[playerName] || 0;
 
-                // Competition rank of this player's count among all 16 (higher = 1st).
-                const allCounts = Object.keys(PLAYER_INFO).map(k => counts[k] || 0);
-                const rankNum = competitionRank(myCount, allCounts);
+                // Per-game percentage per player (0 matches -> 0%).
+                const pct = {};
+                allPlayers.forEach(k => {
+                    const mp = matchesPlayed[k] || 0;
+                    pct[k] = mp > 0 ? (counts[k] || 0) / mp * 100 : 0;
+                });
 
+                // Rank by count across all 16.
+                const allCounts = allPlayers.map(k => counts[k] || 0);
+                const rankByCount = {};
+                allPlayers.forEach(k => { rankByCount[k] = competitionRank(counts[k] || 0, allCounts); });
+
+                // Rank by pct, but ONLY among players with >= 30 matches.
+                const eligible = allPlayers.filter(k => (matchesPlayed[k] || 0) >= BOOSTERS_MIN_GAMES);
+                const eligiblePcts = eligible.map(k => pct[k]);
+                const rankByPct = {};
+                eligible.forEach(k => { rankByPct[k] = competitionRank(pct[k], eligiblePcts); });
+                // Non-eligible players simply have no entry in rankByPct.
+
+                perBooster[idx] = { count: counts, pct, rankByCount, rankByPct };
+            });
+
+            boostersCache = { matchesPlayed, perBooster };
+            paintBoosterCells(container, playerName);
+        }
+
+        // Fill every computed booster cell's count + rank lines from the cache,
+        // according to the current boostersView. Safe to call repeatedly (toggle).
+        function paintBoosterCells(container, playerName) {
+            if (!boostersCache) return;
+            const { matchesPlayed, perBooster } = boostersCache;
+            const mp = matchesPlayed[playerName] || 0;
+
+            BOOSTERS.forEach((b, idx) => {
+                if (!b.compute || !perBooster[idx]) return;
                 const cell = container.querySelector(`.booster-cell[data-booster-idx="${idx}"]`);
                 if (!cell) return;
-                cell.querySelector('.booster-count').textContent =
-                    myCount + (myCount === 1 ? ' time' : ' times');
-                cell.querySelector('.booster-rank').textContent = ordinal(rankNum);
+                const countEl = cell.querySelector('.booster-count');
+                const rankEl = cell.querySelector('.booster-rank');
+                const d = perBooster[idx];
+
+                if (boostersView === 'totals') {
+                    const c = d.count[playerName] || 0;
+                    countEl.textContent = c + (c === 1 ? ' time' : ' times');
+                    rankEl.textContent = ordinal(d.rankByCount[playerName]);
+                } else {
+                    // Per game: rate + rank among >=30-match players.
+                    countEl.textContent = (d.pct[playerName] || 0).toFixed(1) + '%';
+                    if (mp >= BOOSTERS_MIN_GAMES && d.rankByPct[playerName] !== undefined) {
+                        rankEl.textContent = ordinal(d.rankByPct[playerName]);
+                    } else {
+                        rankEl.textContent = '<30 games';
+                    }
+                }
             });
         }
 
