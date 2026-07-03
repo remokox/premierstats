@@ -7895,7 +7895,8 @@
         // Columns on the ecohunters sheet (gid 1037802432), 1-based.
         // Blank column A shifts everything right by one vs. the visible headers.
         const ECO_COL = { player: 7, kills: 13, deaths: 14, assists: 15, quad: 35, ace: 34, // G, M, N, O, AI(4k), AH(5k)
-            clutch1v5: 29, clutch1v4: 30, clutch1v3: 31, clutch1v2: 32 }; // AC, AD, AE, AF
+            clutch1v5: 29, clutch1v4: 30, clutch1v3: 31, clutch1v2: 32, // AC, AD, AE, AF
+            kast: 18 }; // R
 
         // Slice ecohunters data into consecutive 5-row match blocks starting at
         // row 4 (0-based index 3). Only complete 5-row blocks with all names
@@ -8031,6 +8032,28 @@
             return counts;
         }
 
+        // Mister consistent (per-row threshold): count each player's GAMES with
+        // KAST strictly above 85%. KAST is stored as a plain whole-number percent
+        // in column R (e.g. 85.7, not 0.857 and not "85.7%"), so a direct numeric
+        // compare works with no symbol-stripping. STRICT '>': exactly 85.0 does
+        // NOT count (the sheet contains 85.0 rows, so this genuinely matters).
+        // Non-numeric cells -> excluded (isNaN guard), same as Carry.
+        function computeMisterConsistent(data, blocks) {
+            const counts = {};
+            Object.keys(PLAYER_INFO).forEach(k => counts[k] = 0);
+
+            for (let i = 3; i < data.length; i++) {
+                const row = data[i];
+                const eco = normLabel(row[ECO_COL.player - 1]).toLowerCase();
+                const player = ECONAME_TO_PLAYER[eco];
+                if (!player) continue;
+                const kast = parseFloat(row[ECO_COL.kast - 1]);
+                if (!isNaN(kast) && kast > 85) counts[player]++;
+            }
+
+            return counts;
+        }
+
         // Best pistol round is the MANUAL booster: totals are supplied by hand
         // (not derived from any sheet). Fill in each player's total best-pistol
         // count below. Per-game rate divides by (matches * 2) because there are
@@ -8069,6 +8092,7 @@
         BOOSTERS.find(b => b.name === 'Carry').compute = computeCarry;
         BOOSTERS.find(b => b.name === 'Quad').compute = computeQuad;
         BOOSTERS.find(b => b.name === 'Clutch').compute = computeClutch;
+        BOOSTERS.find(b => b.name === 'Mister consistent').compute = computeMisterConsistent;
         const bpBooster = BOOSTERS.find(b => b.name === 'Best pistol round');
         bpBooster.compute = computeBestPistol;
         bpBooster.perGameDivisor = 2;
