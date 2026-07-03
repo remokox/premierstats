@@ -8537,7 +8537,10 @@
             { label: 'ADR',        col: 22, fmt: 'dec1' },   // V
             { label: 'HS%',        col: 24, fmt: 'pct1' },   // X
             { label: 'KAST',       col: 26, fmt: 'pct1' },   // Z
-            { label: 'Rating 2.0', col: 45, fmt: 'dec2' }    // AS
+            { label: 'Rating 2.0', col: 45, fmt: 'dec2' },   // AS
+            { label: 'Flash assists', col: 164, fmt: 'int'  },   // FH (raw count)
+            { label: 'Last alive',    col: 131, fmt: 'pct1' },   // EA (already a %; label drops redundant %)
+            { label: 'Saves/loss',    col: 139, fmt: 'pct1' }    // EI (saves per round loss, already a %)
         ];
 
         function formatStatValue(raw, fmt) {
@@ -8549,6 +8552,7 @@
                 case 'dec2': return num.toFixed(2);
                 case 'dec1': return num.toFixed(1);
                 case 'pct1': return num.toFixed(1) + '%';
+                case 'int':  return num.toFixed(0);
                 default:     return String(num);
             }
         }
