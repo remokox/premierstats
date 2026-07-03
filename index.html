@@ -5446,6 +5446,11 @@
                             grid: { color: 'rgba(42, 48, 64, 0.6)' }
                         },
                         y: {
+                            // Fixed range (not auto-scaled) so charts are comparable
+                            // across players, at the cost of clipping any day whose
+                            // K/D exceeds 3.0.
+                            min: 0,
+                            max: 3.0,
                             title: { display: true, text: 'K/D', color: '#9ba3af' },
                             ticks: { color: '#9ba3af' },
                             grid: { color: 'rgba(42, 48, 64, 0.6)' }
