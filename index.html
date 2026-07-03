@@ -7898,7 +7898,10 @@
             clutch1v5: 29, clutch1v4: 30, clutch1v3: 31, clutch1v2: 32, // AC, AD, AE, AF
             kast: 18, // R
             tradeKills: 25, traded: 26, // Y (player did the trading), Z (player was traded)
-            hsPct: 17 }; // Q
+            hsPct: 17, // Q
+            // SMG weapon-kill columns (verified against sheet headers). All 7 SMGs:
+            smgMac10: 106, smgMp9: 107, smgBizon: 114, smgP90: 119, // DB, DC, DJ, DO
+            smgUmp45: 132, smgMp7: 134, smgMp5sd: 135 }; // EB, ED, EE
 
         // Slice ecohunters data into consecutive 5-row match blocks starting at
         // row 4 (0-based index 3). Only complete 5-row blocks with all names
@@ -8123,6 +8126,66 @@
             return counts;
         }
 
+        // Bottom of scoreboard (per-MATCH comparison): the exact inversion of Top
+        // of scoreboard. Within each 5-player block, the WORST player by kills asc,
+        // then assists asc, then deaths DESC. Credits all players tied at the worst
+        // tuple (mirrors Top's credit-all-leaders). Uses the same M/N/O columns.
+        function computeBottomOfScoreboard(data, blocks) {
+            const counts = {};
+            Object.keys(PLAYER_INFO).forEach(k => counts[k] = 0);
+
+            blocks.forEach(block => {
+                const stats = block.map(x => ({
+                    player: x.player,
+                    kills: parseInt(x.row[ECO_COL.kills - 1], 10),
+                    assists: parseInt(x.row[ECO_COL.assists - 1], 10),
+                    deaths: parseInt(x.row[ECO_COL.deaths - 1], 10)
+                }));
+
+                // Inverted comparator: fewer kills is worse, then fewer assists,
+                // then MORE deaths is worse.
+                const worseThan = (a, b) => {
+                    if (a.kills !== b.kills) return a.kills < b.kills;
+                    if (a.assists !== b.assists) return a.assists < b.assists;
+                    return a.deaths > b.deaths;
+                };
+                let worst = stats[0];
+                stats.forEach(s => { if (worseThan(s, worst)) worst = s; });
+                const equalToWorst = s =>
+                    s.kills === worst.kills && s.assists === worst.assists && s.deaths === worst.deaths;
+                stats.forEach(s => { if (equalToWorst(s)) counts[s.player]++; });
+            });
+
+            return counts;
+        }
+
+        // Farmer (per-row threshold, SUMMED): count each player's GAMES where their
+        // TOTAL SMG kills across all 7 SMGs is >= 3. Unlike Clutch (which ORs its
+        // columns), Farmer SUMS them: 1 MAC-10 + 1 MP9 + 1 P90 in a map = 3 = counts.
+        // Cells are blank when a player didn't use that SMG, so each term is coerced
+        // to 0 (parseInt(blank) -> NaN -> `|| 0`); without this one blank NaN would
+        // poison the whole sum and silently drop a qualifying match.
+        function computeFarmer(data, blocks) {
+            const counts = {};
+            Object.keys(PLAYER_INFO).forEach(k => counts[k] = 0);
+
+            const smgCols = [
+                ECO_COL.smgMac10, ECO_COL.smgMp9, ECO_COL.smgBizon, ECO_COL.smgP90,
+                ECO_COL.smgUmp45, ECO_COL.smgMp7, ECO_COL.smgMp5sd
+            ];
+
+            for (let i = 3; i < data.length; i++) {
+                const row = data[i];
+                const eco = normLabel(row[ECO_COL.player - 1]).toLowerCase();
+                const player = ECONAME_TO_PLAYER[eco];
+                if (!player) continue;
+                const smgKills = smgCols.reduce((sum, c) => sum + (parseInt(row[c - 1], 10) || 0), 0);
+                if (smgKills >= 3) counts[player]++;
+            }
+
+            return counts;
+        }
+
         // Best pistol round is the MANUAL booster: totals are supplied by hand
         // (not derived from any sheet). Fill in each player's total best-pistol
         // count below. Per-game rate divides by (matches * 2) because there are
@@ -8165,6 +8228,8 @@
         BOOSTERS.find(b => b.name === 'Avenger').compute = computeAvenger;
         BOOSTERS.find(b => b.name === 'Bait').compute = computeBait;
         BOOSTERS.find(b => b.name === 'Aim bot').compute = computeAimBot;
+        BOOSTERS.find(b => b.name === 'Bottom of scoreboard').compute = computeBottomOfScoreboard;
+        BOOSTERS.find(b => b.name === 'Farmer').compute = computeFarmer;
         const bpBooster = BOOSTERS.find(b => b.name === 'Best pistol round');
         bpBooster.compute = computeBestPistol;
         bpBooster.perGameDivisor = 2;
