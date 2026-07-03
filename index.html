@@ -7894,7 +7894,7 @@
 
         // Columns on the ecohunters sheet (gid 1037802432), 1-based.
         // Blank column A shifts everything right by one vs. the visible headers.
-        const ECO_COL = { player: 7, kills: 13, deaths: 14, assists: 15, quad: 35 }; // G, M, N, O, AI(4k)
+        const ECO_COL = { player: 7, kills: 13, deaths: 14, assists: 15, quad: 35, ace: 34 }; // G, M, N, O, AI(4k), AH(5k)
 
         // Slice ecohunters data into consecutive 5-row match blocks starting at
         // row 4 (0-based index 3). Only complete 5-row blocks with all names
@@ -7981,9 +7981,10 @@
             return counts;
         }
 
-        // Quad (per-row threshold): count each player's matches with >= 1 quad kill.
-        // The 4k column (AI) holds the number of quad kills that match; we count the
-        // match once if it's >= 1 (matches-with-a-quad, NOT total quad kills).
+        // Quad (per-row threshold): count each player's matches with a 4k OR a 5k.
+        // "Quad kill" includes aces here (a 5k round satisfies the quad booster,
+        // since 5 >= 4). Reads the 4k column (AI) and 5k column (AH); a match counts
+        // once if either had >= 1 that match (matches, NOT total multikills).
         function computeQuad(data, blocks) {
             const counts = {};
             Object.keys(PLAYER_INFO).forEach(k => counts[k] = 0);
@@ -7994,9 +7995,44 @@
                 const player = ECONAME_TO_PLAYER[eco];
                 if (!player) continue;
                 const quads = parseInt(row[ECO_COL.quad - 1], 10);
-                if (!isNaN(quads) && quads >= 1) counts[player]++;
+                const aces = parseInt(row[ECO_COL.ace - 1], 10);
+                const hasQuad = !isNaN(quads) && quads >= 1;
+                const hasAce = !isNaN(aces) && aces >= 1;
+                if (hasQuad || hasAce) counts[player]++;
             }
 
+            return counts;
+        }
+
+        // Best pistol round is the MANUAL booster: totals are supplied by hand
+        // (not derived from any sheet). Fill in each player's total best-pistol
+        // count below. Per-game rate divides by (matches * 2) because there are
+        // 2 pistol rounds per game — set via perGameDivisor = 2 on the booster.
+        // Keys must match PLAYER_INFO exactly (mind diacritics).
+        const BEST_PISTOL_TOTALS = {
+            'remokox': 153,
+            'Große Cigarette': 122,
+            'MasnoPro Vulpes Wójcior': 53,
+            'Badum': 67,
+            'MasnoCoach THUNDER': 41,
+            'Marnyr': 4,
+            'Torrek': 32,
+            'Yao Ming': 0,
+            'monke': 18,
+            'ołmi': 49,
+            'Minion 2': 11,
+            'Twój Stary': 18,
+            'kieik': 6,
+            'wuja': 0,
+            'Jeffrey Epstein': 1,
+            'Szymon Gwiazda Rocka': 1
+        };
+
+        // Manual booster: "compute" just returns the hand-entered totals.
+        // Players missing from the object default to 0 via the render path.
+        function computeBestPistol(data, blocks) {
+            const counts = {};
+            Object.keys(PLAYER_INFO).forEach(k => counts[k] = BEST_PISTOL_TOTALS[k] || 0);
             return counts;
         }
 
@@ -8005,6 +8041,9 @@
         BOOSTERS.find(b => b.name === 'Top of scoreboard').compute = computeTopOfScoreboard;
         BOOSTERS.find(b => b.name === 'Carry').compute = computeCarry;
         BOOSTERS.find(b => b.name === 'Quad').compute = computeQuad;
+        const bpBooster = BOOSTERS.find(b => b.name === 'Best pistol round');
+        bpBooster.compute = computeBestPistol;
+        bpBooster.perGameDivisor = 2;
 
         // ===== Boosters render state =====
         // View toggle: 'totals' shows raw match-counts ranked by count;
@@ -8090,10 +8129,13 @@
                 const counts = b.compute(data, blocks);
 
                 // Per-game percentage per player (0 matches -> 0%).
+                // divisor accounts for boosters measured per-opportunity rather
+                // than per-match (Best pistol round: 2 pistol rounds per game).
+                const divisor = b.perGameDivisor || 1;
                 const pct = {};
                 allPlayers.forEach(k => {
                     const mp = matchesPlayed[k] || 0;
-                    pct[k] = mp > 0 ? (counts[k] || 0) / mp * 100 : 0;
+                    pct[k] = mp > 0 ? (counts[k] || 0) / (mp * divisor) * 100 : 0;
                 });
 
                 // Rank by count across all 16.
