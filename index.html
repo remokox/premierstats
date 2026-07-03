@@ -2119,6 +2119,8 @@
 
         .aw-photo   { grid-area: photo; display: flex; flex-direction: column; }
         .aw-spider  { grid-area: spider; }
+        .aw-spider #awards-spider { width: 100%; height: 100%; min-height: 320px; display: flex; align-items: center; justify-content: center; }
+        .aw-spider #awards-spider canvas { max-width: 100%; }
         .aw-right   { grid-area: right; display: flex; flex-direction: column; gap: 18px; }
         .aw-award-name { flex: 0 0 auto; }
         .aw-summary { flex: 1 1 auto; }
@@ -3027,6 +3029,9 @@
 
                     <!-- Performance graph slot — to be remade -->
                     <div class="awards-box aw-spider">
+                        <div id="awards-spider" class="awards-placeholder">loading data
+                            <canvas id="awards-spider-canvas" style="display:none;"></canvas>
+                        </div>
                     </div>
 
                     <!-- Award name + Text summary (both manual) -->
@@ -4075,20 +4080,12 @@
 
         // Load overview page data
         async function loadOverviewData() {
-            const [data, rankingRows] = await Promise.all([
-                fetchSheetData(SHEET_GIDS.sum_stats_maps),
-                fetchSheetData(SHEET_GIDS.ecohunters)
-            ]);
+            const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
             
             if (!data) {
                 document.getElementById('overview-loading').innerHTML = '<p style="color: var(--danger);">Error loading data. Please refresh the page.</p>';
                 return;
             }
-
-            // Avg Opponent / Rank Change come from the ecohunters sheet; if that
-            // fetch failed, fall back to empty stats so the rest of the table
-            // still renders.
-            const ranking = rankingRows ? computeRankingStats(rankingRows) : { avgOpponent: {}, rankChange: {} };
 
             // Extract rows 8-22 (indices 7-21 in 0-indexed array)
             const players = [];
@@ -4101,8 +4098,6 @@
                 
                 players.push({
                     name: name,
-                    avgOpponent: ranking.avgOpponent[name] ?? null,
-                    rankChange: ranking.rankChange[name] ?? null,
                     matches: parseInt(row[OVERVIEW_COLUMNS.matches - 1]) || 0,
                     winrate: parseFloat(row[OVERVIEW_COLUMNS.winrate - 1]) || 0,
                     kd: parseFloat(row[OVERVIEW_COLUMNS.kd - 1]) || 0,
@@ -4137,17 +4132,13 @@
                     playerCount++;
                 }
 
-                const avgOpponentText = player.avgOpponent === null ? '-' : player.avgOpponent.toFixed(0);
-                const rankChangeText = player.rankChange === null ? '-' :
-                    (player.rankChange > 0 ? '+' : '') + player.rankChange.toFixed(0);
-
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td class="player-name">${player.name}</td>
                     <td class="stat-value">-</td>
-                    <td class="stat-value">${avgOpponentText}</td>
                     <td class="stat-value">-</td>
-                    <td class="stat-value">${rankChangeText}</td>
+                    <td class="stat-value">-</td>
+                    <td class="stat-value">-</td>
                     <td class="stat-value">${player.matches}</td>
                     <td class="stat-value">${(player.winrate).toFixed(2)}%</td>
                     <td class="stat-value">${player.kd.toFixed(2)}</td>
@@ -7863,6 +7854,9 @@
 
             // Notable stats (map fixed to 'All' for now; per-award map scope later)
             renderNotableStats(playerName, 'All');
+
+            // Spider/radar chart (always All-maps; bounds from > 30 game players)
+            renderSpiderChart(playerName);
         }
 
         // ===== Awards: Boosters =====
@@ -7924,41 +7918,6 @@
             // SMG weapon-kill columns (verified against sheet headers). All 7 SMGs:
             smgMac10: 106, smgMp9: 107, smgBizon: 114, smgP90: 119, // DB, DC, DJ, DO
             smgUmp45: 132, smgMp7: 134, smgMp5sd: 135 }; // EB, ED, EE
-
-        // Ranking stats sourced from the ecohunters sheet (gid 1037802432):
-        //   - Avg Opponent: average of column F across every row belonging to
-        //     the player (identified via column G, same resolution as ECO_COL.player).
-        //   - Rank Change: sum of column I across every row belonging to the player.
-        const RANK_ECO_COL = { avgOpponent: 6, rankChange: 9 }; // F, I
-
-        function computeRankingStats(data) {
-            const oppSum = {}, oppCount = {}, changeSum = {};
-            Object.keys(PLAYER_INFO).forEach(k => { oppSum[k] = 0; oppCount[k] = 0; changeSum[k] = 0; });
-
-            data.forEach(row => {
-                const eco = normLabel(row[ECO_COL.player - 1]).toLowerCase();
-                const player = ECONAME_TO_PLAYER[eco];
-                if (!player) return; // header row or unresolved name — skip
-
-                const oppVal = parseFloat(row[RANK_ECO_COL.avgOpponent - 1]);
-                if (!isNaN(oppVal)) {
-                    oppSum[player] += oppVal;
-                    oppCount[player]++;
-                }
-
-                const changeVal = parseFloat(row[RANK_ECO_COL.rankChange - 1]);
-                if (!isNaN(changeVal)) {
-                    changeSum[player] += changeVal;
-                }
-            });
-
-            const avgOpponent = {};
-            Object.keys(PLAYER_INFO).forEach(k => {
-                avgOpponent[k] = oppCount[k] > 0 ? oppSum[k] / oppCount[k] : null;
-            });
-
-            return { avgOpponent, rankChange: changeSum };
-        }
 
         // Slice ecohunters data into consecutive 5-row match blocks starting at
         // row 4 (0-based index 3). Only complete 5-row blocks with all names
@@ -8578,6 +8537,181 @@
         // ===== Awards: Notable stats =====
         // Renders 5 rows (stat name | value | place among the 16 roster players).
         // Ranking is standard competition ranking (ties share a place, next skips),
+        // Spider/radar chart axes (all on sum_stats_maps, gid 999727190).
+        // All 12 are higher-is-better, so normalization needs no direction flag.
+        // Each drawn player's value is mapped to [0,1] against the 5th/95th
+        // percentile of the QUALIFYING players (> 30 games), then clamped — so a
+        // small-sample player can't stretch the scale, and out-of-band values pin
+        // to the ring edge or centre rather than spiking past them.
+        const RADAR_AXES = [
+            { label: 'Rating 3.0',       col: 185, fmt: 'dec2' },   // GC
+            { label: 'ADR',              col: 22,  fmt: 'dec1' },   // V
+            { label: 'KPRW',             col: 56,  fmt: 'dec2' },   // BD
+            { label: '1k+',              col: 59,  fmt: 'pct1' },   // BG
+            { label: '2k+',              col: 63,  fmt: 'pct1' },   // BK
+            { label: 'KAST',             col: 26,  fmt: 'pct1' },   // Z  (raw number, % appended)
+            { label: 'Support rounds',   col: 80,  fmt: 'pct1' },   // CB
+            { label: 'Opening success',  col: 109, fmt: 'pct1' },   // DE
+            { label: '1on1 win',         col: 136, fmt: 'pct1' },   // EF (on THIS sheet; not Zeus)
+            { label: 'UD per round',     col: 161, fmt: 'dec2' },   // FE
+            { label: 'Opp flashed/round',col: 167, fmt: 'dec2' },   // FK
+            { label: 'Round swing',      col: 44,  fmt: 'pct2' }    // AR (raw number, % appended)
+        ];
+
+        // Threshold for a player to help SET the radar's percentile bounds.
+        // Strictly greater than 30 (not inclusive), per spec — distinct from the
+        // boosters' BOOSTERS_MIN_GAMES which is >= 30.
+        const RADAR_MIN_GAMES = 30;
+
+        // Linear / inclusive percentile (matches spreadsheet PERCENTILE.INC).
+        // sorted must be ascending. p in [0,1]. Returns interpolated value.
+        function percentileInc(sorted, p) {
+            if (sorted.length === 0) return NaN;
+            if (sorted.length === 1) return sorted[0];
+            const rank = p * (sorted.length - 1);      // 0-based fractional index
+            const lo = Math.floor(rank);
+            const hi = Math.ceil(rank);
+            if (lo === hi) return sorted[lo];
+            const frac = rank - lo;
+            return sorted[lo] + (sorted[hi] - sorted[lo]) * frac;
+        }
+
+        // Parse a stat cell the same way renderNotableStats does: strip a trailing
+        // % if present, trim, parseFloat. Returns NaN for blank/garbage.
+        function parseStatCell(raw) {
+            return parseFloat(String(raw).replace('%', '').trim());
+        }
+
+        // For each RADAR_AXES entry, compute [p5, p95] over the qualifying players'
+        // values (> RADAR_MIN_GAMES games). qualifierRows are the already-filtered
+        // roster rows meeting the games threshold. Returns { axisIndex: {p5, p95} }.
+        function computeRadarBounds(qualifierRows) {
+            const bounds = {};
+            RADAR_AXES.forEach((axis, i) => {
+                const vals = qualifierRows
+                    .map(r => parseStatCell(r[axis.col - 1]))
+                    .filter(v => !isNaN(v))
+                    .sort((a, b) => a - b);
+                bounds[i] = {
+                    p5: percentileInc(vals, 0.05),
+                    p95: percentileInc(vals, 0.95),
+                    n: vals.length
+                };
+            });
+            return bounds;
+        }
+
+        // Normalize one value to [0,1] against an axis's percentile bounds, clamped.
+        // Degenerate p5===p95 (no spread) -> 0.5 so the point sits mid-radius rather
+        // than dividing by zero.
+        function normalizeRadarValue(value, b) {
+            if (isNaN(value) || !b || isNaN(b.p5) || isNaN(b.p95)) return 0;
+            if (b.p95 === b.p5) return 0.5;
+            const t = (value - b.p5) / (b.p95 - b.p5);
+            return Math.max(0, Math.min(1, t));
+        }
+
+        // Render the 12-axis radar for one player. Bounds come from the 5th/95th
+        // percentile of players with > RADAR_MIN_GAMES games (always All-maps); the
+        // player's own values are normalized+clamped to [0,1] against those bounds.
+        // Ring ticks are hidden (12 mixed-unit axes can't share a labelled scale);
+        // raw values live in the axis labels and the hover tooltip.
+        async function renderSpiderChart(playerName) {
+            const wrapper = document.getElementById('awards-spider');
+            const canvas = document.getElementById('awards-spider-canvas');
+            if (!wrapper || !canvas) return;
+
+            const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
+            if (!data) {
+                wrapper.innerHTML = '<span style="color: var(--danger);">Failed to load stats.</span>';
+                return;
+            }
+
+            // Roster rows (All maps), and the qualifier subset (> 30 games).
+            const rosterRows = rowsForMap(data, 'All').filter(r => {
+                const name = (r[PLAYER_COLUMNS.name - 1] || '').toString().trim();
+                return PLAYER_INFO[name] !== undefined;
+            });
+            const qualifierRows = rosterRows.filter(r =>
+                (parseInt(r[PLAYER_COLUMNS.matches - 1], 10) || 0) > RADAR_MIN_GAMES);
+
+            const playerRow = rosterRows.find(r =>
+                (r[PLAYER_COLUMNS.name - 1] || '').toString().trim() === playerName);
+            if (!playerRow) {
+                wrapper.innerHTML = '<span style="color: var(--danger);">No stats for this player.</span>';
+                return;
+            }
+
+            const bounds = computeRadarBounds(qualifierRows);
+
+            // Per-axis: normalized radius for the polygon, raw formatted value for
+            // labels/tooltips.
+            const normalized = [];
+            const rawFormatted = [];
+            RADAR_AXES.forEach((axis, i) => {
+                const raw = playerRow[axis.col - 1];
+                const num = parseStatCell(raw);
+                normalized.push(normalizeRadarValue(num, bounds[i]));
+                rawFormatted.push(isNaN(num) ? '—' : formatStatValue(raw, axis.fmt));
+            });
+
+            // Axis labels: two lines — stat name, then the raw value.
+            const axisLabels = RADAR_AXES.map((axis, i) => [axis.label, rawFormatted[i]]);
+
+            const canvasId = 'awards-spider-canvas';
+            if (graphChartInstances[canvasId]) graphChartInstances[canvasId].destroy();
+
+            wrapper.classList.remove('awards-placeholder');
+            // Clear the "loading data" text node but KEEP the canvas element.
+            Array.from(wrapper.childNodes).forEach(n => {
+                if (n.nodeType === Node.TEXT_NODE) n.remove();
+            });
+            canvas.style.display = 'block';
+
+            graphChartInstances[canvasId] = new Chart(canvas.getContext('2d'), {
+                type: 'radar',
+                data: {
+                    labels: axisLabels,
+                    datasets: [{
+                        data: normalized,
+                        backgroundColor: 'rgba(255, 107, 53, 0.25)',
+                        borderColor: '#ff6b35',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#ff6b35',
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                // Show the stat name and the RAW value, not the 0–1 radius.
+                                title: (items) => RADAR_AXES[items[0].dataIndex].label,
+                                label: (c) => rawFormatted[c.dataIndex]
+                            }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            min: 0,
+                            max: 1,
+                            ticks: { display: false, stepSize: 0.2 },   // hide 0.2/0.4/… ring labels
+                            grid: { color: 'rgba(42, 48, 64, 0.8)' },
+                            angleLines: { color: 'rgba(42, 48, 64, 0.8)' },
+                            pointLabels: {
+                                color: '#c9d1d9',
+                                font: { size: 11 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
         // higher value = better = 1st, computed over the given map block ('All' now).
         // mapName is parameterized so a future award like "Best rating on Nuke"
         // can rank over the Nuke block with no change to this function.
@@ -8601,6 +8735,7 @@
                 case 'dec2': return num.toFixed(2);
                 case 'dec1': return num.toFixed(1);
                 case 'pct1': return num.toFixed(1) + '%';
+                case 'pct2': return num.toFixed(2) + '%';
                 case 'int':  return num.toFixed(0);
                 default:     return String(num);
             }
