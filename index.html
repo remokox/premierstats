@@ -7894,7 +7894,8 @@
 
         // Columns on the ecohunters sheet (gid 1037802432), 1-based.
         // Blank column A shifts everything right by one vs. the visible headers.
-        const ECO_COL = { player: 7, kills: 13, deaths: 14, assists: 15, quad: 35, ace: 34 }; // G, M, N, O, AI(4k), AH(5k)
+        const ECO_COL = { player: 7, kills: 13, deaths: 14, assists: 15, quad: 35, ace: 34, // G, M, N, O, AI(4k), AH(5k)
+            clutch1v5: 29, clutch1v4: 30, clutch1v3: 31, clutch1v2: 32 }; // AC, AD, AE, AF
 
         // Slice ecohunters data into consecutive 5-row match blocks starting at
         // row 4 (0-based index 3). Only complete 5-row blocks with all names
@@ -8004,6 +8005,32 @@
             return counts;
         }
 
+        // Clutch (per-row threshold): count each player's GAMES containing at
+        // least one clutch of any type. The four clutch columns (1v5/1v4/1v3/1v2)
+        // are OR'd, NOT summed: a game with any clutch counts once, so a rare
+        // double-clutch game is worth the same as a single 1v2 — matches the
+        // "count games in which a clutch happened" rule. Non-numeric cells -> 0.
+        function computeClutch(data, blocks) {
+            const counts = {};
+            Object.keys(PLAYER_INFO).forEach(k => counts[k] = 0);
+
+            for (let i = 3; i < data.length; i++) {
+                const row = data[i];
+                const eco = normLabel(row[ECO_COL.player - 1]).toLowerCase();
+                const player = ECONAME_TO_PLAYER[eco];
+                if (!player) continue;
+
+                const cols = [ECO_COL.clutch1v5, ECO_COL.clutch1v4, ECO_COL.clutch1v3, ECO_COL.clutch1v2];
+                const hasClutch = cols.some(c => {
+                    const v = parseInt(row[c - 1], 10);
+                    return !isNaN(v) && v >= 1;
+                });
+                if (hasClutch) counts[player]++;
+            }
+
+            return counts;
+        }
+
         // Best pistol round is the MANUAL booster: totals are supplied by hand
         // (not derived from any sheet). Fill in each player's total best-pistol
         // count below. Per-game rate divides by (matches * 2) because there are
@@ -8041,6 +8068,7 @@
         BOOSTERS.find(b => b.name === 'Top of scoreboard').compute = computeTopOfScoreboard;
         BOOSTERS.find(b => b.name === 'Carry').compute = computeCarry;
         BOOSTERS.find(b => b.name === 'Quad').compute = computeQuad;
+        BOOSTERS.find(b => b.name === 'Clutch').compute = computeClutch;
         const bpBooster = BOOSTERS.find(b => b.name === 'Best pistol round');
         bpBooster.compute = computeBestPistol;
         bpBooster.perGameDivisor = 2;
