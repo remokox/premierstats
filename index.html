@@ -8655,8 +8655,9 @@
                 rawFormatted.push(isNaN(num) ? '—' : formatStatValue(raw, axis.fmt));
             });
 
-            // Axis labels: two lines — stat name, then the raw value.
-            const axisLabels = RADAR_AXES.map((axis, i) => [axis.label, rawFormatted[i]]);
+            // Axis labels: stat name only (raw values removed per request; they
+            // remain available on hover via the tooltip).
+            const axisLabels = RADAR_AXES.map(axis => axis.label);
 
             const canvasId = 'awards-spider-canvas';
             if (graphChartInstances[canvasId]) graphChartInstances[canvasId].destroy();
@@ -8678,8 +8679,9 @@
                         borderColor: '#ff6b35',
                         borderWidth: 2,
                         pointBackgroundColor: '#ff6b35',
-                        pointRadius: 4,
-                        pointHoverRadius: 6
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        pointHitRadius: 12
                     }]
                 },
                 options: {
