@@ -8646,12 +8646,20 @@
 
             // Per-axis: normalized radius for the polygon, raw formatted value for
             // labels/tooltips.
+            // Cosmetic display floor: map the true normalized [0,1] onto
+            // [FLOOR, 1] so a 0-percentile vertex sits just off-centre on a small
+            // inner ring instead of collapsing to the dead centre point. Purely
+            // visual — does NOT change the percentile math or the printed values;
+            // only the plotted radius. Kept OUT of normalizeRadarValue so that
+            // function's [0,1] contract (and its tests) stay honest.
+            const RADAR_DISPLAY_FLOOR = 0.1;
             const normalized = [];
             const rawFormatted = [];
             RADAR_AXES.forEach((axis, i) => {
                 const raw = playerRow[axis.col - 1];
                 const num = parseStatCell(raw);
-                normalized.push(normalizeRadarValue(num, bounds[i]));
+                const t = normalizeRadarValue(num, bounds[i]);
+                normalized.push(RADAR_DISPLAY_FLOOR + (1 - RADAR_DISPLAY_FLOOR) * t);
                 rawFormatted.push(isNaN(num) ? '—' : formatStatValue(raw, axis.fmt));
             });
 
