@@ -2586,6 +2586,14 @@
                                 <tr><td>Time opponent flashed per round [s]</td><td>-</td></tr>
                             </tbody>
                         </table>
+
+                        <!-- K/D Over Time Section -->
+                        <div class="player-detail-section-title">K/D Over Time</div>
+                        <div class="graph-card">
+                            <div class="graph-canvas-wrap" id="overview-kd-chart-wrap">
+                                <canvas id="overview-kd-chart"></canvas>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Right Content - Individual Tab -->
@@ -4451,6 +4459,11 @@
             
             console.log('Loading data for player:', info.nickname);
 
+            // K/D-over-time chart reads a different sheet (ecohunters) than the
+            // rest of this function (sum_stats_maps), so it's independent of
+            // whether a playerRow is found below — fire it in parallel.
+            loadOverviewKdChart(mapName);
+
             // Immediately show a loading message in the per-map panels that rebuild
             // their tbody. Each loader replaces this with real rows when its own
             // fetch finishes, so no separate "hide" step is needed for these.
@@ -5315,6 +5328,133 @@
             setClutchRow('clutch-loss', clutchLongestRuns(c => c.status === 'lost'));
 
             hidePanelOverlay('detail-tab-streaks');
+        }
+
+        // K/D Over Time (Overview tab). Uses the ecohunters sheet (one row per
+        // player per match) — NOT sum_stats_maps, which has no per-match dates.
+        // For the current player (+ optional map filter), buckets matches by
+        // date, sums kills and deaths separately per day, then divides the
+        // sums (NOT an average of per-match ratios) to get that day's K/D.
+        // Days with zero recorded deaths that day are skipped (undefined
+        // ratio), as are days with no matches at all — per spec, the line
+        // should be constant across only the days that actually have data.
+        async function loadOverviewKdChart(mapName) {
+            const canvas = document.getElementById('overview-kd-chart');
+            if (!canvas) return;
+            const host = document.getElementById('overview-kd-chart-wrap') || canvas.parentElement;
+            showOverlayOn(host);
+
+            if (!currentPlayerName) { hideOverlayOn(host); return; }
+            const info = PLAYER_INFO[currentPlayerName];
+            if (!info) { hideOverlayOn(host); return; }
+
+            const data = await fetchSheetData(SHEET_GIDS.ecohunters);
+            if (!data) {
+                console.error('K/D over time: failed to load data');
+                hideOverlayOn(host);
+                return;
+            }
+
+            // Map nav filter value -> sheet map-name string (same convention as
+            // loadScoreStatsData, which reads this same sheet).
+            const MAP_NAMES = {
+                ancient: 'Ancient', anubis: 'Anubis', dust2: 'Dust II', inferno: 'Inferno',
+                mirage: 'Mirage', nuke: 'Nuke', overpass: 'Overpass'
+            };
+            const wantMap = (mapName && mapName !== 'all') ? MAP_NAMES[mapName] : null;
+
+            // Columns on the ecohunters sheet (gid 1037802432), 0-based.
+            const DATE = 1, MAP = 2, PLAYER = 6, KILLS = 12, DEATHS = 13;
+
+            // Bucket by date string: sum kills and deaths separately.
+            const buckets = {}; // dateStr -> { kills, deaths }
+            data.forEach(row => {
+                const name = (row[PLAYER] || '').toString().trim();
+                if (name !== info.ecoName) return;
+                if (wantMap && (row[MAP] || '').toString().trim() !== wantMap) return;
+
+                const dateStr = (row[DATE] || '').toString().trim();
+                if (!dateStr) return;
+
+                const k = parseInt(row[KILLS], 10);
+                const d = parseInt(row[DEATHS], 10);
+                if (isNaN(k) || isNaN(d)) return;
+
+                if (!buckets[dateStr]) buckets[dateStr] = { kills: 0, deaths: 0 };
+                buckets[dateStr].kills += k;
+                buckets[dateStr].deaths += d;
+            });
+
+            // Parse "DD.MM.YYYY" into a sortable Date. Bad/unparsable dates are
+            // dropped rather than risking a wrongly-ordered x-axis.
+            const parseSheetDate = (s) => {
+                const parts = s.split('.');
+                if (parts.length !== 3) return null;
+                const [dd, mm, yyyy] = parts.map(p => parseInt(p, 10));
+                if (isNaN(dd) || isNaN(mm) || isNaN(yyyy)) return null;
+                return new Date(yyyy, mm - 1, dd);
+            };
+
+            const points = Object.keys(buckets)
+                .map(dateStr => ({ dateStr, dateObj: parseSheetDate(dateStr), b: buckets[dateStr] }))
+                .filter(p => p.dateObj && p.b.deaths > 0) // skip days with no deaths recorded (undefined K/D) and unparsable dates
+                .sort((a, b) => a.dateObj - b.dateObj);
+
+            const labels = points.map(p => p.dateStr);
+            const kdValues = points.map(p => p.b.kills / p.b.deaths);
+
+            if (graphChartInstances['overview-kd-chart']) graphChartInstances['overview-kd-chart'].destroy();
+
+            if (points.length === 0) {
+                hideOverlayOn(host);
+                canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+                return;
+            }
+
+            graphChartInstances['overview-kd-chart'] = new Chart(canvas.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: kdValues,
+                        borderColor: '#ff6b35',
+                        backgroundColor: 'rgba(255, 107, 53, 0.15)',
+                        borderWidth: 2,
+                        tension: 0,       // straight connecting lines, no smoothing
+                        fill: false,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#ff6b35',
+                        pointHoverRadius: 5,
+                        spanGaps: true    // skipped (missing) days don't break the line
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (c) => `K/D: ${c.parsed.y.toFixed(2)}`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Date', color: '#9ba3af' },
+                            ticks: { color: '#9ba3af' },
+                            grid: { color: 'rgba(42, 48, 64, 0.6)' }
+                        },
+                        y: {
+                            title: { display: true, text: 'K/D', color: '#9ba3af' },
+                            ticks: { color: '#9ba3af' },
+                            grid: { color: 'rgba(42, 48, 64, 0.6)' }
+                        }
+                    }
+                }
+            });
+
+            hideOverlayOn(host);
         }
 
         // Stats by game score (ecohunters tab)
