@@ -4075,12 +4075,20 @@
 
         // Load overview page data
         async function loadOverviewData() {
-            const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
+            const [data, rankingRows] = await Promise.all([
+                fetchSheetData(SHEET_GIDS.sum_stats_maps),
+                fetchSheetData(SHEET_GIDS.ecohunters)
+            ]);
             
             if (!data) {
                 document.getElementById('overview-loading').innerHTML = '<p style="color: var(--danger);">Error loading data. Please refresh the page.</p>';
                 return;
             }
+
+            // Avg Opponent / Rank Change come from the ecohunters sheet; if that
+            // fetch failed, fall back to empty stats so the rest of the table
+            // still renders.
+            const ranking = rankingRows ? computeRankingStats(rankingRows) : { avgOpponent: {}, rankChange: {} };
 
             // Extract rows 8-22 (indices 7-21 in 0-indexed array)
             const players = [];
@@ -4093,6 +4101,8 @@
                 
                 players.push({
                     name: name,
+                    avgOpponent: ranking.avgOpponent[name] ?? null,
+                    rankChange: ranking.rankChange[name] ?? null,
                     matches: parseInt(row[OVERVIEW_COLUMNS.matches - 1]) || 0,
                     winrate: parseFloat(row[OVERVIEW_COLUMNS.winrate - 1]) || 0,
                     kd: parseFloat(row[OVERVIEW_COLUMNS.kd - 1]) || 0,
@@ -4127,13 +4137,17 @@
                     playerCount++;
                 }
 
+                const avgOpponentText = player.avgOpponent === null ? '-' : player.avgOpponent.toFixed(0);
+                const rankChangeText = player.rankChange === null ? '-' :
+                    (player.rankChange > 0 ? '+' : '') + player.rankChange.toFixed(0);
+
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td class="player-name">${player.name}</td>
                     <td class="stat-value">-</td>
+                    <td class="stat-value">${avgOpponentText}</td>
                     <td class="stat-value">-</td>
-                    <td class="stat-value">-</td>
-                    <td class="stat-value">-</td>
+                    <td class="stat-value">${rankChangeText}</td>
                     <td class="stat-value">${player.matches}</td>
                     <td class="stat-value">${(player.winrate).toFixed(2)}%</td>
                     <td class="stat-value">${player.kd.toFixed(2)}</td>
@@ -7910,6 +7924,41 @@
             // SMG weapon-kill columns (verified against sheet headers). All 7 SMGs:
             smgMac10: 106, smgMp9: 107, smgBizon: 114, smgP90: 119, // DB, DC, DJ, DO
             smgUmp45: 132, smgMp7: 134, smgMp5sd: 135 }; // EB, ED, EE
+
+        // Ranking stats sourced from the ecohunters sheet (gid 1037802432):
+        //   - Avg Opponent: average of column F across every row belonging to
+        //     the player (identified via column G, same resolution as ECO_COL.player).
+        //   - Rank Change: sum of column I across every row belonging to the player.
+        const RANK_ECO_COL = { avgOpponent: 6, rankChange: 9 }; // F, I
+
+        function computeRankingStats(data) {
+            const oppSum = {}, oppCount = {}, changeSum = {};
+            Object.keys(PLAYER_INFO).forEach(k => { oppSum[k] = 0; oppCount[k] = 0; changeSum[k] = 0; });
+
+            data.forEach(row => {
+                const eco = normLabel(row[ECO_COL.player - 1]).toLowerCase();
+                const player = ECONAME_TO_PLAYER[eco];
+                if (!player) return; // header row or unresolved name — skip
+
+                const oppVal = parseFloat(row[RANK_ECO_COL.avgOpponent - 1]);
+                if (!isNaN(oppVal)) {
+                    oppSum[player] += oppVal;
+                    oppCount[player]++;
+                }
+
+                const changeVal = parseFloat(row[RANK_ECO_COL.rankChange - 1]);
+                if (!isNaN(changeVal)) {
+                    changeSum[player] += changeVal;
+                }
+            });
+
+            const avgOpponent = {};
+            Object.keys(PLAYER_INFO).forEach(k => {
+                avgOpponent[k] = oppCount[k] > 0 ? oppSum[k] / oppCount[k] : null;
+            });
+
+            return { avgOpponent, rankChange: changeSum };
+        }
 
         // Slice ecohunters data into consecutive 5-row match blocks starting at
         // row 4 (0-based index 3). Only complete 5-row blocks with all names
