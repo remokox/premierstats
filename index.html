@@ -7874,7 +7874,7 @@
             { name: 'Cannon fodder',     icon: 'cannonfodder.png',    tip: 'The player survives 5 rounds or fewer on a map.' },
             { name: 'Bait',              icon: 'bait.png',            tip: 'Player is traded 4 times or more on a map.' },
             { name: 'Assist',            icon: 'assist.png',          tip: 'The player gets 4 or more damage assists on a map.' },
-            { name: 'Flash',             icon: 'flash.png',           tip: 'The player gets 4 or more flash assists on a map.' },
+            { name: 'Flash',             icon: 'flash.png',           tip: 'The player gets 2 or more flash assists on a map.' },
             { name: 'Saver',             icon: 'saver.png',           tip: 'The player survives 1 or more lost rounds on a map.' },
             { name: 'Rambo',             icon: 'rambo.png',           tip: 'The player makes a knife, zeus or shotgun kill.' },
             { name: 'Kobe',              icon: 'kobe.png',            tip: 'The player gets 1 or more grenade kills on a map.' }
@@ -7896,6 +7896,8 @@
         // Blank column A shifts everything right by one vs. the visible headers.
         const ECO_COL = { player: 7, kills: 13, deaths: 14, assists: 15, quad: 35, ace: 34, // G, M, N, O, AI(4k), AH(5k)
             roundsPlayed: 10, // J
+            flashAssists: 20, // T
+            saves: 82, // CD (survived a round the team lost)
             clutch1v5: 29, clutch1v4: 30, clutch1v3: 31, clutch1v2: 32, // AC, AD, AE, AF
             kast: 18, // R
             tradeKills: 25, traded: 26, // Y (player did the trading), Z (player was traded)
@@ -8232,6 +8234,47 @@
             return counts;
         }
 
+        // Flash (per-row threshold): count each player's GAMES with >= 2 flash
+        // assists. NOTE the threshold is 2, NOT 4 — deliberately looser than the
+        // other assist-family boosters (Avenger/Bait/Assist use >=4), because flash
+        // assists are rarer per-flash; this was checked against the data. Column T,
+        // distinct from O (damage assists). Plain integer; Carry clone.
+        function computeFlash(data, blocks) {
+            const counts = {};
+            Object.keys(PLAYER_INFO).forEach(k => counts[k] = 0);
+
+            for (let i = 3; i < data.length; i++) {
+                const row = data[i];
+                const eco = normLabel(row[ECO_COL.player - 1]).toLowerCase();
+                const player = ECONAME_TO_PLAYER[eco];
+                if (!player) continue;
+                const flashes = parseInt(row[ECO_COL.flashAssists - 1], 10);
+                if (!isNaN(flashes) && flashes >= 2) counts[player]++;
+            }
+
+            return counts;
+        }
+
+        // Saver (per-row threshold): count each player's GAMES with >= 1 save,
+        // where a "save" (column CD) is surviving a round the team lost — confirmed
+        // as the sheet's definition. Threshold is 1, inclusive. Plain integer;
+        // blank/non-numeric -> treated as 0 saves (no credit), via the isNaN guard.
+        function computeSaver(data, blocks) {
+            const counts = {};
+            Object.keys(PLAYER_INFO).forEach(k => counts[k] = 0);
+
+            for (let i = 3; i < data.length; i++) {
+                const row = data[i];
+                const eco = normLabel(row[ECO_COL.player - 1]).toLowerCase();
+                const player = ECONAME_TO_PLAYER[eco];
+                if (!player) continue;
+                const saves = parseInt(row[ECO_COL.saves - 1], 10);
+                if (!isNaN(saves) && saves >= 1) counts[player]++;
+            }
+
+            return counts;
+        }
+
         // Best pistol round is the MANUAL booster: totals are supplied by hand
         // (not derived from any sheet). Fill in each player's total best-pistol
         // count below. Per-game rate divides by (matches * 2) because there are
@@ -8278,6 +8321,8 @@
         BOOSTERS.find(b => b.name === 'Farmer').compute = computeFarmer;
         BOOSTERS.find(b => b.name === 'Assist').compute = computeAssist;
         BOOSTERS.find(b => b.name === 'Cannon fodder').compute = computeCannonFodder;
+        BOOSTERS.find(b => b.name === 'Flash').compute = computeFlash;
+        BOOSTERS.find(b => b.name === 'Saver').compute = computeSaver;
         const bpBooster = BOOSTERS.find(b => b.name === 'Best pistol round');
         bpBooster.compute = computeBestPistol;
         bpBooster.perGameDivisor = 2;
