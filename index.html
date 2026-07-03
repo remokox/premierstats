@@ -8655,9 +8655,9 @@
                 rawFormatted.push(isNaN(num) ? '—' : formatStatValue(raw, axis.fmt));
             });
 
-            // Axis labels: stat name only (raw values removed per request; they
-            // remain available on hover via the tooltip).
-            const axisLabels = RADAR_AXES.map(axis => axis.label);
+            // Axis labels: two lines — stat name, then the raw value — shown
+            // statically outside the chart next to each spoke. No hover tooltip.
+            const axisLabels = RADAR_AXES.map((axis, i) => [axis.label, rawFormatted[i]]);
 
             const canvasId = 'awards-spider-canvas';
             if (graphChartInstances[canvasId]) graphChartInstances[canvasId].destroy();
@@ -8680,8 +8680,7 @@
                         borderWidth: 2,
                         pointBackgroundColor: '#ff6b35',
                         pointRadius: 0,
-                        pointHoverRadius: 5,
-                        pointHitRadius: 12
+                        pointHoverRadius: 0
                     }]
                 },
                 options: {
@@ -8689,13 +8688,7 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                // Show the stat name and the RAW value, not the 0–1 radius.
-                                title: (items) => RADAR_AXES[items[0].dataIndex].label,
-                                label: (c) => rawFormatted[c.dataIndex]
-                            }
-                        }
+                        tooltip: { enabled: false }
                     },
                     scales: {
                         r: {
