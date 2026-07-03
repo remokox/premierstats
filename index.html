@@ -8545,17 +8545,17 @@
         // to the ring edge or centre rather than spiking past them.
         const RADAR_AXES = [
             { label: 'Rating 3.0',       col: 185, fmt: 'dec2' },   // GC
+            { label: 'K/D',              col: 14,  fmt: 'dec2' },   // N  (between Rating and ADR)
             { label: 'ADR',              col: 22,  fmt: 'dec1' },   // V
             { label: 'KPRW',             col: 56,  fmt: 'dec2' },   // BD
             { label: '1k+',              col: 59,  fmt: 'pct1' },   // BG
             { label: '2k+',              col: 63,  fmt: 'pct1' },   // BK
             { label: 'KAST',             col: 26,  fmt: 'pct1' },   // Z  (raw number, % appended)
-            { label: 'Support rounds',   col: 80,  fmt: 'pct1' },   // CB
             { label: 'Opening success',  col: 109, fmt: 'pct1' },   // DE
             { label: '1on1 win',         col: 136, fmt: 'pct1' },   // EF (on THIS sheet; not Zeus)
             { label: 'UD per round',     col: 161, fmt: 'dec2' },   // FE
             { label: 'Opp flashed/round',col: 167, fmt: 'dec2' },   // FK
-            { label: 'Round swing',      col: 44,  fmt: 'pct2' }    // AR (raw number, % appended)
+            { label: 'Round swing',      col: 44,  fmt: 'pct2' }    // AR (raw number, % appended; unpopulated for now)
         ];
 
         // Threshold for a player to help SET the radar's percentile bounds.
