@@ -7860,7 +7860,7 @@
         // values once their compute fn is written; the rest show placeholders.
         const BOOSTERS = [
             // --- Top row (9) ---
-            { name: 'Top of scoreboard', icon: 'topscoreboard.png',   tip: 'The player ends at the top of the scoreboard on a map.' },
+            { name: 'Top of scoreboard', icon: 'topscoreboard.png',   tip: 'The player ends at the top of the scoreboard on a map based on kills, then assists, and then deaths.' },
             { name: 'Carry',             icon: 'carry.png',           tip: 'The player gets 20 or more kills on a map.' },
             { name: 'Quad',              icon: 'quad.png',            tip: 'The player makes a quad kill.' },
             { name: 'Best pistol round', icon: 'bestpistolround.png', tip: 'Player is best in any pistol round based on kills, then assists, then deaths.' },
@@ -7870,7 +7870,7 @@
             { name: 'Aim bot',           icon: 'hsmachine.png',       tip: 'The player gets the highest headshot percentage on a map.' },
             { name: 'Farmer',            icon: 'farmer.png',          tip: 'The player makes 3 or more SMG kills on a map.' },
             // --- Bottom row (8 boosters; a toggle button fills the 9th cell) ---
-            { name: 'Bottom of scoreboard', icon: 'bottomscoreboard.png', tip: 'The player ends at the bottom of the scoreboard on a map.' },
+            { name: 'Bottom of scoreboard', icon: 'bottomscoreboard.png', tip: 'The player ends at the bottom of the scoreboard on a map based on kills, then assists, and then deaths.' },
             { name: 'Cannon fodder',     icon: 'cannonfodder.png',    tip: 'The player survives 5 rounds or fewer on a map.' },
             { name: 'Bait',              icon: 'bait.png',            tip: 'Player is traded 4 times or more on a map.' },
             { name: 'Assist',            icon: 'assist.png',          tip: 'The player gets 4 or more damage assists on a map.' },
@@ -7895,6 +7895,7 @@
         // Columns on the ecohunters sheet (gid 1037802432), 1-based.
         // Blank column A shifts everything right by one vs. the visible headers.
         const ECO_COL = { player: 7, kills: 13, deaths: 14, assists: 15, quad: 35, ace: 34, // G, M, N, O, AI(4k), AH(5k)
+            roundsPlayed: 10, // J
             clutch1v5: 29, clutch1v4: 30, clutch1v3: 31, clutch1v2: 32, // AC, AD, AE, AF
             kast: 18, // R
             tradeKills: 25, traded: 26, // Y (player did the trading), Z (player was traded)
@@ -8186,6 +8187,51 @@
             return counts;
         }
 
+        // Assist (per-row threshold): count each player's GAMES with >= 4 damage
+        // assists. On this sheet column O IS damage assists (the same column the
+        // scoreboard tiebreakers read as "assists"). Plain integer; Carry clone.
+        function computeAssist(data, blocks) {
+            const counts = {};
+            Object.keys(PLAYER_INFO).forEach(k => counts[k] = 0);
+
+            for (let i = 3; i < data.length; i++) {
+                const row = data[i];
+                const eco = normLabel(row[ECO_COL.player - 1]).toLowerCase();
+                const player = ECONAME_TO_PLAYER[eco];
+                if (!player) continue;
+                const assists = parseInt(row[ECO_COL.assists - 1], 10);
+                if (!isNaN(assists) && assists >= 4) counts[player]++;
+            }
+
+            return counts;
+        }
+
+        // Cannon fodder (per-row, DERIVED): count each player's GAMES where they
+        // survived <= 5 rounds. The sheet has no "rounds survived" column, so it's
+        // derived as roundsPlayed (J) - deaths (N): one death max per round, so
+        // J - N is exactly the rounds the player finished alive. Inclusive of 5.
+        // GUARD: only count if J is a real positive number — a blank/0 J would make
+        // J - N negative, and (negative <= 5) is true, which would falsely credit a
+        // missing-data row. Skipping such rows prevents that.
+        function computeCannonFodder(data, blocks) {
+            const counts = {};
+            Object.keys(PLAYER_INFO).forEach(k => counts[k] = 0);
+
+            for (let i = 3; i < data.length; i++) {
+                const row = data[i];
+                const eco = normLabel(row[ECO_COL.player - 1]).toLowerCase();
+                const player = ECONAME_TO_PLAYER[eco];
+                if (!player) continue;
+                const roundsPlayed = parseInt(row[ECO_COL.roundsPlayed - 1], 10);
+                const deaths = parseInt(row[ECO_COL.deaths - 1], 10);
+                if (isNaN(roundsPlayed) || roundsPlayed <= 0) continue; // missing data -> skip
+                const survived = roundsPlayed - (isNaN(deaths) ? 0 : deaths);
+                if (survived <= 5) counts[player]++;
+            }
+
+            return counts;
+        }
+
         // Best pistol round is the MANUAL booster: totals are supplied by hand
         // (not derived from any sheet). Fill in each player's total best-pistol
         // count below. Per-game rate divides by (matches * 2) because there are
@@ -8230,6 +8276,8 @@
         BOOSTERS.find(b => b.name === 'Aim bot').compute = computeAimBot;
         BOOSTERS.find(b => b.name === 'Bottom of scoreboard').compute = computeBottomOfScoreboard;
         BOOSTERS.find(b => b.name === 'Farmer').compute = computeFarmer;
+        BOOSTERS.find(b => b.name === 'Assist').compute = computeAssist;
+        BOOSTERS.find(b => b.name === 'Cannon fodder').compute = computeCannonFodder;
         const bpBooster = BOOSTERS.find(b => b.name === 'Best pistol round');
         bpBooster.compute = computeBestPistol;
         bpBooster.perGameDivisor = 2;
