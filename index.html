@@ -876,8 +876,157 @@
             min-height: 120px;
             color: var(--text-primary);
         }
+        /* 2 columns of 5 */
         .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+        }
+        @media (max-width: 640px) {
+            .roles-grid { grid-template-columns: 1fr; }
+        }
+
+        .role-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--bg-tertiary);
+        }
+        .role-card-icon {
+            width: 46px;
+            height: 46px;
+            object-fit: contain;
+            flex: 0 0 auto;
+        }
+        .role-card-body {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .role-card-name-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .role-card-name {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* info "i" — visually identical to .info-tip, but hosts a multi-line child bubble */
+        .role-info {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 15px;
+            height: 15px;
+            margin-left: 6px;
+            border-radius: 50%;
+            border: 1px solid var(--accent-tertiary);
+            color: var(--accent-tertiary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-style: italic;
+            font-weight: 700;
+            line-height: 1;
+            cursor: help;
+            user-select: none;
+            flex: 0 0 auto;
+        }
+        .role-info-bubble {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: max-content;
+            max-width: 260px;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--accent-tertiary);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px var(--shadow);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            line-height: 1.4;
+            text-align: left;
+            text-transform: none;
+            letter-spacing: normal;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.15s ease;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        .role-info-bubble::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: var(--accent-tertiary);
+        }
+        .role-info:hover .role-info-bubble {
+            opacity: 1;
+            visibility: visible;
+        }
+        .role-info-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+        .role-info-rule {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 6px 0;
+        }
+        .role-info-metric {
+            margin-bottom: 6px;
             color: var(--text-secondary);
+        }
+        .role-info-tier { display: block; }
+        .role-info-tier b { font-weight: 700; }
+        .tier-goat b { color: #1dd15d; }
+        .tier-mid  b { color: #f5a623; }
+        .tier-noob b { color: #e05555; }
+
+        /* three-colour bar */
+        .role-bar {
+            display: flex;
+            width: 100%;
+            height: 16px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: var(--bg-secondary);
+        }
+        .role-bar-seg {
+            height: 100%;
+            font-size: 0.62rem;
+            line-height: 16px;
+            text-align: center;
+            color: #0b0e14;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .role-bar-goat { background: #1dd15d; }
+        .role-bar-mid  { background: #f5a623; }
+        .role-bar-noob { background: #e05555; }
+        .role-bar-placeholder-note {
+            margin-top: 4px;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            font-style: italic;
         }
 
         .map-filter-container {
@@ -2914,9 +3063,7 @@
 
                         <!-- Box 2: the 12 roles (grid built in a later step) -->
                         <div class="roles-grid-box">
-                            <div id="roles-grid" class="roles-grid">
-                                Roles grid placeholder — 12 roles go here.
-                            </div>
+                            <div id="roles-grid" class="roles-grid"></div>
                         </div>
 
                         <!-- Box 3: Text summary (per-player, placeholder for now) -->
@@ -8011,6 +8158,81 @@
         // Award name, summary, boosters, and notable stats are placeholders
         // pending their rules — this function deliberately does not touch them.
         const AWARDS_PHOTO_BASE = 'https://raw.githubusercontent.com/remokox/premierstats/main/';
+
+        /* --- Role in a team ---
+           Static scaffolding. Bar percentages are DEMO placeholders until per-player
+           calculation is wired. Tier thresholds are transcribed verbatim (incl. the
+           boundary overlaps we flagged) — display only; the calc step resolves those.
+           Final display order should later sort by green (GOAT) %; for now, screenshot order. */
+        const ROLES = [
+            { icon: 'main_awp.png',      name: 'Main AWP',      metric: 'AWP kills per round',
+              goat: 'above 0.35',                     mid: '0.20 or above',         noob: '0.2 or less' },
+            { icon: 'hs_machine.png',    name: 'HS Machine',    metric: 'Headshot percentage',
+              goat: 'above 60%',                      mid: '50% or above',          noob: 'below 50%' },
+            { icon: 'support.png',       name: 'Support',       metric: 'Support rounds (assist, survived or traded)',
+              goat: 'above 25%',                      mid: '17% or above',          noob: 'below 17%' },
+            { icon: 'multi_fragger.png', name: 'Multi Fragger', metric: 'Multikills (more than one frag) per round',
+              goat: 'above 0.20',                     mid: '0.14 or above',         noob: '0.14 or less' },
+            { icon: 'leader.png',        name: 'Leader',        metric: 'Team match result',
+              goat: 'Team wins a map in regulation',  mid: 'Team wins a map in overtime', noob: 'Team loses' },
+            { icon: 'eco_friendly.png',  name: 'Eco Friendly',  metric: 'SMG and shotgun kills per round',
+              goat: 'above 0.07',                     mid: '0.02 or above',         noob: '0.02 or less' },
+            { icon: 'entry_fragger.png', name: 'Entry Fragger', metric: 'First kills per round',
+              goat: 'above 0.15',                     mid: '0.08 or above',         noob: '0.08 or less' },
+            { icon: 'stathunter.png',    name: 'Stathunter',    metric: 'Rating after match',
+              goat: 'above 1.30',                     mid: '1.00 or above',         noob: '1.00 or less' },
+            { icon: 'camper.png',        name: 'Camper',        metric: 'Deaths per round',
+              goat: 'below 0.55',                     mid: '0.65 or below',         noob: 'above 0.65' },
+            { icon: 'noob.png',          name: 'Noob',          metric: 'Rating after match',
+              goat: 'below 0.85',                     mid: '1.12 or below',         noob: 'above 1.12' }
+        ];
+
+        // DEMO bar splits [goat, mid, noob] summing to 100 — replaced per player later.
+        const ROLE_DEMO_BARS = [
+            [45, 35, 20], [30, 45, 25], [55, 30, 15], [25, 40, 35], [40, 35, 25],
+            [20, 50, 30], [35, 40, 25], [50, 30, 20], [30, 35, 35], [15, 45, 40]
+        ];
+
+        function esc(s) {
+            return String(s).replace(/[&<>"']/g, c => (
+                { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]
+            ));
+        }
+
+        function renderRoles() {
+            const grid = document.getElementById('roles-grid');
+            if (!grid) return;
+            grid.innerHTML = ROLES.map((r, i) => {
+                const [g, m, n] = ROLE_DEMO_BARS[i] || [34, 33, 33];
+                return `
+                <div class="role-card">
+                    <img class="role-card-icon" src="${AWARDS_PHOTO_BASE + r.icon}"
+                         alt="${esc(r.name)}" onerror="this.style.visibility='hidden'">
+                    <div class="role-card-body">
+                        <div class="role-card-name-row">
+                            <span class="role-card-name">${esc(r.name)}</span>
+                            <span class="role-info" tabindex="0">i
+                                <span class="role-info-bubble">
+                                    <span class="role-info-title">${esc(r.name)}</span>
+                                    <hr class="role-info-rule">
+                                    <span class="role-info-metric">${esc(r.metric)}</span>
+                                    <span class="role-info-tier tier-goat"><b>GOAT:</b> ${esc(r.goat)}</span>
+                                    <span class="role-info-tier tier-mid"><b>Mid:</b> ${esc(r.mid)}</span>
+                                    <span class="role-info-tier tier-noob"><b>Noob:</b> ${esc(r.noob)}</span>
+                                </span>
+                            </span>
+                        </div>
+                        <div class="role-bar">
+                            <div class="role-bar-seg role-bar-goat" style="width:${g}%">${g}%</div>
+                            <div class="role-bar-seg role-bar-mid"  style="width:${m}%">${m}%</div>
+                            <div class="role-bar-seg role-bar-noob" style="width:${n}%">${n}%</div>
+                        </div>
+                        <div class="role-bar-placeholder-note">demo values — not real yet</div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+        document.addEventListener('DOMContentLoaded', renderRoles);
 
         function resetAwardsSelection() {
             const select = document.getElementById('awards-player-select');
