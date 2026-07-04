@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CS2 Round Win Probability</title>
+<style>
+  :root{
+    --bg-deep:#0c0f11;
+    --bg-panel:#14181b;
+    --bg-panel-2:#191e21;
+    --line:#262c2f;
+    --line-soft:#1d2225;
+    --text-hi:#eae7e0;
+    --text-mid:#9aa1a5;
+    --text-dim:#5f676b;
+    --t-orange:#c9853b;
+    --t-orange-soft:#8a5f30;
+    --ct-blue:#4e7a9c;
+    --ct-blue-soft:#3a5c74;
+    --warn:#b3543f;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg-deep);color:var(--text-hi);
+    font-family:'Segoe UI',ui-sans-serif,system-ui,-apple-system,Arial,sans-serif;}
+  #app{max-width:1040px;margin:0 auto;padding:28px 20px 40px;}
+
+  .eyebrow{
+    font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+    color:var(--text-dim); font-weight:600; margin-bottom:4px;
+  }
+  h1{
+    font-size:22px; margin:0 0 2px 0; font-weight:700; letter-spacing:.01em;
+    color:var(--text-hi);
+  }
+  .subtitle{color:var(--text-mid); font-size:13px; margin-bottom:22px;}
+
+  .maptabs{
+    display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px;
+    border-bottom:1px solid var(--line); padding-bottom:14px;
+  }
+  .maptab{
+    background:var(--bg-panel); border:1px solid var(--line); color:var(--text-mid);
+    font-size:12.5px; letter-spacing:.03em; padding:8px 14px; border-radius:3px;
+    cursor:pointer; font-weight:600; text-transform:uppercase; transition:all .12s ease;
+  }
+  .maptab:hover{ border-color:#3a4145; color:var(--text-hi); }
+  .maptab.active{
+    background:linear-gradient(180deg, #232a2e, #1a1f22);
+    border-color:#4a5359; color:var(--text-hi);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+  }
+
+  .controlrow{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:18px; flex-wrap:wrap; gap:12px;
+  }
+
+  .togglewrap{
+    display:flex; align-items:center; gap:10px;
+    background:var(--bg-panel); border:1px solid var(--line);
+    border-radius:4px; padding:5px 6px;
+  }
+  .toggle-label{
+    font-size:11.5px; letter-spacing:.08em; text-transform:uppercase;
+    padding:6px 12px; border-radius:3px; cursor:pointer; font-weight:700;
+    color:var(--text-dim); transition:all .15s ease; user-select:none;
+  }
+  .toggle-label.active-noplant{ background:var(--bg-panel-2); color:var(--text-hi); }
+  .toggle-label.active-plant{ background:var(--warn); color:#fff0ea; }
+
+  .legend{
+    display:flex; align-items:center; gap:10px; font-size:11px; color:var(--text-dim);
+  }
+  .legend-bar{
+    width:130px; height:8px; border-radius:2px;
+    background:linear-gradient(90deg, var(--ct-blue) 0%, #4a4a48 50%, var(--t-orange) 100%);
+  }
+
+  .axislabel-top{
+    font-size:10.5px; letter-spacing:.15em; text-transform:uppercase;
+    color:var(--t-orange); font-weight:700; margin-bottom:6px;
+  }
+  .axislabel-side{
+    font-size:10.5px; letter-spacing:.15em; text-transform:uppercase;
+    color:var(--ct-blue); font-weight:700;
+    writing-mode:vertical-rl; transform:rotate(180deg);
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .gridwrap{ display:flex; gap:10px; }
+  .rowlabels{ display:flex; flex-direction:column; }
+  table.matrix{ border-collapse:separate; border-spacing:5px; }
+  .colheadcell, .rowheadcell{
+    text-align:center; font-size:13px; font-weight:700; color:var(--text-mid);
+    width:100px; height:28px;
+  }
+  .cornercell{ width:44px; }
+  .rowheadcell{ width:44px; }
+
+  td.cell{
+    width:100px; height:72px; border-radius:5px; position:relative;
+    padding:0; vertical-align:middle; text-align:center;
+    border:1px solid rgba(255,255,255,0.05);
+  }
+  td.cell.empty{ background:var(--bg-panel-2); border:1px dashed var(--line); }
+  td.cell.lowconf{ border:1px dashed rgba(255,255,255,0.28); }
+
+  .cell-inner{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    height:100%; width:100%;
+  }
+  .cell-pct{ font-size:17px; font-weight:800; letter-spacing:.01em; }
+  .cell-n{ font-size:10px; margin-top:3px; opacity:.75; font-weight:600; letter-spacing:.02em; }
+  .cell-flag{ position:absolute; top:4px; right:5px; font-size:9px; opacity:.6; }
+
+  .footnote{
+    margin-top:20px; font-size:11.5px; color:var(--text-dim); line-height:1.6;
+    border-top:1px solid var(--line); padding-top:14px;
+  }
+  .footnote b{ color:var(--text-mid); }
+  .swatch{ display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:5px; vertical-align:middle; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="eyebrow">CS2 &middot; XvX Round Outcomes</div>
+  <h1>Round Win Probability Matrix</h1>
+  <div class="subtitle">T-side win probability by alive-player count, split by bomb status. Select a map below.</div>
+
+  <div class="maptabs" id="maptabs"></div>
+
+  <div class="controlrow">
+    <div class="togglewrap" id="toggle">
+      <div class="toggle-label active-noplant" data-mode="noplant" id="lbl-noplant">Not Planted</div>
+      <div class="toggle-label" data-mode="plant" id="lbl-plant">Planted</div>
+    </div>
+    <div class="legend">
+      <span><span class="swatch" style="background:var(--ct-blue)"></span>CT favored</span>
+      <div class="legend-bar"></div>
+      <span><span class="swatch" style="background:var(--t-orange)"></span>T favored</span>
+    </div>
+  </div>
+
+  <div class="axislabel-top" style="margin-left:54px;">CT alive &rarr;</div>
+  <div class="gridwrap">
+    <div class="axislabel-side" style="width:16px;">T alive &rarr;</div>
+    <table class="matrix" id="matrix"></table>
+  </div>
+
+  <div class="footnote" id="footnote"></div>
+</div>
+
+<script>
+const DATA = {"Ancient": {"noplant": [[{"pct": 51.18, "n": 1020}, {"pct": 70.86, "n": 477}, {"pct": 83.26, "n": 221}, {"pct": 94.51, "n": 91}, {"pct": 100.0, "n": 35}, {"pct": 100.0, "n": 9}], [{"pct": 33.64, "n": 541}, {"pct": 56.34, "n": 536}, {"pct": 74.53, "n": 369}, {"pct": 93.16, "n": 190}, {"pct": 97.5, "n": 80}, {"pct": 100.0, "n": 26}], [{"pct": 10.48, "n": 248}, {"pct": 30.47, "n": 361}, {"pct": 53.89, "n": 321}, {"pct": 76.26, "n": 198}, {"pct": 94.12, "n": 85}, {"pct": 100.0, "n": 30}], [{"pct": 3.03, "n": 132}, {"pct": 9.21, "n": 239}, {"pct": 27.13, "n": 247}, {"pct": 53.59, "n": 181}, {"pct": 77.17, "n": 92}, {"pct": 100.0, "n": 18}], [{"pct": 0.0, "n": 67}, {"pct": 0.0, "n": 163}, {"pct": 2.26, "n": 177}, {"pct": 12.0, "n": 125}, {"pct": 38.36, "n": 73}, {"pct": 100.0, "n": 17}], [{"pct": 0.0, "n": 32}, {"pct": 0.0, "n": 99}, {"pct": 0.0, "n": 112}, {"pct": 0.0, "n": 66}, {"pct": 0.0, "n": 42}, {"pct": null, "n": 0}]], "plant": [[{"pct": 100.0, "n": 6}, {"pct": 72.73, "n": 11}, {"pct": 84.21, "n": 38}, {"pct": 100.0, "n": 44}, {"pct": 100.0, "n": 27}, {"pct": 100.0, "n": 9}], [{"pct": 0.0, "n": 3}, {"pct": 35.0, "n": 20}, {"pct": 67.44, "n": 86}, {"pct": 97.84, "n": 139}, {"pct": 99.18, "n": 122}, {"pct": 100.0, "n": 57}], [{"pct": 0.0, "n": 1}, {"pct": 16.67, "n": 24}, {"pct": 49.47, "n": 95}, {"pct": 83.05, "n": 177}, {"pct": 96.24, "n": 186}, {"pct": 100.0, "n": 93}], [{"pct": 0.0, "n": 4}, {"pct": 4.55, "n": 22}, {"pct": 24.66, "n": 73}, {"pct": 64.63, "n": 164}, {"pct": 89.05, "n": 210}, {"pct": 100.0, "n": 120}], [{"pct": 0.0, "n": 2}, {"pct": 0.0, "n": 19}, {"pct": 4.44, "n": 45}, {"pct": 27.88, "n": 104}, {"pct": 65.71, "n": 140}, {"pct": 100.0, "n": 74}], [{"pct": null, "n": 0}, {"pct": 0.0, "n": 14}, {"pct": 0.0, "n": 28}, {"pct": 0.0, "n": 52}, {"pct": 14.29, "n": 42}, {"pct": null, "n": 0}]]}, "Anubis": {"noplant": [[{"pct": 50.82, "n": 913}, {"pct": 71.66, "n": 434}, {"pct": 88.83, "n": 197}, {"pct": 95.56, "n": 90}, {"pct": 100.0, "n": 35}, {"pct": 100.0, "n": 11}], [{"pct": 32.09, "n": 455}, {"pct": 51.28, "n": 468}, {"pct": 76.18, "n": 319}, {"pct": 89.13, "n": 184}, {"pct": 93.1, "n": 29}, {"pct": 100.0, "n": 12}], [{"pct": 18.06, "n": 227}, {"pct": 31.95, "n": 338}, {"pct": 54.92, "n": 295}, {"pct": 78.14, "n": 183}, {"pct": 92.96, "n": 71}, {"pct": 100.0, "n": 25}], [{"pct": 3.57, "n": 112}, {"pct": 10.31, "n": 223}, {"pct": 24.08, "n": 245}, {"pct": 51.16, "n": 172}, {"pct": 86.76, "n": 68}, {"pct": 100.0, "n": 20}], [{"pct": 0.0, "n": 55}, {"pct": 3.7, "n": 135}, {"pct": 5.71, "n": 175}, {"pct": 17.39, "n": 138}, {"pct": 44.62, "n": 65}, {"pct": 100.0, "n": 20}], [{"pct": 0.0, "n": 29}, {"pct": 0.0, "n": 75}, {"pct": 0.0, "n": 97}, {"pct": 0.0, "n": 70}, {"pct": 0.0, "n": 26}, {"pct": null, "n": 0}]], "plant": [[{"pct": 0.0, "n": 1}, {"pct": null, "n": 0}, {"pct": 100.0, "n": 14}, {"pct": 100.0, "n": 34}, {"pct": 100.0, "n": 36}, {"pct": 100.0, "n": 23}], [{"pct": 0.0, "n": 1}, {"pct": 6.67, "n": 15}, {"pct": 83.33, "n": 42}, {"pct": 95.61, "n": 114}, {"pct": 98.0, "n": 100}, {"pct": 100.0, "n": 44}], [{"pct": 0.0, "n": 2}, {"pct": 10.53, "n": 19}, {"pct": 62.5, "n": 56}, {"pct": 88.57, "n": 140}, {"pct": 95.06, "n": 162}, {"pct": 100.0, "n": 72}], [{"pct": 0.0, "n": 2}, {"pct": 5.0, "n": 20}, {"pct": 32.31, "n": 65}, {"pct": 65.15, "n": 132}, {"pct": 88.64, "n": 176}, {"pct": 100.0, "n": 94}], [{"pct": 0.0, "n": 2}, {"pct": 0.0, "n": 14}, {"pct": 6.82, "n": 44}, {"pct": 29.21, "n": 89}, {"pct": 63.64, "n": 132}, {"pct": 100.0, "n": 90}], [{"pct": 0.0, "n": 1}, {"pct": 0.0, "n": 6}, {"pct": 0.0, "n": 22}, {"pct": 2.33, "n": 42}, {"pct": 23.21, "n": 44}, {"pct": null, "n": 13}]]}, "Dust II": {"noplant": [[{"pct": 49.65, "n": 427}, {"pct": 68.69, "n": 198}, {"pct": 86.36, "n": 88}, {"pct": 94.44, "n": 36}, {"pct": 100.0, "n": 11}, {"pct": 100.0, "n": 2}], [{"pct": 33.07, "n": 251}, {"pct": 52.65, "n": 226}, {"pct": 74.68, "n": 158}, {"pct": 87.37, "n": 95}, {"pct": 100.0, "n": 35}, {"pct": 100.0, "n": 20}], [{"pct": 16.54, "n": 133}, {"pct": 29.95, "n": 187}, {"pct": 55.56, "n": 162}, {"pct": 79.65, "n": 113}, {"pct": 93.48, "n": 46}, {"pct": 100.0, "n": 13}], [{"pct": 3.45, "n": 58}, {"pct": 8.87, "n": 124}, {"pct": 22.31, "n": 121}, {"pct": 51.04, "n": 96}, {"pct": 83.33, "n": 42}, {"pct": 100.0, "n": 13}], [{"pct": 0.0, "n": 30}, {"pct": 2.44, "n": 82}, {"pct": 5.15, "n": 97}, {"pct": 14.67, "n": 75}, {"pct": 45.0, "n": 40}, {"pct": 100.0, "n": 7}], [{"pct": 0.0, "n": 18}, {"pct": 0.0, "n": 43}, {"pct": 0.0, "n": 57}, {"pct": 0.0, "n": 37}, {"pct": 0.0, "n": 15}, {"pct": null, "n": 0}]], "plant": [[{"pct": 0.0, "n": 1}, {"pct": 100.0, "n": 2}, {"pct": 100.0, "n": 6}, {"pct": 100.0, "n": 11}, {"pct": 100.0, "n": 11}, {"pct": 100.0, "n": 4}], [{"pct": 0.0, "n": 0}, {"pct": 75.0, "n": 4}, {"pct": 91.67, "n": 12}, {"pct": 92.31, "n": 39}, {"pct": 100.0, "n": 41}, {"pct": 100.0, "n": 18}], [{"pct": 0.0, "n": 1}, {"pct": 50.0, "n": 4}, {"pct": 63.64, "n": 22}, {"pct": 89.29, "n": 56}, {"pct": 97.4, "n": 77}, {"pct": 100.0, "n": 38}], [{"pct": 0.0, "n": 1}, {"pct": 20.0, "n": 5}, {"pct": 14.29, "n": 21}, {"pct": 62.5, "n": 56}, {"pct": 87.18, "n": 78}, {"pct": 100.0, "n": 41}], [{"pct": null, "n": 0}, {"pct": 0.0, "n": 2}, {"pct": 0.0, "n": 14}, {"pct": 26.83, "n": 41}, {"pct": 61.43, "n": 70}, {"pct": 100.0, "n": 39}], [{"pct": null, "n": 0}, {"pct": null, "n": 0}, {"pct": 0.0, "n": 8}, {"pct": 0.0, "n": 18}, {"pct": 0.0, "n": 27}, {"pct": null, "n": 0}]]}, "Inferno": {"noplant": [[{"pct": 47.0, "n": 866}, {"pct": 68.92, "n": 370}, {"pct": 87.26, "n": 157}, {"pct": 100.0, "n": 62}, {"pct": 100.0, "n": 20}, {"pct": 100.0, "n": 7}], [{"pct": 30.68, "n": 502}, {"pct": 50.69, "n": 434}, {"pct": 75.72, "n": 276}, {"pct": 91.37, "n": 139}, {"pct": 100.0, "n": 52}, {"pct": 100.0, "n": 20}], [{"pct": 18.48, "n": 276}, {"pct": 32.22, "n": 360}, {"pct": 58.13, "n": 289}, {"pct": 76.61, "n": 171}, {"pct": 98.46, "n": 65}, {"pct": 100.0, "n": 11}], [{"pct": 7.19, "n": 153}, {"pct": 11.7, "n": 282}, {"pct": 29.41, "n": 238}, {"pct": 51.75, "n": 143}, {"pct": 80.77, "n": 52}, {"pct": 100.0, "n": 13}], [{"pct": 1.56, "n": 64}, {"pct": 1.62, "n": 185}, {"pct": 6.12, "n": 196}, {"pct": 20.63, "n": 126}, {"pct": 44.9, "n": 49}, {"pct": 100.0, "n": 9}], [{"pct": 0.0, "n": 31}, {"pct": 0.0, "n": 98}, {"pct": 0.0, "n": 118}, {"pct": 0.0, "n": 69}, {"pct": 0.0, "n": 20}, {"pct": null, "n": 0}]], "plant": [[{"pct": null, "n": 0}, {"pct": 100.0, "n": 2}, {"pct": 71.43, "n": 10}, {"pct": 100.0, "n": 27}, {"pct": 100.0, "n": 24}, {"pct": 100.0, "n": 9}], [{"pct": null, "n": 3}, {"pct": 40.0, "n": 6}, {"pct": 74.42, "n": 32}, {"pct": 96.47, "n": 82}, {"pct": 100.0, "n": 79}, {"pct": 100.0, "n": 42}], [{"pct": null, "n": 6}, {"pct": 14.29, "n": 29}, {"pct": 57.58, "n": 59}, {"pct": 84.89, "n": 120}, {"pct": 98.54, "n": 135}, {"pct": 100.0, "n": 56}], [{"pct": null, "n": 7}, {"pct": 22.22, "n": 42}, {"pct": 36.51, "n": 73}, {"pct": 65.99, "n": 115}, {"pct": 89.71, "n": 157}, {"pct": 100.0, "n": 85}], [{"pct": null, "n": 5}, {"pct": 0.0, "n": 35}, {"pct": 5.41, "n": 64}, {"pct": 36.0, "n": 87}, {"pct": 64.08, "n": 91}, {"pct": 100.0, "n": 72}], [{"pct": null, "n": 3}, {"pct": 0.0, "n": 18}, {"pct": 0.0, "n": 35}, {"pct": 2.78, "n": 44}, {"pct": 12.0, "n": 1}, {"pct": null, "n": 6}]]}, "Mirage": {"noplant": [[{"pct": 49.16, "n": 773}, {"pct": 69.86, "n": 345}, {"pct": 87.07, "n": 147}, {"pct": 97.01, "n": 67}, {"pct": 100.0, "n": 27}, {"pct": 100.0, "n": 8}], [{"pct": 32.32, "n": 427}, {"pct": 51.46, "n": 410}, {"pct": 76.17, "n": 256}, {"pct": 93.98, "n": 133}, {"pct": 100.0, "n": 63}, {"pct": 100.0, "n": 20}], [{"pct": 17.45, "n": 212}, {"pct": 30.87, "n": 311}, {"pct": 52.38, "n": 273}, {"pct": 78.31, "n": 166}, {"pct": 97.4, "n": 77}, {"pct": 100.0, "n": 31}], [{"pct": 5.98, "n": 117}, {"pct": 14.62, "n": 212}, {"pct": 28.38, "n": 229}, {"pct": 50.63, "n": 158}, {"pct": 81.82, "n": 66}, {"pct": 100.0, "n": 19}], [{"pct": 0.0, "n": 65}, {"pct": 0.72, "n": 139}, {"pct": 5.63, "n": 160}, {"pct": 19.83, "n": 116}, {"pct": 44.62, "n": 65}, {"pct": 100.0, "n": 18}], [{"pct": 0.0, "n": 31}, {"pct": 0.0, "n": 88}, {"pct": 0.0, "n": 101}, {"pct": 0.0, "n": 61}, {"pct": 0.0, "n": 28}, {"pct": null, "n": 0}]], "plant": [[{"pct": 100.0, "n": 1}, {"pct": 100.0, "n": 2}, {"pct": 88.89, "n": 16}, {"pct": 96.3, "n": 26}, {"pct": 100.0, "n": 24}, {"pct": 100.0, "n": 10}], [{"pct": 100.0, "n": 1}, {"pct": 75.0, "n": 4}, {"pct": 90.32, "n": 31}, {"pct": 94.12, "n": 68}, {"pct": 98.7, "n": 77}, {"pct": 100.0, "n": 35}], [{"pct": 0.0, "n": 1}, {"pct": 0.0, "n": 3}, {"pct": 72.73, "n": 33}, {"pct": 87.63, "n": 97}, {"pct": 99.15, "n": 117}, {"pct": 100.0, "n": 74}], [{"pct": 0.0, "n": 3}, {"pct": 11.11, "n": 9}, {"pct": 40.0, "n": 35}, {"pct": 70.0, "n": 100}, {"pct": 96.58, "n": 117}, {"pct": 100.0, "n": 72}], [{"pct": 0.0, "n": 2}, {"pct": 14.29, "n": 7}, {"pct": 12.5, "n": 24}, {"pct": 35.09, "n": 57}, {"pct": 66.67, "n": 90}, {"pct": 100.0, "n": 49}], [{"pct": 0.0, "n": 2}, {"pct": 0.0, "n": 4}, {"pct": 6.67, "n": 14}, {"pct": 0.0, "n": 19}, {"pct": 15.63, "n": 28}, {"pct": null, "n": 5}]]}, "Nuke": {"noplant": [[{"pct": 46.19, "n": 1063}, {"pct": 67.28, "n": 492}, {"pct": 87.72, "n": 228}, {"pct": 94.9, "n": 98}, {"pct": 100.0, "n": 37}, {"pct": 100.0, "n": 10}], [{"pct": 28.07, "n": 570}, {"pct": 47.99, "n": 523}, {"pct": 73.41, "n": 346}, {"pct": 88.59, "n": 184}, {"pct": 100.0, "n": 83}, {"pct": 100.0, "n": 29}], [{"pct": 12.9, "n": 310}, {"pct": 36.09, "n": 338}, {"pct": 49.87, "n": 373}, {"pct": 73.5, "n": 234}, {"pct": 94.9, "n": 98}, {"pct": 100.0, "n": 32}], [{"pct": 3.14, "n": 159}, {"pct": 12.46, "n": 297}, {"pct": 24.92, "n": 317}, {"pct": 42.56, "n": 242}, {"pct": 78.1, "n": 105}, {"pct": 100.0, "n": 29}], [{"pct": 0.0, "n": 83}, {"pct": 2.65, "n": 189}, {"pct": 6.67, "n": 225}, {"pct": 15.24, "n": 210}, {"pct": 37.76, "n": 98}, {"pct": 100.0, "n": 18}], [{"pct": 0.0, "n": 43}, {"pct": 0.0, "n": 104}, {"pct": 0.0, "n": 122}, {"pct": 0.0, "n": 111}, {"pct": 0.0, "n": 46}, {"pct": null, "n": 0}]], "plant": [[{"pct": null, "n": 0}, {"pct": 100.0, "n": 6}, {"pct": 89.47, "n": 17}, {"pct": 97.3, "n": 36}, {"pct": 100.0, "n": 32}, {"pct": 100.0, "n": 16}], [{"pct": null, "n": 0}, {"pct": 71.43, "n": 5}, {"pct": 74.42, "n": 34}, {"pct": 93.98, "n": 79}, {"pct": 99.03, "n": 102}, {"pct": 100.0, "n": 51}], [{"pct": 0.0, "n": 1}, {"pct": 25.0, "n": 12}, {"pct": 55.38, "n": 65}, {"pct": 86.4, "n": 125}, {"pct": 98.73, "n": 158}, {"pct": 100.0, "n": 73}], [{"pct": 0.0, "n": 1}, {"pct": 7.14, "n": 14}, {"pct": 26.42, "n": 53}, {"pct": 53.97, "n": 126}, {"pct": 87.72, "n": 171}, {"pct": 100.0, "n": 89}], [{"pct": 0.0, "n": 1}, {"pct": 0.0, "n": 12}, {"pct": 9.76, "n": 41}, {"pct": 28.44, "n": 109}, {"pct": 62.59, "n": 147}, {"pct": 100.0, "n": 79}], [{"pct": null, "n": 0}, {"pct": 0.0, "n": 0}, {"pct": 0.0, "n": 6}, {"pct": 1.89, "n": 17}, {"pct": 12.28, "n": 53}, {"pct": null, "n": 57}]]}, "Overpass": {"noplant": [[{"pct": 48.85, "n": 520}, {"pct": 64.89, "n": 225}, {"pct": 82.83, "n": 99}, {"pct": 97.73, "n": 88}, {"pct": 100.0, "n": 8}, {"pct": 100.0, "n": 4}], [{"pct": 36.39, "n": 294}, {"pct": 52.31, "n": 281}, {"pct": 74.59, "n": 181}, {"pct": 89.0, "n": 100}, {"pct": 97.14, "n": 35}, {"pct": 100.0, "n": 9}], [{"pct": 15.56, "n": 135}, {"pct": 29.17, "n": 216}, {"pct": 52.17, "n": 161}, {"pct": 77.55, "n": 98}, {"pct": 91.67, "n": 36}, {"pct": 100.0, "n": 10}], [{"pct": 4.76, "n": 63}, {"pct": 12.67, "n": 150}, {"pct": 26.32, "n": 152}, {"pct": 47.22, "n": 108}, {"pct": 71.79, "n": 39}, {"pct": 100.0, "n": 6}], [{"pct": 0.0, "n": 31}, {"pct": 0.0, "n": 93}, {"pct": 3.0, "n": 100}, {"pct": 15.73, "n": 89}, {"pct": 48.78, "n": 41}, {"pct": 100.0, "n": 12}], [{"pct": 0.0, "n": 11}, {"pct": 0.0, "n": 54}, {"pct": 0.0, "n": 53}, {"pct": 0.0, "n": 44}, {"pct": 0.0, "n": 18}, {"pct": null, "n": 0}]], "plant": [[{"pct": 100.0, "n": 2}, {"pct": 100.0, "n": 2}, {"pct": 75.0, "n": 9}, {"pct": 100.0, "n": 25}, {"pct": 100.0, "n": 14}, {"pct": 100.0, "n": 6}], [{"pct": 66.67, "n": 2}, {"pct": 85.71, "n": 6}, {"pct": 76.47, "n": 29}, {"pct": 94.03, "n": 63}, {"pct": 98.41, "n": 62}, {"pct": 100.0, "n": 32}], [{"pct": 50.0, "n": 2}, {"pct": 33.33, "n": 6}, {"pct": 55.56, "n": 36}, {"pct": 90.79, "n": 76}, {"pct": 97.4, "n": 77}, {"pct": 100.0, "n": 47}], [{"pct": 0.0, "n": 1}, {"pct": 14.29, "n": 7}, {"pct": 30.0, "n": 40}, {"pct": 70.0, "n": 90}, {"pct": 90.53, "n": 95}, {"pct": 100.0, "n": 50}], [{"pct": 0.0, "n": 1}, {"pct": 0.0, "n": 7}, {"pct": 19.7, "n": 25}, {"pct": 61.84, "n": 66}, {"pct": 100.0, "n": 76}, {"pct": null, "n": 42}], [{"pct": null, "n": 0}, {"pct": 0.0, "n": 2}, {"pct": 0.0, "n": 9}, {"pct": 0.0, "n": 33}, {"pct": 7.14, "n": 28}, {"pct": null, "n": 0}]]}};
+</script>
+<script>
+(function(){
+  const maps = Object.keys(DATA);
+  let currentMap = maps[0];
+  let currentMode = 'noplant';
+  const LOW_N = 15;
+
+  const maptabs = document.getElementById('maptabs');
+  maps.forEach(m=>{
+    const b = document.createElement('div');
+    b.className = 'maptab' + (m===currentMap?' active':'');
+    b.textContent = m;
+    b.onclick = ()=>{ currentMap = m; render(); };
+    b.dataset.map = m;
+    maptabs.appendChild(b);
+  });
+
+  document.getElementById('lbl-noplant').onclick = ()=>{ currentMode='noplant'; render(); };
+  document.getElementById('lbl-plant').onclick = ()=>{ currentMode='plant'; render(); };
+
+  function colorForPct(pct){
+    // 0 -> CT blue, 50 -> neutral gray, 100 -> T orange
+    const ct = [78,122,156];
+    const mid = [58,58,56];
+    const t = [201,133,59];
+    let c1,c2,frac;
+    if(pct<=50){ c1=ct; c2=mid; frac=pct/50; }
+    else { c1=mid; c2=t; frac=(pct-50)/50; }
+    const r = Math.round(c1[0]+(c2[0]-c1[0])*frac);
+    const g = Math.round(c1[1]+(c2[1]-c1[1])*frac);
+    const bl = Math.round(c1[2]+(c2[2]-c1[2])*frac);
+    return `rgb(${r},${g},${bl})`;
+  }
+
+  function render(){
+    document.querySelectorAll('.maptab').forEach(b=>{
+      b.classList.toggle('active', b.dataset.map===currentMap);
+    });
+    document.getElementById('lbl-noplant').classList.toggle('active-noplant', currentMode==='noplant');
+    document.getElementById('lbl-plant').classList.toggle('active-plant', currentMode==='plant');
+
+    const grid = DATA[currentMap][currentMode];
+    const table = document.getElementById('matrix');
+    table.innerHTML = '';
+
+    // header row
+    const headRow = document.createElement('tr');
+    headRow.appendChild(document.createElement('td')).className='cornercell';
+    [5,4,3,2,1,0].forEach(ct=>{
+      const th = document.createElement('td');
+      th.className='colheadcell'; th.textContent = ct;
+      headRow.appendChild(th);
+    });
+    table.appendChild(headRow);
+
+    for(let i=0;i<6;i++){
+      const tr = document.createElement('tr');
+      const rh = document.createElement('td');
+      rh.className='rowheadcell'; rh.textContent = 5-i;
+      tr.appendChild(rh);
+      for(let j=0;j<6;j++){
+        const cellData = grid[i][j];
+        const td = document.createElement('td');
+        td.className='cell';
+        if(cellData.pct===null || cellData.n===0){
+          td.classList.add('empty');
+          const inner = document.createElement('div');
+          inner.className='cell-inner';
+          inner.innerHTML = '<span style="color:var(--text-dim);font-size:11px;">no data</span>';
+          td.appendChild(inner);
+        } else {
+          const isLow = cellData.n < LOW_N;
+          td.style.background = colorForPct(cellData.pct);
+          if(isLow){ td.classList.add('lowconf'); td.style.opacity = 0.55; }
+          const inner = document.createElement('div');
+          inner.className='cell-inner';
+          const pctSpan = document.createElement('div');
+          pctSpan.className='cell-pct';
+          pctSpan.textContent = cellData.pct.toFixed(1)+'%';
+          pctSpan.style.color = (cellData.pct>35 && cellData.pct<65) ? '#1a1a1a' : '#fff8f0';
+          const nSpan = document.createElement('div');
+          nSpan.className='cell-n';
+          nSpan.textContent = 'n='+cellData.n;
+          nSpan.style.color = (cellData.pct>35 && cellData.pct<65) ? '#1a1a1a' : '#fff8f0';
+          inner.appendChild(pctSpan);
+          inner.appendChild(nSpan);
+          td.appendChild(inner);
+          if(isLow){
+            const flag = document.createElement('div');
+            flag.className='cell-flag';
+            flag.textContent = '\u26A0';
+            flag.style.color = (cellData.pct>35 && cellData.pct<65) ? '#1a1a1a' : '#fff8f0';
+            td.appendChild(flag);
+          }
+        }
+        tr.appendChild(td);
+      }
+      table.appendChild(tr);
+    }
+
+    document.getElementById('footnote').innerHTML =
+      `<b>Reading this:</b> cell value is T-side win probability for that alive-count combination on <b>${currentMap}</b>, ` +
+      `${currentMode==='plant' ? 'after the bomb has been planted' : 'before the bomb is planted'}. ` +
+      `<b>n</b> is the number of rounds observed. Cells with n &lt; ${LOW_N} are dashed and dimmed &mdash; ` +
+      `treat those percentages as noisy, not signal. Cells marked "no data" had zero observed rounds in this state.`;
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
