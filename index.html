@@ -4332,9 +4332,9 @@
             const ecoData = await fetchSheetData(SHEET_GIDS.ecohunters);
             if (ecoData) ecoAgg = computeOverviewEcoAggregates(ecoData);
 
-            // Extract rows 8-22 (indices 7-21 in 0-indexed array)
+            // Extract rows 8-24 (indices 7-23 in 0-indexed array)
             const players = [];
-            for (let i = 7; i < 23 && i < data.length; i++) {
+            for (let i = 7; i < 24 && i < data.length; i++) {
                 const row = data[i];
                 const name = row[OVERVIEW_COLUMNS.name - 1];
                 
@@ -4534,9 +4534,9 @@
                 return;
             }
 
-            // Extract rows 8-22 (indices 7-21 in 0-indexed array)
+            // Extract rows 8-24 (indices 7-23 in 0-indexed array)
             const players = [];
-            for (let i = 7; i < 23 && i < data.length; i++) {
+            for (let i = 7; i < 24 && i < data.length; i++) {
                 const row = data[i];
                 const name = row[PLAYER_COLUMNS.name - 1];
                 
@@ -5128,8 +5128,8 @@
             const info = PLAYER_INFO[playerName];
             if (!info) return null;
             
-            // Find the "All" row for this player to get attributes (rows 8-22, indices 7-21)
-            for (let i = 7; i <= 22 && i < data.length; i++) {
+            // Find the "All" row for this player to get attributes (rows 8-24, indices 7-23)
+            for (let i = 7; i <= 23 && i < data.length; i++) {
                 const row = data[i];
                 if (row[2] === info.nickname) {
                     return {
