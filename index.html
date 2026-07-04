@@ -4278,6 +4278,21 @@
             });
         }
 
+        // Premier rating band -> cell colors, matching the conditional-format
+        // rules in the source sheet (approximate standard Premier palette).
+        // Returns null when no band applies (below 5000, blank, or non-numeric),
+        // meaning "no fill / default text". Shared by End Rank, Peak, Avg Opponent.
+        function premierBandColors(value) {
+            const v = parseFloat(value);
+            if (isNaN(v)) return null;
+            if (v >= 25000) return { bg: '#C0202C', fg: '#ffffff' }; // red
+            if (v >= 20000) return { bg: '#B83DBA', fg: '#ffffff' }; // magenta
+            if (v >= 15000) return { bg: '#8E44AD', fg: '#ffffff' }; // purple
+            if (v >= 10000) return { bg: '#4B8FD6', fg: '#ffffff' }; // bright blue
+            if (v >= 5000)  return { bg: '#A0D2E8', fg: '#0b1622' }; // light blue, dark text
+            return null; // below 5000: no band in the source rules
+        }
+
         // Load overview page data
         async function loadOverviewData() {
             const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
@@ -4286,6 +4301,13 @@
                 document.getElementById('overview-loading').innerHTML = '<p style="color: var(--danger);">Error loading data. Please refresh the page.</p>';
                 return;
             }
+
+            // Rank Change (sum of col I) and Avg Opponent (mean of col F) come
+            // from the ecohunters sheet, keyed by PLAYER_INFO key. A failed fetch
+            // here must NOT block the primary table, so it degrades to no data.
+            let ecoAgg = {};
+            const ecoData = await fetchSheetData(SHEET_GIDS.ecohunters);
+            if (ecoData) ecoAgg = computeOverviewEcoAggregates(ecoData);
 
             // Extract rows 8-22 (indices 7-21 in 0-indexed array)
             const players = [];
@@ -4296,6 +4318,9 @@
                 // Skip empty rows or rows with #DIV/0! errors
                 if (!name || name === '' || name.includes('#DIV')) continue;
                 
+                // Overview name IS the PLAYER_INFO key (see PLAYER_INFO[name] usage),
+                // which is the same key computeOverviewEcoAggregates is keyed by.
+                const agg = ecoAgg[name] || null;
                 players.push({
                     name: name,
                     matches: parseInt(row[OVERVIEW_COLUMNS.matches - 1]) || 0,
@@ -4303,7 +4328,9 @@
                     kd: parseFloat(row[OVERVIEW_COLUMNS.kd - 1]) || 0,
                     adr: parseFloat(row[OVERVIEW_COLUMNS.adr - 1]) || 0,
                     hs_pct: parseFloat(row[OVERVIEW_COLUMNS.hs_pct - 1]) || 0,
-                    rating: parseFloat(row[OVERVIEW_COLUMNS.rating - 1]) || 0
+                    rating: parseFloat(row[OVERVIEW_COLUMNS.rating - 1]) || 0,
+                    rankChange: agg ? agg.rankChange : null,
+                    avgOpponent: agg ? agg.avgOpponent : null
                 });
             }
 
@@ -4332,13 +4359,56 @@
                     playerCount++;
                 }
 
+                // Avg Opponent: rounded whole-number rating, band-colored.
+                let avgOppCell = '<td class="stat-value">-</td>';
+                if (player.avgOpponent !== null && !isNaN(player.avgOpponent)) {
+                    const rounded = Math.round(player.avgOpponent);
+                    const c = premierBandColors(rounded);
+                    const style = c ? ` style="background:${c.bg};color:${c.fg};"` : '';
+                    avgOppCell = `<td class="stat-value"${style}>${rounded}</td>`;
+                }
+
+                // Rank Change: signed, green for positive / red for negative,
+                // neutral for exactly zero.
+                let rankChangeCell = '<td class="stat-value">-</td>';
+                if (player.rankChange !== null && !isNaN(player.rankChange)) {
+                    const rc = Math.round(player.rankChange);
+                    if (rc > 0) {
+                        rankChangeCell = `<td class="stat-value" style="color:var(--success,#2ecc71);">+${rc}</td>`;
+                    } else if (rc < 0) {
+                        rankChangeCell = `<td class="stat-value" style="color:var(--danger,#e74c3c);">${rc}</td>`;
+                    } else {
+                        rankChangeCell = `<td class="stat-value">0</td>`;
+                    }
+                }
+
+                // End Rank: band-colored rating. Dormant until player.endRank is
+                // populated; renders an uncolored placeholder while absent.
+                let endRankCell = '<td class="stat-value">-</td>';
+                if (player.endRank !== undefined && player.endRank !== null && !isNaN(player.endRank)) {
+                    const rounded = Math.round(player.endRank);
+                    const c = premierBandColors(rounded);
+                    const style = c ? ` style="background:${c.bg};color:${c.fg};"` : '';
+                    endRankCell = `<td class="stat-value"${style}>${rounded}</td>`;
+                }
+
+                // Peak: band-colored rating. Dormant until player.peak is populated;
+                // renders an uncolored placeholder while absent.
+                let peakCell = '<td class="stat-value">-</td>';
+                if (player.peak !== undefined && player.peak !== null && !isNaN(player.peak)) {
+                    const rounded = Math.round(player.peak);
+                    const c = premierBandColors(rounded);
+                    const style = c ? ` style="background:${c.bg};color:${c.fg};"` : '';
+                    peakCell = `<td class="stat-value"${style}>${rounded}</td>`;
+                }
+
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td class="player-name">${player.name}</td>
-                    <td class="stat-value">-</td>
-                    <td class="stat-value">-</td>
-                    <td class="stat-value">-</td>
-                    <td class="stat-value">-</td>
+                    ${endRankCell}
+                    ${avgOppCell}
+                    ${peakCell}
+                    ${rankChangeCell}
                     <td class="stat-value">${player.matches}</td>
                     <td class="stat-value">${(player.winrate).toFixed(2)}%</td>
                     <td class="stat-value">${player.kd.toFixed(2)}</td>
@@ -9007,7 +9077,7 @@
         // by rate among players with >= 30 matches. Sub-30 players show their
         // rate but "<30 games" instead of a rank, and are excluded from the pool.
         let boostersView = 'totals';
-        const BOOSTERS_MIN_GAMES = 30;
+        const BOOSTERS_MIN_GAMES = 25;
 
         // Cache populated once per player-render so toggling doesn't refetch.
         // { matchesPlayed: {playerKey:int},
@@ -9024,6 +9094,42 @@
                 if (player) mp[player]++;
             }
             return mp;
+        }
+
+        // Aggregate two overview columns from the ecohunters sheet, keyed by
+        // PLAYER_INFO key (same resolution path as computeMatchesPlayed):
+        //   rankChange  = SUM of column I (0-based index 8) across a player's rows
+        //   avgOpponent = MEAN of column F (0-based index 5), numeric rows only
+        // Non-numeric / blank cells are skipped: they don't contribute to the
+        // rank-change sum, and they're excluded from BOTH the numerator and the
+        // denominator of the opponent average (so they don't drag it toward 0).
+        // Column letters follow this sheet's convention where col G = index 6.
+        function computeOverviewEcoAggregates(data) {
+            const RANK_CHANGE_COL = 8; // column I
+            const OPPONENT_COL = 5;    // column F
+            const agg = {}; // playerKey -> { rankChange, oppSum, oppCount }
+            Object.keys(PLAYER_INFO).forEach(k => agg[k] = { rankChange: 0, oppSum: 0, oppCount: 0 });
+            for (let i = 3; i < data.length; i++) {
+                const row = data[i];
+                const eco = normLabel(row[ECO_COL.player - 1]).toLowerCase();
+                const player = ECONAME_TO_PLAYER[eco];
+                if (!player) continue;
+
+                const rc = parseFloat(row[RANK_CHANGE_COL]);
+                if (!isNaN(rc)) agg[player].rankChange += rc;
+
+                const opp = parseFloat(row[OPPONENT_COL]);
+                if (!isNaN(opp)) { agg[player].oppSum += opp; agg[player].oppCount++; }
+            }
+            const out = {};
+            Object.keys(agg).forEach(k => {
+                const a = agg[k];
+                out[k] = {
+                    rankChange: a.rankChange,
+                    avgOpponent: a.oppCount > 0 ? a.oppSum / a.oppCount : null
+                };
+            });
+            return out;
         }
 
         async function renderBoosters(playerName) {
@@ -9138,7 +9244,7 @@
                     if (mp >= BOOSTERS_MIN_GAMES && d.rankByPct[playerName] !== undefined) {
                         rankEl.textContent = ordinal(d.rankByPct[playerName]);
                     } else {
-                        rankEl.textContent = '<30 games';
+                        rankEl.textContent = '<25 games';
                     }
                 }
             });
