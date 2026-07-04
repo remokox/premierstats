@@ -8341,12 +8341,12 @@
             const emptyMsg = wantMap ? 'A player has not played this map' : 'No match data';
 
             // Wired roles. Column indices (0-based):
-            //   G=6 name, D=3 outcome, J=9 rounds, Q=16 hs%, AP=67 mk/round,
+            //   G=6 name, D=3 outcome, J=9 rounds, Q=16 hs%, AP=41 mk/round,
             //   BQ=68 support count, CW=100 AWP kills.
             applyRole(0, rows, r => bucketMainAWP(num(r[100]), num(r[9])), emptyMsg);      // Main AWP
             applyRole(1, rows, r => bucketHSMachine(num(r[16])), emptyMsg);                // HS Machine
             applyRole(2, rows, r => bucketSupport(num(r[68]), num(r[9])), emptyMsg);       // Support
-            applyRole(3, rows, r => bucketMultiFragger(num(r[67])), emptyMsg);             // Multi Fragger
+            applyRole(3, rows, r => bucketMultiFragger(num(r[41])), emptyMsg);             // Multi Fragger (AP)
             applyRole(4, rows, r => bucketLeader(r[3], num(r[9])), emptyMsg);              // Leader
         }
 
