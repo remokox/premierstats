@@ -8178,7 +8178,7 @@
             { icon: 'multi_fragger.png', name: 'Multi Fragger', metric: 'Multikills (more than one frag) per round',
               goat: 'above 0.20',                     mid: '0.14 or above',         noob: '0.14 or less' },
             { icon: 'leader.png',        name: 'Leader',        metric: 'Team match result',
-              goat: 'Team wins a map in regulation',  mid: 'Team wins a map in overtime', noob: 'Team loses' },
+              goat: 'Team wins in regulation',  mid: 'Team wins in overtime or ties', noob: 'Team loses' },
             { icon: 'eco_friendly.png',  name: 'Eco Friendly',  metric: 'SMG and shotgun kills per round',
               goat: 'above 0.07',                     mid: '0.02 or above',         noob: '0.02 or less' },
             { icon: 'entry_fragger.png', name: 'Entry Fragger', metric: 'First kills per round',
@@ -8268,6 +8268,42 @@
             return 'noob';
         }
 
+        // HS Machine: headshot %, stored as a whole number in Q (e.g. 61). No division.
+        // >60 GOAT ; >=50 MID ; else NOOB.
+        function bucketHSMachine(hsPct) {
+            if (hsPct > 60) return 'goat';
+            if (hsPct >= 50) return 'mid';
+            return 'noob';
+        }
+
+        // Support: support-round count (BQ) / rounds (J).
+        // >0.25 GOAT ; >=0.17 MID ; else NOOB.
+        function bucketSupport(supportRounds, rounds) {
+            const v = supportRounds / rounds;
+            if (v > 0.25) return 'goat';
+            if (v >= 0.17) return 'mid';
+            return 'noob';
+        }
+
+        // Multi Fragger: multikills-per-round already stored as a ratio in AP. No division.
+        // >0.20 GOAT ; >=0.14 MID (tie -> higher) ; else NOOB.
+        function bucketMultiFragger(mkPerRound) {
+            if (mkPerRound > 0.20) return 'goat';
+            if (mkPerRound >= 0.14) return 'mid';
+            return 'noob';
+        }
+
+        // Leader: categorical from match result (D) with a win-only overtime test on
+        // rounds (J). Win in regulation (J<=24) -> GOAT ; win in OT (J>24) OR tie -> MID ;
+        // loss -> NOOB. Any other/blank value -> null (row skipped, not counted).
+        function bucketLeader(outcomeRaw, rounds) {
+            const o = normLabel(outcomeRaw).toLowerCase();
+            if (o === 'win') return rounds > 24 ? 'mid' : 'goat';
+            if (o === 'tie') return 'mid';
+            if (o === 'loss') return 'noob';
+            return null; // unknown outcome — don't guess
+        }
+
         const num = x => {
             const v = parseFloat(x);
             return Number.isFinite(v) ? v : 0; // blanks / non-numeric -> 0
@@ -8304,8 +8340,14 @@
             // matches is normal (never played it); under "All", zero is a red flag.
             const emptyMsg = wantMap ? 'A player has not played this map' : 'No match data';
 
-            // --- Main AWP (role index 0) ---
-            applyRole(0, rows, r => bucketMainAWP(num(r[100]), num(r[9])), emptyMsg);
+            // Wired roles. Column indices (0-based):
+            //   G=6 name, D=3 outcome, J=9 rounds, Q=16 hs%, AP=67 mk/round,
+            //   BQ=68 support count, CW=100 AWP kills.
+            applyRole(0, rows, r => bucketMainAWP(num(r[100]), num(r[9])), emptyMsg);      // Main AWP
+            applyRole(1, rows, r => bucketHSMachine(num(r[16])), emptyMsg);                // HS Machine
+            applyRole(2, rows, r => bucketSupport(num(r[68]), num(r[9])), emptyMsg);       // Support
+            applyRole(3, rows, r => bucketMultiFragger(num(r[67])), emptyMsg);             // Multi Fragger
+            applyRole(4, rows, r => bucketLeader(r[3], num(r[9])), emptyMsg);              // Leader
         }
 
         // Generic applier: given a role index, this player's rows, a bucketing
