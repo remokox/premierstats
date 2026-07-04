@@ -1406,6 +1406,19 @@
             border-bottom-color: var(--accent-tertiary);
         }
 
+        /* Link variant: the "i" is a clickable anchor (opens an external
+           reference). Keeps the blue-"i" badge look — strips default anchor
+           underline/colour — and signals clickability with a pointer cursor. */
+        a.info-tip--link {
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--accent-tertiary);
+        }
+        a.info-tip--link:hover {
+            background: var(--accent-tertiary);
+            color: var(--bg-primary);
+        }
+
         /* Ecohunters Page Styles */
         .ecohunters-explanation {
             background: var(--bg-secondary);
@@ -2603,7 +2616,7 @@
                                 <span class="player-detail-stat-value" id="detail-rating">0.00</span>
                             </div>
                             <div class="player-detail-stat-row">
-                                <span class="player-detail-stat-label">Round Swing</span>
+                                <span class="player-detail-stat-label">Round Swing<a class="info-tip info-tip--link" href="https://grepsonka.github.io/matrix/cs2_round_win_matrix.html" target="_blank" rel="noopener noreferrer" data-tip="How much this player's actions shift their team's chance of winning the round. Click to open the probability matrix.">i</a></span>
                                 <span class="player-detail-stat-value" id="detail-round-swing">0.00%</span>
                             </div>
                             <div class="player-detail-stat-row">
@@ -7739,7 +7752,7 @@
                             <th>ADR</th>
                             <th>HS%</th>
                             <th>KAST<span class="info-tip info-tip--down" data-tip="Rounds in which a player killed, assisted, survived or was traded">i</span></th>
-                            <th>Round Swing</th>
+                            <th>Round Swing<a class="info-tip info-tip--link info-tip--down" href="https://grepsonka.github.io/matrix/cs2_round_win_matrix.html" target="_blank" rel="noopener noreferrer" data-tip="How much this player's actions shift their team's chance of winning the round. Click to open the probability matrix.">i</a></th>
                             <th>Rating 3.0</th>
                             ${showExtraColumn ? `<th>${selectedStatLabel}</th>` : ''}
                         </tr>
