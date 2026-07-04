@@ -4581,10 +4581,6 @@
             console.log('About to call loadPlayerDetailData with currentPlayerName:', currentPlayerName);
             loadPlayerDetailData('all');
 
-            // Roles tab: computed from the ecohunters sheet, not map-filtered,
-            // so load it once here rather than inside the map-filtered chain.
-            loadRolesData();
-
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -4659,6 +4655,10 @@
             // rest of this function (sum_stats_maps), so it's independent of
             // whether a playerRow is found below — fire it in parallel.
             loadOverviewKdChart(mapName);
+
+            // Roles tab also reads the ecohunters sheet and is map-filtered the
+            // same way, so it's likewise independent of the sum_stats_maps fetch.
+            loadRolesData(mapName);
 
             // Immediately show a loading message in the per-map panels that rebuild
             // their tbody. Each loader replaces this with real rows when its own
@@ -8275,7 +8275,10 @@
 
         // Reads the ecohunters sheet, computes real bars for the roles that are wired.
         // Currently wired: Main AWP (index 0). Others stay on demo values.
-        async function loadRolesData() {
+        // Map-filtered: when mapName !== 'all', only that map's matches are counted,
+        // matching the same row[2] map-name convention the other ecohunters-based
+        // features use (see loadOverviewKdChart).
+        async function loadRolesData(mapName) {
             if (!currentPlayerName) return;
             const info = PLAYER_INFO[currentPlayerName];
             if (!info || !info.ecoName) return;
@@ -8284,17 +8287,32 @@
             const data = await fetchSheetData(SHEET_GIDS.ecohunters);
             if (!data) return; // network/fetch failure — leave demo bars as-is
 
-            // One row per player per match. Keep this player's rows.
-            const rows = data.filter(row => (row[6] || '').trim() === ecoName);
+            // Convert the nav filter value to the sheet's map-name string.
+            // null => "All" (no map restriction).
+            const wantMap = (mapName && mapName !== 'all') ? mapNameForBlock(mapName) : null;
+
+            // One row per player per match. Keep this player's rows, on the chosen
+            // map if one is selected. normLabel (not .trim) so U+00A0 in a cell
+            // can't silently break the match — same guard the rest of the app uses.
+            const rows = data.filter(row => {
+                if (normLabel(row[6]) !== ecoName) return false;
+                if (wantMap && normLabel(row[2]) !== wantMap) return false;
+                return true;
+            });
+
+            // Empty-state message differs by context: under a specific map, zero
+            // matches is normal (never played it); under "All", zero is a red flag.
+            const emptyMsg = wantMap ? 'A player has not played this map' : 'No match data';
 
             // --- Main AWP (role index 0) ---
-            applyRole(0, rows, r => bucketMainAWP(num(r[100]), num(r[9])));
+            applyRole(0, rows, r => bucketMainAWP(num(r[100]), num(r[9])), emptyMsg);
         }
 
-        // Generic applier: given a role index, this player's rows, and a bucketing
+        // Generic applier: given a role index, this player's rows, a bucketing
         // function that returns 'goat' | 'mid' | 'noob' | null (null = skip row),
-        // it computes the split and rewrites that role's bar. Real for all future roles.
-        function applyRole(roleIndex, rows, bucketFn) {
+        // and an empty-state message, it computes the split and rewrites that
+        // role's bar. Real for all future roles.
+        function applyRole(roleIndex, rows, bucketFn, emptyMsg) {
             const bar = document.getElementById(`role-bar-${roleIndex}`);
             const note = document.getElementById(`role-note-${roleIndex}`);
             if (!bar) return;
@@ -8310,17 +8328,14 @@
             }
 
             if (counted === 0) {
-                // Defensive: no matching rows. Won't happen with current data,
-                // but makes a future mapping/data error loud instead of silent.
-                bar.innerHTML = `<div class="role-bar-seg" style="width:100%;background:var(--bg-secondary);color:var(--text-secondary);">No match data</div>`;
+                bar.innerHTML = `<div class="role-bar-seg" style="width:100%;background:var(--bg-secondary);color:var(--text-secondary);font-style:italic;">${esc(emptyMsg || 'No match data')}</div>`;
                 if (note) note.style.display = 'none';
                 return;
             }
 
-            const split = pctSplit(goat, mid, noob);
-            const [g, m, n] = split;
+            const [g, m, n] = pctSplit(goat, mid, noob);
             bar.innerHTML = buildBarHTML(g, m, n);
-            if (note) note.remove(); // real data — drop the "demo values" note
+            if (note) note.style.display = 'none'; // real data — hide the "demo values" note
         }
 
         function resetAwardsSelection() {
