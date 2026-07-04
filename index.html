@@ -8304,10 +8304,56 @@
             return null; // unknown outcome — don't guess
         }
 
+        // Eco Friendly: (sum of SMG + shotgun kills) / rounds.
+        // >0.07 GOAT ; >=0.02 MID ; else NOOB. Columns are summed by index (see ECO_COLS).
+        function bucketEcoFriendly(ecoKills, rounds) {
+            const v = ecoKills / rounds;
+            if (v > 0.07) return 'goat';
+            if (v >= 0.02) return 'mid';
+            return 'noob';
+        }
+
+        // Entry Fragger: entry (first) kills / rounds.
+        // >0.15 GOAT ; >=0.08 MID ; else NOOB.
+        function bucketEntryFragger(entryKills, rounds) {
+            const v = entryKills / rounds;
+            if (v > 0.15) return 'goat';
+            if (v >= 0.08) return 'mid';
+            return 'noob';
+        }
+
+        // Stathunter: post-match rating (already a value, no division).
+        // >1.30 GOAT ; >=1.00 MID ; else NOOB.
+        function bucketStathunter(rating) {
+            if (rating > 1.30) return 'goat';
+            if (rating >= 1.00) return 'mid';
+            return 'noob';
+        }
+
+        // Camper: deaths per round (already a ratio). INVERTED — lower is better.
+        // <0.55 GOAT ; <=0.65 MID ; else NOOB.
+        function bucketCamper(dpr) {
+            if (dpr < 0.55) return 'goat';
+            if (dpr <= 0.65) return 'mid';
+            return 'noob';
+        }
+
+        // Noob: post-match rating, but INVERTED — being bad earns green here.
+        // <0.85 GOAT ; <=1.12 MID ; else NOOB. (Same AU column as Stathunter, opposite logic.)
+        function bucketNoob(rating) {
+            if (rating < 0.85) return 'goat';
+            if (rating <= 1.12) return 'mid';
+            return 'noob';
+        }
+
         const num = x => {
             const v = parseFloat(x);
             return Number.isFinite(v) ? v : 0; // blanks / non-numeric -> 0
         };
+
+        // Eco Friendly kill columns (0-based): 7 SMGs + 4 shotguns, summed per match.
+        const ECO_COLS = [105, 106, 113, 118, 131, 133, 134, 117, 125, 126, 127];
+        const sumCols = (row, cols) => cols.reduce((t, c) => t + num(row[c]), 0);
 
         // Reads the ecohunters sheet, computes real bars for the roles that are wired.
         // Currently wired: Main AWP (index 0). Others stay on demo values.
@@ -8341,13 +8387,19 @@
             const emptyMsg = wantMap ? 'A player has not played this map' : 'No match data';
 
             // Wired roles. Column indices (0-based):
-            //   G=6 name, D=3 outcome, J=9 rounds, Q=16 hs%, AP=41 mk/round,
-            //   BQ=68 support count, CW=100 AWP kills.
+            //   G=6 name, D=3 outcome, J=9 rounds, Q=16 hs%, W=22 entry kills,
+            //   AN=39 DPR, AP=41 mk/round, AU=46 rating, BQ=68 support count,
+            //   CW=100 AWP kills, ECO_COLS = 11 SMG+shotgun kill columns.
             applyRole(0, rows, r => bucketMainAWP(num(r[100]), num(r[9])), emptyMsg);      // Main AWP
             applyRole(1, rows, r => bucketHSMachine(num(r[16])), emptyMsg);                // HS Machine
             applyRole(2, rows, r => bucketSupport(num(r[68]), num(r[9])), emptyMsg);       // Support
             applyRole(3, rows, r => bucketMultiFragger(num(r[41])), emptyMsg);             // Multi Fragger (AP)
             applyRole(4, rows, r => bucketLeader(r[3], num(r[9])), emptyMsg);              // Leader
+            applyRole(5, rows, r => bucketEcoFriendly(sumCols(r, ECO_COLS), num(r[9])), emptyMsg); // Eco Friendly
+            applyRole(6, rows, r => bucketEntryFragger(num(r[22]), num(r[9])), emptyMsg);  // Entry Fragger (W)
+            applyRole(7, rows, r => bucketStathunter(num(r[46])), emptyMsg);               // Stathunter (AU)
+            applyRole(8, rows, r => bucketCamper(num(r[39])), emptyMsg);                   // Camper (AN)
+            applyRole(9, rows, r => bucketNoob(num(r[46])), emptyMsg);                     // Noob (AU)
         }
 
         // Generic applier: given a role index, this player's rows, a bucketing
