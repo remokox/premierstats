@@ -3955,6 +3955,15 @@
                 kd: 256,       // IW
                 plusMinus: 258,// IY
                 rating: 259    // IZ
+            },
+            'Pan Piorun Ciechanów': {
+                date: 262,     // JC
+                map: 264,      // JE
+                result: 268,   // JI
+                score: 270,    // JK
+                kd: 272,       // JM
+                plusMinus: 274,// JO
+                rating: 275    // JP
             }
         };
 
@@ -4071,6 +4080,13 @@
                 oneVX: 158,    // FC
                 status: 160,   // FE
                 round: 161     // FF
+            },
+            'Pan Piorun Ciechanów': {
+                date: 163,     // FH
+                map: 165,      // FJ
+                oneVX: 168,    // FM
+                status: 170,   // FO
+                round: 171     // FP
             }
         };
 
@@ -4238,6 +4254,13 @@
                 flag: 'ukraine.png',
                 photo: 'szymon.png',
                 ecoName: 'Szymon'
+            },
+            'Pan Piorun Ciechanów': {
+                nickname: 'Pan Piorun Ciechanów',
+                realname: 'Jan Kowalski',
+                flag: 'poland.png',
+                photo: 'piorun.png',
+                ecoName: 'Piorun'
             }
         };
 
@@ -4761,14 +4784,14 @@
             
             // Define row ranges for each map (convert to 0-based indices)
             const mapRowRanges = {
-                'all': [7, 22],          // rows 8-23
-                'ancient': [29, 44],     // rows 30-45
-                'anubis': [51, 66],      // rows 52-67
-                'dust2': [73, 88],       // rows 74-89
-                'inferno': [95, 110],    // rows 96-111
-                'mirage': [117, 132],    // rows 118-133
-                'nuke': [139, 154],      // rows 140-155
-                'overpass': [161, 176]   // rows 162-177
+                'all': [7, 23],          // rows 8-24
+                'ancient': [29, 45],     // rows 30-46
+                'anubis': [51, 67],      // rows 52-68
+                'dust2': [73, 89],       // rows 74-90
+                'inferno': [95, 111],    // rows 96-112
+                'mirage': [117, 133],    // rows 118-134
+                'nuke': [139, 155],      // rows 140-156
+                'overpass': [161, 177]   // rows 162-178
             };
             
             const [startRow, endRow] = mapRowRanges[mapName.toLowerCase()];
@@ -6019,14 +6042,14 @@
             
             // Use same row finding logic as loadPlayerDetailData
             const mapRowRanges = {
-                'all': [7, 22],          // rows 8-23
-                'ancient': [29, 44],     // rows 30-45
-                'anubis': [51, 66],      // rows 52-67
-                'dust2': [73, 88],       // rows 74-89
-                'inferno': [95, 110],    // rows 96-111
-                'mirage': [117, 132],    // rows 118-133
-                'nuke': [139, 154],      // rows 140-155
-                'overpass': [161, 176]   // rows 162-177
+                'all': [7, 23],          // rows 8-24
+                'ancient': [29, 45],     // rows 30-46
+                'anubis': [51, 67],      // rows 52-68
+                'dust2': [73, 89],       // rows 74-90
+                'inferno': [95, 111],    // rows 96-112
+                'mirage': [117, 133],    // rows 118-134
+                'nuke': [139, 155],      // rows 140-156
+                'overpass': [161, 177]   // rows 162-178
             };
             
             const [startRow, endRow] = mapRowRanges[mapName.toLowerCase()];
@@ -8622,12 +8645,12 @@
         }
 
         // --- Per-booster computations ---
-        // Each returns { playerKey: count } across all 16 players. Reads the
+        // Each returns { playerKey: count } across all 17 players. Reads the
         // ecohunters match blocks. Only implemented boosters have a compute fn.
 
         // --- Per-booster compute contract ---
         // Each compute fn has signature (data, blocks) and returns
-        // { playerKey: count } for all 16 players.
+        // { playerKey: count } for all 17 players.
         //   data   = raw ecohunters rows (for per-row threshold boosters)
         //   blocks = data pre-sliced into 5-row match blocks with resolved
         //            players (for boosters that compare within a match)
@@ -9038,7 +9061,8 @@
             'kieik': 6,
             'wuja': 0,
             'Jeffrey Epstein': 1,
-            'Szymon Gwiazda Rocka': 1
+            'Szymon Gwiazda Rocka': 1,
+            'Pan Piorun Ciechanów': 0
         };
 
         // Manual booster: "compute" just returns the hand-entered totals.
@@ -9184,7 +9208,7 @@
             const matchesPlayed = computeMatchesPlayed(data);
             const allPlayers = Object.keys(PLAYER_INFO);
 
-            // Compute each booster's data for all 16 players, once.
+            // Compute each booster's data for all 17 players, once.
             const perBooster = {};
             BOOSTERS.forEach((b, idx) => {
                 if (!b.compute) return;
@@ -9251,7 +9275,7 @@
         }
 
         // ===== Awards: Notable stats =====
-        // Renders 5 rows (stat name | value | place among the 16 roster players).
+        // Renders 5 rows (stat name | value | place among the 17 roster players).
         // Ranking is standard competition ranking (ties share a place, next skips),
         // Spider/radar chart axes (all on sum_stats_maps, gid 999727190).
         // All 12 are higher-is-better, so normalization needs no direction flag.
@@ -9488,7 +9512,7 @@
                 return;
             }
 
-            // Rows for this map block, restricted to the 16 known roster players.
+            // Rows for this map block, restricted to the 17 known roster players.
             const rows = rowsForMap(data, mapName).filter(r => {
                 const name = (r[PLAYER_COLUMNS.name - 1] || '').toString().trim();
                 return PLAYER_INFO[name] !== undefined;
