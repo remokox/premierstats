@@ -4580,7 +4580,11 @@
             // Load data for "All" maps
             console.log('About to call loadPlayerDetailData with currentPlayerName:', currentPlayerName);
             loadPlayerDetailData('all');
-            
+
+            // Roles tab: computed from the ecohunters sheet, not map-filtered,
+            // so load it once here rather than inside the map-filtered chain.
+            loadRolesData();
+
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -8199,6 +8203,14 @@
             ));
         }
 
+        // Shared bar markup. Percentages are pre-rounded integers summing to 100.
+        function buildBarHTML(g, m, n) {
+            return `
+                <div class="role-bar-seg role-bar-goat" style="width:${g}%">${g ? g + '%' : ''}</div>
+                <div class="role-bar-seg role-bar-mid"  style="width:${m}%">${m ? m + '%' : ''}</div>
+                <div class="role-bar-seg role-bar-noob" style="width:${n}%">${n ? n + '%' : ''}</div>`;
+        }
+
         function renderRoles() {
             const grid = document.getElementById('roles-grid');
             if (!grid) return;
@@ -8222,17 +8234,94 @@
                                 </span>
                             </span>
                         </div>
-                        <div class="role-bar">
-                            <div class="role-bar-seg role-bar-goat" style="width:${g}%">${g}%</div>
-                            <div class="role-bar-seg role-bar-mid"  style="width:${m}%">${m}%</div>
-                            <div class="role-bar-seg role-bar-noob" style="width:${n}%">${n}%</div>
-                        </div>
-                        <div class="role-bar-placeholder-note">demo values — not real yet</div>
+                        <div class="role-bar" id="role-bar-${i}">${buildBarHTML(g, m, n)}</div>
+                        <div class="role-bar-placeholder-note" id="role-note-${i}">demo values — not real yet</div>
                     </div>
                 </div>`;
             }).join('');
         }
         document.addEventListener('DOMContentLoaded', renderRoles);
+
+        // Split integer percentages that sum to 100 from three raw counts,
+        // using largest-remainder so the three shown numbers always total 100.
+        function pctSplit(goat, mid, noob) {
+            const total = goat + mid + noob;
+            if (total === 0) return null; // caller shows "no data"
+            const raw = [goat, mid, noob].map(c => (c / total) * 100);
+            const floor = raw.map(Math.floor);
+            let remainder = 100 - floor.reduce((a, b) => a + b, 0);
+            // hand out the leftover points to the largest fractional parts
+            const order = raw
+                .map((v, i) => ({ i, frac: v - Math.floor(v) }))
+                .sort((a, b) => b.frac - a.frac);
+            const out = floor.slice();
+            for (let k = 0; k < remainder; k++) out[order[k].i]++;
+            return out; // [goatPct, midPct, noobPct]
+        }
+
+        // Per-match bucketing for Main AWP: AWP kills / rounds, tie -> higher tier.
+        // >0.35 GOAT ; >=0.20 MID ; else NOOB.
+        function bucketMainAWP(kills, rounds) {
+            const v = kills / rounds;
+            if (v > 0.35) return 'goat';
+            if (v >= 0.20) return 'mid';
+            return 'noob';
+        }
+
+        const num = x => {
+            const v = parseFloat(x);
+            return Number.isFinite(v) ? v : 0; // blanks / non-numeric -> 0
+        };
+
+        // Reads the ecohunters sheet, computes real bars for the roles that are wired.
+        // Currently wired: Main AWP (index 0). Others stay on demo values.
+        async function loadRolesData() {
+            if (!currentPlayerName) return;
+            const info = PLAYER_INFO[currentPlayerName];
+            if (!info || !info.ecoName) return;
+            const ecoName = info.ecoName;
+
+            const data = await fetchSheetData(SHEET_GIDS.ecohunters);
+            if (!data) return; // network/fetch failure — leave demo bars as-is
+
+            // One row per player per match. Keep this player's rows.
+            const rows = data.filter(row => (row[6] || '').trim() === ecoName);
+
+            // --- Main AWP (role index 0) ---
+            applyRole(0, rows, r => bucketMainAWP(num(r[100]), num(r[9])));
+        }
+
+        // Generic applier: given a role index, this player's rows, and a bucketing
+        // function that returns 'goat' | 'mid' | 'noob' | null (null = skip row),
+        // it computes the split and rewrites that role's bar. Real for all future roles.
+        function applyRole(roleIndex, rows, bucketFn) {
+            const bar = document.getElementById(`role-bar-${roleIndex}`);
+            const note = document.getElementById(`role-note-${roleIndex}`);
+            if (!bar) return;
+
+            let goat = 0, mid = 0, noob = 0, counted = 0;
+            for (const r of rows) {
+                const b = bucketFn(r);
+                if (b === 'goat') goat++;
+                else if (b === 'mid') mid++;
+                else if (b === 'noob') noob++;
+                else continue; // null -> skip, not a valid match for this role
+                counted++;
+            }
+
+            if (counted === 0) {
+                // Defensive: no matching rows. Won't happen with current data,
+                // but makes a future mapping/data error loud instead of silent.
+                bar.innerHTML = `<div class="role-bar-seg" style="width:100%;background:var(--bg-secondary);color:var(--text-secondary);">No match data</div>`;
+                if (note) note.style.display = 'none';
+                return;
+            }
+
+            const split = pctSplit(goat, mid, noob);
+            const [g, m, n] = split;
+            bar.innerHTML = buildBarHTML(g, m, n);
+            if (note) note.remove(); // real data — drop the "demo values" note
+        }
 
         function resetAwardsSelection() {
             const select = document.getElementById('awards-player-select');
