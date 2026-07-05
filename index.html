@@ -3355,6 +3355,12 @@
          first render of the whole page. Down here the HTML is already parsed, and it
          still executes before the inline script below, so load order is unchanged. -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Date adapter for Chart.js time scales. MUST load after Chart.js (it registers
+         onto the global Chart object) and before the inline script below that builds
+         charts. The date-fns build bundles date-fns itself, so this single tag is
+         sufficient - no separate date-fns script needed. Version pinned deliberately:
+         adapter 3.x is the line compatible with Chart.js 4.x. -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <script>
         // Google Sheets configuration
         const SHEET_ID = '14dRJgt4aZUFMrBCP8KHkZ6_zhNZE2aInBU9U1kTJ3mg';
@@ -5313,25 +5319,6 @@
             // Columns on the ecohunters sheet (gid 1037802432), 0-based.
             const DATE = 1, MAP = 2, PLAYER = 6, KILLS = 12, DEATHS = 13;
 
-            // Bucket by date string: sum kills and deaths separately.
-            const buckets = {}; // dateStr -> { kills, deaths }
-            data.forEach(row => {
-                const name = (row[PLAYER] || '').toString().trim();
-                if (name !== info.ecoName) return;
-                if (wantMap && (row[MAP] || '').toString().trim() !== wantMap) return;
-
-                const dateStr = (row[DATE] || '').toString().trim();
-                if (!dateStr) return;
-
-                const k = parseInt(row[KILLS], 10);
-                const d = parseInt(row[DEATHS], 10);
-                if (isNaN(k) || isNaN(d)) return;
-
-                if (!buckets[dateStr]) buckets[dateStr] = { kills: 0, deaths: 0 };
-                buckets[dateStr].kills += k;
-                buckets[dateStr].deaths += d;
-            });
-
             // Parse "DD.MM.YYYY" into a sortable Date. Bad/unparsable dates are
             // dropped rather than risking a wrongly-ordered x-axis.
             const parseSheetDate = (s) => {
@@ -5342,13 +5329,44 @@
                 return new Date(yyyy, mm - 1, dd);
             };
 
-            const points = Object.keys(buckets)
-                .map(dateStr => ({ dateStr, dateObj: parseSheetDate(dateStr), b: buckets[dateStr] }))
-                .filter(p => p.dateObj && p.b.deaths > 0) // skip days with no deaths recorded (undefined K/D) and unparsable dates
-                .sort((a, b) => a.dateObj - b.dateObj);
+            // Collect ONE record per game (not per day). We keep kills/deaths
+            // separate per game so the rolling window can be a true ratio-of-sums.
+            // Same-date games are kept as distinct records; the stable sort below
+            // preserves their original sheet order, so the 10-game window still
+            // advances game-by-game through games played on the same day rather
+            // than collapsing them into a single daily point.
+            const games = []; // { dateObj, kills, deaths }
+            data.forEach(row => {
+                const name = (row[PLAYER] || '').toString().trim();
+                if (name !== info.ecoName) return;
+                if (wantMap && (row[MAP] || '').toString().trim() !== wantMap) return;
 
-            const labels = points.map(p => p.dateStr);
-            const kdValues = points.map(p => p.b.kills / p.b.deaths);
+                const dateObj = parseSheetDate((row[DATE] || '').toString().trim());
+                if (!dateObj) return; // unparsable date -> can't order it, drop it
+
+                const k = parseInt(row[KILLS], 10);
+                const d = parseInt(row[DEATHS], 10);
+                if (isNaN(k) || isNaN(d)) return; // non-numeric K or D -> drop game
+
+                games.push({ dateObj, kills: k, deaths: d });
+            });
+
+            // Chronological order. Array.prototype.sort is stable (ES2019+), so
+            // games with an identical date retain sheet order.
+            games.sort((a, b) => a.dateObj - b.dateObj);
+
+            // Trailing 10-game rolling K/D as ratio-of-sums. For the first 9 games
+            // the window is however many games exist so far (a partial average),
+            // per the requirement to "show as many as you can" for short histories.
+            const WINDOW = 10;
+            const points = []; // { x: Date, y: kd, n: windowSize }
+            for (let i = 0; i < games.length; i++) {
+                const start = Math.max(0, i - (WINDOW - 1));
+                let sumK = 0, sumD = 0;
+                for (let j = start; j <= i; j++) { sumK += games[j].kills; sumD += games[j].deaths; }
+                if (sumD === 0) continue; // window with zero total deaths -> undefined K/D, skip
+                points.push({ x: games[i].dateObj, y: sumK / sumD, n: i - start + 1 });
+            }
 
             if (graphChartInstances['overview-kd-chart']) graphChartInstances['overview-kd-chart'].destroy();
 
@@ -5361,9 +5379,10 @@
             graphChartInstances['overview-kd-chart'] = new Chart(canvas.getContext('2d'), {
                 type: 'line',
                 data: {
-                    labels: labels,
                     datasets: [{
-                        data: kdValues,
+                        // {x: Date, y: rollingKd} points. No `labels` array: on a time
+                        // axis Chart.js reads x straight from each point.
+                        data: points,
                         borderColor: '#ff6b35',
                         backgroundColor: 'rgba(255, 107, 53, 0.15)',
                         borderWidth: 2,
@@ -5372,30 +5391,63 @@
                         pointRadius: 3,
                         pointBackgroundColor: '#ff6b35',
                         pointHoverRadius: 5,
-                        spanGaps: true    // skipped (missing) days don't break the line
+                        spanGaps: true
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    parsing: false,   // data is already {x,y}; skip Chart.js's own parsing
                     plugins: {
                         legend: { display: false },
+                        title: {
+                            display: true,
+                            text: '10 game K/D running average',
+                            color: '#e6e8ec',
+                            font: { size: 15, weight: '600' },
+                            padding: { top: 4, bottom: 12 }
+                        },
                         tooltip: {
                             callbacks: {
-                                label: (c) => `K/D: ${c.parsed.y.toFixed(2)}`
+                                // Header = the game's date; body = the rolling value,
+                                // and for early games it honestly flags a partial
+                                // window ("over N games") instead of implying 10.
+                                title: (items) => {
+                                    const d = items[0].parsed.x;
+                                    return new Date(d).toLocaleDateString('en-GB'); // dd/mm/yyyy
+                                },
+                                label: (c) => {
+                                    const n = c.raw && c.raw.n;
+                                    const base = `K/D: ${c.parsed.y.toFixed(2)}`;
+                                    return (n && n < 10) ? `${base} (over ${n} games)` : base;
+                                }
                             }
                         }
                     },
                     scales: {
                         x: {
+                            type: 'time',
+                            time: {
+                                // Parsing format of the underlying Date is irrelevant
+                                // (we pass real Date objects); these control display.
+                                tooltipFormat: 'dd.MM.yyyy',
+                                displayFormats: { day: 'dd.MM', week: 'dd.MM', month: 'MMM yyyy' }
+                            },
                             title: { display: true, text: 'Date', color: '#9ba3af' },
-                            ticks: { color: '#9ba3af' },
+                            ticks: {
+                                color: '#9ba3af',
+                                autoSkip: true,
+                                maxTicksLimit: 8,   // spacing between date labels
+                                maxRotation: 0,
+                                autoSkipPadding: 12
+                            },
                             grid: { color: 'rgba(42, 48, 64, 0.6)' }
                         },
                         y: {
                             // Fixed range (not auto-scaled) so charts are comparable
-                            // across players, at the cost of clipping any day whose
-                            // K/D exceeds 3.0.
+                            // across players. Rolling averages rarely approach 3.0, so
+                            // the clip is far less lossy here than on the old per-day
+                            // chart, but a sustained 3.0+ stretch would still be capped.
                             min: 0,
                             max: 3.0,
                             title: { display: true, text: 'K/D', color: '#9ba3af' },
