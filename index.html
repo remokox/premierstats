@@ -5386,17 +5386,55 @@
             // because a skipped game (sumD===0) can leave a gap in the x indices.
             // idxToDate maps a point's x (game index) -> its Date, so the tick
             // callback can label each boundary with that game's real date.
-            const monthTickValues = [];
+            const rawMonthTicks = [];
             const idxToDate = {};
             let prevMonthKey = null;
             points.forEach(p => {
                 idxToDate[p.x] = p.date;
                 const key = p.date.getFullYear() + '-' + p.date.getMonth();
                 if (key !== prevMonthKey) {
-                    monthTickValues.push(p.x);
+                    rawMonthTicks.push(p.x);
                     prevMonthKey = key;
                 }
             });
+
+            // Protected anchors: the first month tick (data start) and the TRUE last
+            // data point (data end). The end anchor is forced in even if it isn't a
+            // month boundary, so the axis always shows when the data actually ends.
+            const startAnchor = rawMonthTicks[0];
+            const endAnchor = points[points.length - 1].x;
+
+            // Collision suppression. Month labels are wide (~"DD.MM.YYYY"); when a
+            // short/stub month puts two boundaries close together they overlap. We
+            // drop INTERIOR ticks that fall within MIN_GAP game-indices of the last
+            // kept tick. Anchors are never dropped: the start is the seed, and the
+            // end wins any collision against the interior tick before it (that
+            // interior tick is removed instead). MIN_GAP is an approximate constant
+            // (label width / px-per-game); tune this one number if labels still
+            // touch or too many are dropped.
+            const MIN_GAP = 20;
+            const monthTickValues = [];
+            if (startAnchor !== undefined) {
+                monthTickValues.push(startAnchor);
+                let lastKept = startAnchor;
+                for (let t = 1; t < rawMonthTicks.length; t++) {
+                    const v = rawMonthTicks[t];
+                    if (v === endAnchor) continue; // end handled separately below
+                    if (v - lastKept >= MIN_GAP) { monthTickValues.push(v); lastKept = v; }
+                }
+                // Force the end anchor; if the last kept interior tick collides with
+                // it, remove that interior tick so the protected end label survives.
+                if (endAnchor !== startAnchor) {
+                    while (monthTickValues.length > 1 &&
+                           endAnchor - monthTickValues[monthTickValues.length - 1] < MIN_GAP) {
+                        monthTickValues.pop();
+                    }
+                    monthTickValues.push(endAnchor);
+                }
+                // Ensure the end anchor has a date for its label (it may not be a
+                // month boundary, but idxToDate already holds every point's date).
+            }
+
             const fmtDate = (d) => {
                 const dd = String(d.getDate()).padStart(2, '0');
                 const mm = String(d.getMonth() + 1).padStart(2, '0');
