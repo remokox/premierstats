@@ -5367,6 +5367,7 @@
                 if (sumD === 0) continue; // window with zero total deaths -> undefined K/D, skip
                 points.push({ x: games[i].dateObj, y: sumK / sumD, n: i - start + 1 });
             }
+            console.log('KD DEBUG — games:', games.length, 'points:', points.length, 'ecoName:', info.ecoName, 'sample point:', points[0]);
 
             if (graphChartInstances['overview-kd-chart']) graphChartInstances['overview-kd-chart'].destroy();
 
