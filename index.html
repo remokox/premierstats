@@ -5358,14 +5358,17 @@
             // Trailing 10-game rolling K/D as ratio-of-sums. For the first 9 games
             // the window is however many games exist so far (a partial average),
             // per the requirement to "show as many as you can" for short histories.
+            // x is the GAME INDEX (0,1,2...), not a date, so every game gets equal
+            // horizontal space regardless of when it was played. The real date is
+            // kept in `date` for the tooltip and for placing month-boundary ticks.
             const WINDOW = 10;
-            const points = []; // { x: Date, y: kd, n: windowSize }
+            const points = []; // { x: gameIndex, y: kd, date: Date, n: windowSize }
             for (let i = 0; i < games.length; i++) {
                 const start = Math.max(0, i - (WINDOW - 1));
                 let sumK = 0, sumD = 0;
                 for (let j = start; j <= i; j++) { sumK += games[j].kills; sumD += games[j].deaths; }
                 if (sumD === 0) continue; // window with zero total deaths -> undefined K/D, skip
-                points.push({ x: games[i].dateObj, y: sumK / sumD, n: i - start + 1 });
+                points.push({ x: i, y: sumK / sumD, date: games[i].dateObj, n: i - start + 1 });
             }
 
             if (graphChartInstances['overview-kd-chart']) graphChartInstances['overview-kd-chart'].destroy();
@@ -5376,21 +5379,45 @@
                 return;
             }
 
+            // Month-boundary ticks. Walk points in order; a tick belongs at every
+            // point whose date is in a different calendar month than the previous
+            // point's (and always at the first point, so the opening month is
+            // labelled). We source positions from `points` itself, not a 0..N range,
+            // because a skipped game (sumD===0) can leave a gap in the x indices.
+            // idxToDate maps a point's x (game index) -> its Date, so the tick
+            // callback can label each boundary with that game's real date.
+            const monthTickValues = [];
+            const idxToDate = {};
+            let prevMonthKey = null;
+            points.forEach(p => {
+                idxToDate[p.x] = p.date;
+                const key = p.date.getFullYear() + '-' + p.date.getMonth();
+                if (key !== prevMonthKey) {
+                    monthTickValues.push(p.x);
+                    prevMonthKey = key;
+                }
+            });
+            const fmtDate = (d) => {
+                const dd = String(d.getDate()).padStart(2, '0');
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                return `${dd}.${mm}.${d.getFullYear()}`;
+            };
+
             graphChartInstances['overview-kd-chart'] = new Chart(canvas.getContext('2d'), {
                 type: 'line',
                 data: {
                     datasets: [{
-                        // {x: Date, y: rollingKd} points. No `labels` array: on a time
-                        // axis Chart.js reads x straight from each point.
+                        // {x: gameIndex, y: rollingKd, date, n} points. x is a game
+                        // index on a linear axis; the date lives in `date`.
                         data: points,
                         borderColor: '#ff6b35',
                         backgroundColor: 'rgba(255, 107, 53, 0.15)',
                         borderWidth: 2,
                         tension: 0,       // straight connecting lines, no smoothing
                         fill: false,
-                        pointRadius: 3,
+                        pointRadius: 0,       // line only, no dots
+                        pointHoverRadius: 4,  // small marker on hover so the tooltip has a visible anchor
                         pointBackgroundColor: '#ff6b35',
-                        pointHoverRadius: 5,
                         spanGaps: true
                     }]
                 },
@@ -5408,12 +5435,13 @@
                         },
                         tooltip: {
                             callbacks: {
-                                // Header = the game's date; body = the rolling value,
-                                // and for early games it honestly flags a partial
-                                // window ("over N games") instead of implying 10.
+                                // Header = the game's real date (from the point's
+                                // `date` field, since x is now a game index, not a
+                                // date). Body = rolling value; early games are flagged
+                                // as a partial window instead of implying a full 10.
                                 title: (items) => {
-                                    const d = items[0].parsed.x;
-                                    return new Date(d).toLocaleDateString('en-GB'); // dd/mm/yyyy
+                                    const d = items[0].raw && items[0].raw.date;
+                                    return d ? fmtDate(d) : '';
                                 },
                                 label: (c) => {
                                     const n = c.raw && c.raw.n;
@@ -5425,30 +5453,33 @@
                     },
                     scales: {
                         x: {
-                            type: 'time',
-                            time: {
-                                // Parsing format of the underlying Date is irrelevant
-                                // (we pass real Date objects); these control display.
-                                tooltipFormat: 'dd.MM.yyyy',
-                                displayFormats: { day: 'dd.MM', week: 'dd.MM', month: 'MMM yyyy' }
+                            type: 'linear',
+                            // x is a game index (0,1,2...), so every game gets equal
+                            // horizontal space. We force ticks to sit ONLY at the
+                            // month-boundary indices computed above, and label each
+                            // with that game's real date. Uneven gaps between ticks
+                            // are intentional: a wide gap = many games that month.
+                            afterBuildTicks: (axis) => {
+                                axis.ticks = monthTickValues.map(v => ({ value: v }));
                             },
                             title: { display: true, text: 'Date', color: '#9ba3af' },
                             ticks: {
                                 color: '#9ba3af',
-                                autoSkip: true,
-                                maxTicksLimit: 8,   // spacing between date labels
                                 maxRotation: 0,
-                                autoSkipPadding: 12
+                                autoSkip: false, // we already chose the ticks; don't let Chart.js drop them
+                                callback: (value) => {
+                                    const d = idxToDate[value];
+                                    return d ? fmtDate(d) : '';
+                                }
                             },
                             grid: { color: 'rgba(42, 48, 64, 0.6)' }
                         },
                         y: {
                             // Fixed range (not auto-scaled) so charts are comparable
-                            // across players. Rolling averages rarely approach 3.0, so
-                            // the clip is far less lossy here than on the old per-day
-                            // chart, but a sustained 3.0+ stretch would still be capped.
+                            // across players. Capped at 2.5; a rolling average above
+                            // 2.5 would be clipped, but that is rare for a 10-game mean.
                             min: 0,
-                            max: 3.0,
+                            max: 2.5,
                             title: { display: true, text: 'K/D', color: '#9ba3af' },
                             ticks: { color: '#9ba3af' },
                             grid: { color: 'rgba(42, 48, 64, 0.6)' }
