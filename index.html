@@ -293,6 +293,21 @@
             padding-bottom: 15px;
         }
 
+        /* Equalize the three rank columns (End Rank / Avg Opponent / Peak =
+           positions 2,3,4). Pinned to 150px — roughly the natural width of the
+           widest of the three ("AVG OPPONENT") — via width+min+max so auto
+           table-layout can't shrink or expand them independently; nth-child
+           hits both the header th and every body td (body cells carry no
+           data-column). Scoped to #overview-table so the app's other tables
+           keep their automatic sizing. The remaining columns stay automatic. */
+        #overview-table tr > :nth-child(2),
+        #overview-table tr > :nth-child(3),
+        #overview-table tr > :nth-child(4) {
+            width: 150px;
+            min-width: 150px;
+            max-width: 150px;
+        }
+
         .loading {
             text-align: center;
             padding: 40px;
