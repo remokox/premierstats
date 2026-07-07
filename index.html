@@ -6224,6 +6224,58 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        // ===== Methodology view: open + return-to-origin =====
+        // Holds the id of whichever page the user was on when they opened the
+        // methodology view, so Back returns them there rather than a fixed page.
+        // Captured at click time (below), NOT earlier, so it can't go stale.
+        let methodologyReturnPage = 'overview';
+
+        function openMethodology() {
+            // Capture the CURRENTLY active page as the return target. Reading the
+            // DOM here (at click time) is what makes Back land on the real origin
+            // regardless of which page/tooltip triggered this.
+            const current = document.querySelector('.page.active');
+            if (current && current.id) methodologyReturnPage = current.id;
+
+            // Switch pages using the same convention as showPlayerDetail/showPlayersPage.
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('methodology').classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function closeMethodology() {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            // Defensive fallback to 'overview' so Back can never strand the user
+            // on a blank screen if the stored id is somehow missing/invalid.
+            const target = document.getElementById(methodologyReturnPage) || document.getElementById('overview');
+            target.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Wire the methodology Back button (the page div is static HTML, so the
+        // element exists at load; guard in case the markup is ever removed).
+        (function wireMethodologyBack() {
+            const btn = document.getElementById('methodology-back');
+            if (btn) btn.addEventListener('click', closeMethodology);
+        })();
+
+        // ===== TEMPORARY test trigger — REMOVE when tooltips are wired =====
+        // Injects a small button onto the Overview page so the open/Back mechanism
+        // can be verified live in isolation, before any tooltip exists. This whole
+        // block is throwaway scaffolding and will be deleted in the tooltip step.
+        (function addMethodologyTestButton() {
+            const host = document.getElementById('overview');
+            if (!host) return;
+            const b = document.createElement('button');
+            b.textContent = 'TEST: open methodology';
+            b.id = 'methodology-test-btn';
+            b.style.cssText = 'margin:12px;padding:10px 16px;background:var(--accent-tertiary);' +
+                'color:var(--bg-primary);border:none;border-radius:8px;font-weight:700;cursor:pointer;';
+            b.addEventListener('click', openMethodology);
+            host.insertBefore(b, host.firstChild);
+        })();
+        // ===== end temporary test trigger =====
+
         // Load maps data from Google Sheets and calculate statistics
         async function loadMapsData() {
             const container = document.getElementById('maps-container');
