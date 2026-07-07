@@ -4017,7 +4017,9 @@
                     hs_pct: parseFloat(row[OVERVIEW_COLUMNS.hs_pct - 1]) || 0,
                     rating: parseFloat(row[OVERVIEW_COLUMNS.rating - 1]) || 0,
                     rankChange: agg ? agg.rankChange : null,
-                    avgOpponent: agg ? agg.avgOpponent : null
+                    avgOpponent: agg ? agg.avgOpponent : null,
+                    endRank: (PEAK_ENDRANK[name] && PEAK_ENDRANK[name].endRank != null) ? PEAK_ENDRANK[name].endRank : null,
+                    peak: (PEAK_ENDRANK[name] && PEAK_ENDRANK[name].peak != null) ? PEAK_ENDRANK[name].peak : null
                 });
             }
 
@@ -8804,26 +8806,50 @@
             return counts;
         }
 
+        // Peak and End Rank are MANUAL, hand-entered per player (no sheet source).
+        // Keys must match PLAYER_INFO exactly (mind diacritics). null = no data,
+        // which renders the dash placeholder; do NOT use 0 (0 is a real rank and
+        // would band-color and display as an actual value).
+        const PEAK_ENDRANK = {
+            'remokox':                 { endRank: 27268, peak: 28158 },
+            'Große Cigarette':         { endRank: 24058, peak: 25612 },
+            'MasnoPro Vulpes Wójcior': { endRank: 16121, peak: 18241 },
+            'Badum':                   { endRank: 23792, peak: 26238 },
+            'MasnoCoach THUNDER':      { endRank: 14588, peak: 17810 },
+            'Marnyr':                  { endRank: null,  peak: null  },
+            'Torrek':                  { endRank: 25000, peak: 26384 },
+            'Yao Ming':                { endRank: null,  peak: null  },
+            'monke':                   { endRank: 23472, peak: 23472 },
+            'flamezvitality':          { endRank: 26489, peak: 26489 },
+            'Minion 2':                { endRank: 12282, peak: 14349 },
+            'Twój Stary':              { endRank: 15054, peak: 16746 },
+            'tylman duduś':            { endRank: 18034, peak: 18596 },
+            'dziad':                   { endRank: 14392, peak: 18800 },
+            'Jeffrey Epstein':         { endRank: null,  peak: null  },
+            'Szymon Gwiazda Rocka':    { endRank: 22552, peak: 23697 },
+            'Pan Piorun Ciechanów':    { endRank: 10113, peak: 10791 }
+        };
+
         // Best pistol round is the MANUAL booster: totals are supplied by hand
         // (not derived from any sheet). Fill in each player's total best-pistol
         // count below. Per-game rate divides by (matches * 2) because there are
         // 2 pistol rounds per game — set via perGameDivisor = 2 on the booster.
         // Keys must match PLAYER_INFO exactly (mind diacritics).
         const BEST_PISTOL_TOTALS = {
-            'remokox': 153,
-            'Große Cigarette': 122,
-            'MasnoPro Vulpes Wójcior': 53,
-            'Badum': 67,
-            'MasnoCoach THUNDER': 41,
+            'remokox': 162,
+            'Große Cigarette': 135,
+            'MasnoPro Vulpes Wójcior': 57,
+            'Badum': 69,
+            'MasnoCoach THUNDER': 43,
             'Marnyr': 4,
-            'Torrek': 32,
+            'Torrek': 35,
             'Yao Ming': 0,
             'monke': 18,
             'flamezvitality': 49,
             'Minion 2': 11,
             'Twój Stary': 18,
             'tylman duduś': 6,
-            'dziad': 0,
+            'dziad': 1,
             'Jeffrey Epstein': 1,
             'Szymon Gwiazda Rocka': 1,
             'Pan Piorun Ciechanów': 0
