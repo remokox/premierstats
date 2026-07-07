@@ -278,6 +278,20 @@
             font-weight: 600;
         }
 
+        /* Separate the band-colored cells (End Rank / Avg Opponent / Peak) so
+           adjacent fills don't merge into one bar. The fill is inset to the
+           content box, so the cell's own padding shows the dark table
+           background as a gutter between colors. No effect on uncolored
+           stat cells (they have no background to inset), so text columns are
+           untouched. Vertical inset trimmed so rows stay legible while the
+           horizontal gutter does the visual separation. */
+        td.stat-value {
+            background-clip: content-box;
+            background-origin: content-box;
+            padding-top: 8px;
+            padding-bottom: 8px;
+        }
+
         .loading {
             text-align: center;
             padding: 40px;
