@@ -368,7 +368,10 @@
             background: var(--bg-tertiary);
             border: 2px solid var(--border);
             border-radius: 12px;
-            overflow: hidden;
+            /* overflow:hidden removed so attribute tooltips can extend past the
+               card edge without being clipped. The photo's rounded top corners,
+               previously produced by this clip, are now set directly on
+               .player-photo below. */
             transition: all 0.3s ease;
         }
 
@@ -384,6 +387,9 @@
             object-fit: contain;
             border-bottom: 3px solid var(--accent-primary);
             background: var(--bg-tertiary);
+            /* Rounded top corners kept here now that .player-card no longer clips.
+               10px sits just inside the card's 12px radius so the 2px border reads cleanly. */
+            border-radius: 10px 10px 0 0;
         }
 
         .player-info {
@@ -1275,6 +1281,27 @@
         a.info-tip--link:hover {
             background: var(--accent-tertiary);
             color: var(--bg-primary);
+        }
+
+        /* Card attribute tooltips (Set C only): the cards are ~340px wide and the
+           badge sits left-of-centre, so the default centred-above bubble clipped
+           on the card's top and left edges. Scope: only .info-tip inside
+           .player-attribute-label — Sets A and B (detail page) are unaffected.
+           Fix: open the bubble BELOW the badge (like --down) and anchor its LEFT
+           edge to the badge so it extends rightward into the card body. */
+        .player-attribute-label .info-tip::after {
+            bottom: auto;
+            top: calc(100% + 8px);
+            left: 0;
+            transform: none;
+        }
+        .player-attribute-label .info-tip::before {
+            bottom: auto;
+            top: calc(100% + 3px);
+            border-top-color: transparent;
+            border-bottom-color: var(--accent-tertiary);
+            left: 8px;
+            transform: none;
         }
 
         /* ===== Methodology view ("How the ratings work") =====
