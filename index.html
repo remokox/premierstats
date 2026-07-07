@@ -1277,6 +1277,90 @@
             color: var(--bg-primary);
         }
 
+        /* ===== Methodology view ("How the ratings work") =====
+           Reuses existing .section and .back-button. All rules namespaced .mth-. */
+        .mth-wrap { max-width: 820px; }
+        .mth-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2rem; font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 50%, var(--accent-tertiary) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            text-transform: uppercase; letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+        .mth-subtitle {
+            color: var(--text-muted); font-style: italic;
+            margin-bottom: 28px; font-size: 1rem;
+        }
+        .mth-h2 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.35rem; font-weight: 600;
+            color: var(--accent-primary);
+            text-transform: uppercase; letter-spacing: 1px;
+            margin: 38px 0 14px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border);
+        }
+        .mth-h3 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.05rem; font-weight: 600;
+            color: var(--accent-tertiary);
+            margin: 26px 0 8px;
+        }
+        .mth-wrap p { margin-bottom: 14px; color: var(--text-primary); }
+        .mth-wrap p.muted { color: var(--text-secondary); }
+        .mth-step-label { color: var(--accent-secondary); font-weight: 700; }
+        .mth-formula {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.15rem;
+            color: var(--accent-tertiary);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--accent-tertiary);
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin: 16px 0;
+            text-align: center;
+            letter-spacing: 0.5px;
+            overflow-x: auto;
+        }
+        .mth-wrap ul { margin: 12px 0 16px 22px; }
+        .mth-wrap li { margin-bottom: 8px; }
+        .mth-example {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin: 16px 0;
+        }
+        .mth-example .calc {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-tertiary);
+            font-size: 0.95rem;
+        }
+        .mth-attr {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--accent-primary);
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+        }
+        .mth-attr .mth-attr-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700; font-size: 1.1rem;
+            color: var(--accent-primary);
+            margin-bottom: 6px;
+        }
+        .mth-attr .built {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-top: 8px;
+        }
+        .mth-attr .built b { color: var(--text-primary); font-weight: 600; }
+        .mth-point { margin-bottom: 16px; }
+        .mth-point .lead { color: var(--accent-tertiary); font-weight: 600; }
+
         /* Ecohunters Page Styles */
         .ecohunters-explanation {
             background: var(--bg-secondary);
@@ -3386,6 +3470,130 @@
                         <div class="graph-card-title">Trades per game × Deaths traded per game</div>
                         <div class="graph-canvas-wrap"><canvas id="graph-trades-traded"></canvas></div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="methodology" class="page">
+            <div class="section">
+                <button class="back-button" id="methodology-back">← Back</button>
+
+                <div class="mth-wrap">
+                    <div class="mth-title">How the ratings work</div>
+                    <div class="mth-subtitle">What these ratings are, how each score is built, and how to read them honestly.</div>
+
+                    <p>Each player is scored on seven attributes — Firepower, Entrying, Trading, Opening, Clutching, Sniping and Utility — that break down how a player contributes, rather than collapsing everything into a single number. Every attribute is scored from 0 to 100, where 50 is roughly an average player, higher is better, and the best and worst players sit near the extremes.</p>
+
+                    <p>The scores are relative to this specific pool of players. A rating of 70 means "70 compared to these players," not an absolute measure of skill that would hold against any other group. Add or remove players and the scores shift, because every score is a statement about where a player stands within this field. This is deliberate: the ratings exist to compare these players to each other, and that is the only thing they claim to do.</p>
+
+                    <p class="muted">The rest of this page explains, in order, how a single attribute score is built from raw stats, how the system handles players with very little data, what the 0–100 scale means, what each of the seven attributes measures, and — at the end — how to read the scores honestly, including the things they can't tell you.</p>
+
+                    <div class="mth-h2">How a score is built</div>
+                    <p>Every attribute is built the same way, in five steps, from raw stats to a final 0–100 number.</p>
+
+                    <p><span class="mth-step-label">Step 1 — Choose the stats.</span> Each attribute draws on a small set of stats that measure it. Firepower uses kills and damage per round, multi-kill rounds, and so on; Utility uses grenade damage, flash assists, and flash time. The stats for each attribute are listed in the attributes section below.</p>
+
+                    <p><span class="mth-step-label">Step 2 — Normalize each stat.</span> Different stats live on different scales — kills per round runs from about 0.3 to 1.0, while damage per round runs in the tens. To combine them fairly, each stat is converted to a z-score: how many standard deviations above or below the pool average a player sits.</p>
+                    <div class="mth-formula">z = (x − μ) / σ</div>
+                    <p>where x is the player's value, μ is the pool average for that stat, and σ is the pool standard deviation. A z-score of 0 is exactly average; +1 is one standard deviation above the field; −1 is one below. After this step, every stat is on the same footing — a +1 in kills means the same as a +1 in damage, regardless of the original units.</p>
+
+                    <p><span class="mth-step-label">Step 3 — Adjust for sample size.</span> Some stats are computed over rare events — a player might have faced only three 1v1 clutches all season. A rate built on three attempts can't be trusted the way one built on three hundred can. Before normalizing those stats, the system pulls uncertain values toward the average by an amount that depends on how little data there is. This is explained in full in the next section.</p>
+
+                    <p><span class="mth-step-label">Step 4 — Combine the stats.</span> The normalized stats are averaged into a single number for the attribute. Most attributes weight their stats equally; a few weight one stat more heavily where it clearly matters most (for example, Clutching leans on clutch points, since that is what actually winning clutches produces). The weighting for each attribute is noted in the attributes section.</p>
+
+                    <p><span class="mth-step-label">Step 5 — Scale to 0–100.</span> The combined z-score is stretched onto the 0–100 scale so the numbers are readable.</p>
+                    <div class="mth-formula">Score = 30z + 50</div>
+                    <p>An average player (z = 0) scores 50. Each standard deviation is worth 30 points, so a player one standard deviation above the field scores 80. Scores are capped at 0 and 100 at the ends. The scale and the cap are covered in more detail below.</p>
+
+                    <div class="mth-h2">Adjusting for sample size</div>
+                    <p>This is the least obvious part of the system, and the most important for trusting the numbers, so it gets its own section.</p>
+
+                    <p>The problem: some stats are computed over rare events. A player might have taken only three opening duels, or faced two 1v1 clutches, in the entire sample. If one of those two clutches was a win, their 1v1 win rate reads 50%. If both were wins, it reads 100%. Neither number means the player is a good clutcher — there simply isn't enough data to say anything. Left alone, a player who went 2-for-2 on 1v1s would rank as the best clutcher in the pool, ahead of someone who went 180-for-320. That is obviously wrong, and it is exactly the kind of error that would make the whole system untrustworthy.</p>
+
+                    <p>The fix is a technique called shrinkage. Before a rare-event stat is normalized, each player's value is pulled toward the pool average by an amount that depends on how much data backs it up. A player with a huge sample barely moves; a player with almost no data is pulled most of the way to average. The formula is:</p>
+                    <div class="mth-formula">adjusted = (events + k · p) / (opportunities + k)</div>
+                    <p>where events is what the player actually did (say, 1v1s won), opportunities is how many chances they had (1v1s faced), p is the pool average rate for that stat, and k is a constant that controls how aggressively small samples are pulled in. In effect, every player is credited with k extra "average" attempts. If they have thousands of real attempts, those k fakes are a drop in the ocean and their true number stands. If they have three, the fakes dominate and they revert toward the average.</p>
+
+                    <div class="mth-example">
+                        <p style="margin-bottom:10px;">An example. Suppose the pool wins 45% of 1v1s, and k = 20:</p>
+                        <ul>
+                            <li>A player who went 180-for-320 barely moves: <span class="calc">(180 + 20 · 0.45) / (320 + 20) = 55.6%</span>, essentially their real 56%.</li>
+                            <li>A player who went 2-for-2 collapses toward the field: <span class="calc">(2 + 20 · 0.45) / (2 + 20) = 50.0%</span>, no longer a fake-perfect 100%.</li>
+                        </ul>
+                    </div>
+
+                    <p><b>Which stats get this treatment.</b> Only stats built on rare events are shrunk — 1v1 win rate, opening-duel success, the share of a player's kills that were with the AWP, and similar. Stats measured per round are left alone: every player has hundreds of rounds, so a per-round rate (kills per round, damage per round, flash time per round) already rests on plenty of data and needs no adjustment.</p>
+
+                    <p><b>One honest consequence.</b> When a player has no data at all for a rare-event stat — a player who never faced a 1v1 — shrinkage defaults them to the pool average. This is the correct thing to do, because the alternative is either an error or a fabricated number. But it means a score built partly on such stats can, for a no-data player, mean "we don't have enough information" rather than "this player is average." Where this matters, it is flagged in the how-to-read section at the end.</p>
+
+                    <div class="mth-h2">The 0–100 scale</div>
+                    <p>Every attribute is reported on the same 0–100 scale, and keeping it the same across all seven is deliberate. Recall from step 5 that the score is:</p>
+                    <div class="mth-formula">Score = 30z + 50</div>
+                    <p>This does two things. It sets 50 as the average — a player who is exactly at the pool mean on every stat scores 50. And it sets the value of one standard deviation at 30 points — a player one standard deviation above the field scores 80, two above scores 110 (before capping), one below scores 20. The multiplier of 30 was chosen so that the realistic range of players spreads across most of the 0–100 band without everyone bunching into a narrow strip in the middle.</p>
+
+                    <p><b>Why the same scale everywhere.</b> Because every attribute uses the same conversion, a score means the same thing regardless of which attribute it comes from. An 80 in Firepower and an 80 in Utility both describe a player one standard deviation above the field in that attribute. This is what makes a player's profile readable at a glance — you can line up their seven scores and compare them directly, because they are all measured in the same units. If each attribute had its own scale, an 80 here and an 80 there would not be comparable, and the profile would be meaningless.</p>
+
+                    <p><b>The cap.</b> A truly exceptional player can land above a z of about +1.7, which would push their raw score past 100; a truly poor one can fall below 0. These are clamped to 0 and 100. This keeps the scale clean, but it has a consequence worth knowing: at the very top and very bottom, players can be tied at 100 or 0 even though their underlying performance differs slightly. The cap compresses the extremes. For the vast majority of players, who sit comfortably inside the range, this never comes into play — but it is why you will occasionally see two elite players both reading 100 in the same attribute.</p>
+
+                    <div class="mth-h2">The seven attributes</div>
+                    <p>Each attribute is described below: what it measures, the stats it draws on, and any notable decision in how it's built. Every stat listed is normalized and combined as described above; only the stats specifically noted as sample-size-adjusted are shrunk.</p>
+
+                    <div class="mth-attr">
+                        <div class="mth-attr-name">Firepower</div>
+                        <p style="margin:0;">How much killing threat a player generates — raw fragging output and consistency. This is the closest thing to "how hard does this player hit."</p>
+                        <div class="built"><b>Built from:</b> kills per round, kills per round in won rounds, damage per round, the share of rounds with at least one kill, Rating 3.0, and the share of rounds with a multi-kill. All are per-round or per-game rates, so none require sample-size adjustment. <b>Weighted equally</b> — because these stats are all downstream of the same thing, the exact weighting barely changes the result.</div>
+                    </div>
+
+                    <div class="mth-attr">
+                        <div class="mth-attr-name">Entrying</div>
+                        <p style="margin:0;">How much a player contributes as a sacrificial support — the player whose deaths and setup work create openings for teammates, rather than the one who finishes kills.</p>
+                        <div class="built"><b>Built from:</b> traded deaths per round, the share of a player's deaths that were traded, the share of their opening deaths that were traded, assists per round, and the share of rounds played in a support role. The traded-death and opening-death shares are sample-size-adjusted; the per-round stats are used as-is. <b>Weighted equally.</b> This attribute deliberately rewards a role that star fraggers score low on — a low Entrying score is not a criticism; it usually just means the player isn't a sacrificial support.</div>
+                    </div>
+
+                    <div class="mth-attr">
+                        <div class="mth-attr-name">Trading</div>
+                        <p style="margin:0;">How often a player trades others — stepping in to kill an opponent who has just killed a teammate, and contributing to kills they don't personally finish.</p>
+                        <div class="built"><b>Built from:</b> trade kills per round, the share of a player's kills that were trades, the share of their kills that came with an assist, and damage dealt per kill. The trade-kill share, assist share, and damage-per-kill are sample-size-adjusted; trade kills per round is used as-is. <b>Weighted equally.</b></div>
+                    </div>
+
+                    <div class="mth-attr">
+                        <div class="mth-attr-name">Opening</div>
+                        <p style="margin:0;">How good a player is as an entry fragger — the player who takes the first duel of the round, valued for both taking those duels and winning them.</p>
+                        <div class="built"><b>Built from:</b> opening kills per round, opening deaths per round, the share of rounds a player takes the opening duel, opening-duel success rate, and win rate after getting the opening kill. Opening-duel success and post-opening win rate are sample-size-adjusted; the per-round stats are used as-is. <b>Weighted equally, with one difference:</b> opening deaths per round count against the score rather than for it — dying the first duel is a failure of entrying, so it is penalized.</div>
+                    </div>
+
+                    <div class="mth-attr">
+                        <div class="mth-attr-name">Clutching</div>
+                        <p style="margin:0;">How well a player performs in clutch situations — being the last player alive with the round on their shoulders, and converting those situations into won rounds.</p>
+                        <div class="built"><b>Built from:</b> clutch points per round, the share of rounds a player is last alive, time alive per round, 1v1 win rate, and saves per round lost. The 1v1 win rate is sample-size-adjusted; the rest are per-round stats used as-is. <b>Weighted unequally</b> — clutch points per round carries half the total weight, and the other four stats split the remaining half, because the stat that most directly measures clutch success should dominate.</div>
+                    </div>
+
+                    <div class="mth-attr">
+                        <div class="mth-attr-name">Sniping</div>
+                        <p style="margin:0;">How much a player contributes with the AWP, measured per round rather than by career total. A player who snipes intensely in the games they play rates highly here, regardless of how many rounds they've logged.</p>
+                        <div class="built"><b>Built from:</b> AWP kills per round, the share of a player's kills that were with the AWP, AWP multi-kills per round, and AWP opening kills per round. The AWP-kill share is sample-size-adjusted; the three per-round rates are used as-is. <b>Weighted equally.</b> Because it is built on per-round rates, a player who snipes at a high rate over few rounds can score as highly as a high-volume AWPer.</div>
+                    </div>
+
+                    <div class="mth-attr">
+                        <div class="mth-attr-name">Utility</div>
+                        <p style="margin:0;">How much a player gets done with grenades — both damage and flashes. This rewards players who use their utility to create value, whether by dealing damage, blinding opponents, or setting up teammates.</p>
+                        <div class="built"><b>Built from:</b> utility damage per round, utility kills per 100 rounds, flash assists per round, and time opponents spent blinded per round. Utility kills per 100 rounds is lightly sample-size-adjusted; the other three per-round stats are used as-is. <b>Weighted equally.</b> Like Sniping, it is built on per-round rates, so effective utility use over few rounds can still score highly.</div>
+                    </div>
+
+                    <div class="mth-h2">How to read the scores honestly</div>
+                    <p>The ratings are built to be accurate about what they measure, which means being clear about what they don't measure. None of the points below are flaws to work around — they are direct consequences of how the system works.</p>
+
+                    <div class="mth-point"><span class="lead">Scores are relative to this pool, not absolute.</span> A 70 means "70 compared to these players." The same player, measured against a different set, would score differently. Comparing scores across two separately-built pools is not meaningful — a 70 here and a 70 elsewhere were measured against different fields.</div>
+
+                    <div class="mth-point"><span class="lead">Per-round attributes reward rate, not total volume.</span> Sniping and Utility are built on per-round rates, so a player who does something intensely over relatively few rounds can score as highly as someone who has done it far more often in total. This is intentional. If you want to weight total volume, the raw totals are the place to look, not these scores.</div>
+
+                    <div class="mth-point"><span class="lead">A middling score can mean "average" or "not enough data."</span> Where an attribute leans on a rare event, a player with little or no data for that event is pulled toward the average rather than assigned an extreme number. A player who has never been in a clutch will not read as bad at clutching; they will read as roughly average, because there is no evidence either way.</div>
+
+                    <div class="mth-point"><span class="lead">Most players cluster near the middle, because most players are average.</span> With a field this size, the majority land in the middle of the range and only a few reach the extremes. This is not the scale failing to spread people out — it accurately reflects that most members of any group are near its average.</div>
+
+                    <div class="mth-point"><span class="lead">The extremes are capped.</span> Scores are clamped to 0 and 100, so the handful of players who exceed those bounds are pinned to the ends. Occasionally two elite players will both read 100 in an attribute even though their underlying numbers differ slightly. The cap only affects players at the very edges.</div>
+
+                    <div class="mth-point"><span class="lead">Firepower includes Rating 3.0 as one input.</span> Firepower uses HLTV's Rating 3.0 as one of its six stats, alongside kills, damage, and multi-kill measures. This is intentional — it is one signal among several, not the foundation of the score — but it does mean Firepower will tend to move together with a player's overall rating, since the two share information.</div>
                 </div>
             </div>
         </div>
