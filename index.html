@@ -283,10 +283,11 @@
            content box, so the cell's own padding shows the dark table
            background as a gutter between colors. No effect on uncolored
            stat cells (they have no background to inset), so text columns are
-           untouched. Vertical inset matches the horizontal padding so the
-           dark gutter between rows is as visible as the one between columns,
-           reading as an intentional grid of tiles rather than a solid band. */
-        td.stat-value {
+           untouched. Vertical padding is held at 15px here (higher specificity
+           than the #overview-table td padding rule below) so the row-to-row
+           gutter stays visible even though general cell padding is tightened to
+           10px for width; horizontal gutter is the 10px side padding x2. */
+        #overview-table td.stat-value {
             background-clip: content-box;
             background-origin: content-box;
             padding-top: 15px;
@@ -306,6 +307,15 @@
             width: 150px;
             min-width: 150px;
             max-width: 150px;
+        }
+
+        /* Tighten cell padding on the overview table only (15px -> 10px), to
+           reclaim ~110px of horizontal width so the 11-column table fits inside
+           the ~1310px usable width instead of clipping on the right. Scoped to
+           #overview-table: the app's other tables keep the base 15px padding. */
+        #overview-table th,
+        #overview-table td {
+            padding: 10px;
         }
 
         .loading {
