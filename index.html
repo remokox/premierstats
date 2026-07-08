@@ -721,24 +721,12 @@
         }
 
         /* --- Role in a team tab --- */
-        .roles-title-box,
-        .roles-grid-box,
-        .roles-summary-box {
+        .roles-grid-box {
             border: 1px solid var(--border);
             border-radius: 10px;
             background: var(--bg-secondary);
             padding: 20px;
             margin-bottom: 16px;
-        }
-        .roles-title-box {
-            text-align: center;
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-        .roles-summary-box {
-            min-height: 120px;
-            color: var(--text-primary);
         }
         /* 2 columns of 5 */
         .roles-grid {
@@ -3034,19 +3022,9 @@
 
                     <!-- ROLE IN A TEAM TAB -->
                     <div class="player-detail-content" id="detail-tab-roles" style="display:none;">
-                        <!-- Box 1: Role title (per-player, placeholder for now) -->
-                        <div class="roles-title-box">
-                            <span id="roles-title">Role title placeholder</span>
-                        </div>
-
-                        <!-- Box 2: the 12 roles (grid built in a later step) -->
+                        <!-- The 12 roles grid -->
                         <div class="roles-grid-box">
                             <div id="roles-grid" class="roles-grid"></div>
-                        </div>
-
-                        <!-- Box 3: Text summary (per-player, placeholder for now) -->
-                        <div class="roles-summary-box">
-                            <span id="roles-summary">Text summary placeholder.</span>
                         </div>
                     </div>
                 </div>
