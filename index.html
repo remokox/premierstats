@@ -4973,6 +4973,7 @@
                 dprSidebar: colToIndex('AL'),          // 37 (AL for sidebar - DPR)
                 adrSidebar: colToIndex('V'),           // 21 (V for sidebar - ADR)
                 kastSidebar: colToIndex('Z'),          // 25 (Z for sidebar)
+                roundSwing: colToIndex('AR'),          // 43 (AR for sidebar - Round Swing)
                 
                 // Firepower
                 killsPerRoundWin: colToIndex('BD'),    // 55
@@ -5020,7 +5021,20 @@
             
             // Update sidebar stats
             document.getElementById('detail-rating').textContent = formatValue(playerRow[cols.rating]);
-            document.getElementById('detail-round-swing').textContent = '-'; // Not provided
+            // Round Swing: signed percentage with a comma decimal separator
+            // (e.g. "+4,68%" / "-2,14%"). Reads column AR of the map-filtered
+            // playerRow, so it tracks the sidebar's map filter like every other
+            // stat here. Non-numeric/blank falls back to "-".
+            (() => {
+                const num = parseFloat(playerRow[cols.roundSwing]);
+                const el = document.getElementById('detail-round-swing');
+                if (isNaN(num)) {
+                    el.textContent = '-';
+                } else {
+                    const sign = num >= 0 ? '+' : '-';
+                    el.textContent = sign + Math.abs(num).toFixed(2).replace('.', ',') + '%';
+                }
+            })();
             document.getElementById('detail-dpr').textContent = formatValue(playerRow[cols.dprSidebar]);
             document.getElementById('detail-kast').textContent = formatPercentage(playerRow[cols.kastSidebar]);
             document.getElementById('detail-multikills').textContent = formatPercentage(playerRow[cols.roundsMultikill]);
