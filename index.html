@@ -2494,7 +2494,7 @@
                             <th class="sortable" data-column="7">K/D</th>
                             <th class="sortable" data-column="8">ADR</th>
                             <th class="sortable" data-column="9">HS%</th>
-                            <th class="sortable" data-column="10">Rating 3.0</th>
+                            <th class="sortable" data-column="10">Rating 3.0<span class="info-tip info-tip--link info-tip--down" onclick="event.stopPropagation(); openRating()" data-tip="One number per map where 1.00 is average for this pool; higher is better, lower is worse. Combines kills, damage, survival, consistency, multi-kills, and round impact. HLTV 3.0-style, relative to these players only. Click to open full methodology.">i</span></th>
                         </tr>
                     </thead>
                     <tbody id="overview-tbody">
@@ -2565,7 +2565,7 @@
                         
                         <div class="player-detail-stats">
                             <div class="player-detail-stat-row highlight">
-                                <span class="player-detail-stat-label">Rating 3.0</span>
+                                <span class="player-detail-stat-label">Rating 3.0<span class="info-tip info-tip--link" onclick="openRating()" data-tip="One number per map where 1.00 is average for this pool; higher is better, lower is worse. Combines kills, damage, survival, consistency, multi-kills, and round impact. HLTV 3.0-style, relative to these players only. Click to open full methodology.">i</span></span>
                                 <span class="player-detail-stat-value" id="detail-rating">0.00</span>
                             </div>
                             <div class="player-detail-stat-row">
@@ -2641,7 +2641,7 @@
                                 <tr><td>Assists/round</td><td>-</td></tr>
                                 <tr><td>Deaths/round</td><td>-</td></tr>
                                 <tr><td>Maps played</td><td>-</td></tr>
-                                <tr><td>Rating 3.0</td><td>-</td></tr>
+                                <tr><td>Rating 3.0<span class="info-tip info-tip--link" onclick="openRating()" data-tip="One number per map where 1.00 is average for this pool; higher is better, lower is worse. Combines kills, damage, survival, consistency, multi-kills, and round impact. HLTV 3.0-style, relative to these players only. Click to open full methodology.">i</span></td><td>-</td></tr>
                             </tbody>
                         </table>
 
@@ -2652,7 +2652,7 @@
                                 <tr><td>Kills per round</td><td>-</td></tr>
                                 <tr><td>Kills per round win</td><td>-</td></tr>
                                 <tr><td>Damage per round</td><td>-</td></tr>
-                                <tr><td>Rating 3.0</td><td>-</td></tr>
+                                <tr><td>Rating 3.0<span class="info-tip info-tip--link" onclick="openRating()" data-tip="One number per map where 1.00 is average for this pool; higher is better, lower is worse. Combines kills, damage, survival, consistency, multi-kills, and round impact. HLTV 3.0-style, relative to these players only. Click to open full methodology.">i</span></td><td>-</td></tr>
                                 <tr><td>Rounds with a multikill</td><td>-</td></tr>
                                 <tr><td>Rounds with a kill</td><td>-</td></tr>
                             </tbody>
@@ -2832,7 +2832,7 @@
                                     <th>Score</th>
                                     <th>K-D</th>
                                     <th>+/-</th>
-                                    <th>Rating 3.0</th>
+                                    <th>Rating 3.0<span class="info-tip info-tip--link info-tip--down" onclick="openRating()" data-tip="One number per map where 1.00 is average for this pool; higher is better, lower is worse. Combines kills, damage, survival, consistency, multi-kills, and round impact. HLTV 3.0-style, relative to these players only. Click to open full methodology.">i</span></th>
                                 </tr>
                             </thead>
                             <tbody id="matches-tbody">
@@ -3705,6 +3705,63 @@
                 </div>
             </div>
         </div>
+        <div id="rating" class="page">
+            <div class="section">
+                <button class="back-button" id="rating-back">← Back</button>
+
+                <div class="mth-wrap">
+                    <div class="mth-title">How the rating works</div>
+                    <div class="mth-subtitle">What this rating is, how each map score is built, and how to read it honestly.</div>
+
+                    <p>Every player is given a single number for each map they play — a rating where 1.00 is an average performance in this pool, higher is better, and the best and worst maps sit near the extremes. It is built in the mould of HLTV's Rating 3.0: five performance sub-ratings plus a context term called Round Swing, combined into one figure. It is not a copy of HLTV's rating — the exact weights and the economy adjustment that HLTV keeps private are not reproduced here — but it is built on the same skeleton and reads on the same familiar scale.</p>
+
+                    <p>The scores are relative to this specific pool of players. A rating of 1.20 means "20 percent above the average of these players," not an absolute measure of skill that would hold against any other group. Add or remove players and the baselines shift, because every score is a statement about where a map stands within this field. This is deliberate: the rating exists to compare these players to each other, and that is the only thing it claims to do.</p>
+
+                    <p class="muted">The rest of this page explains, in order, how a single map rating is built from raw stats, how each of the six components is defined, how they are combined, and — at the end — how to read the numbers honestly, including the things they cannot tell you.</p>
+
+                    <div class="mth-h2">How a score is built</div>
+                    <p>Every map rating is built the same way, in three stages, from raw stats to a final number.</p>
+
+                    <p><span class="mth-step-label">Stage 1 — Turn totals into per-round rates.</span> Rounds are the unit of Counter-Strike, so every raw total is first divided by the rounds played on that map. A player's kills become kills per round, damage becomes damage per round (ADR), and so on. This puts a 16-round blowout and a 30-round overtime marathon on the same footing — a player is judged by their rate, not by how long the map happened to run.</p>
+
+                    <p><span class="mth-step-label">Stage 2 — Express each rate relative to the field.</span> A rate on its own means little until you know what average looks like. So each component is divided by the pool's average for that stat, producing a number centred on 1.00. A player with a kills-per-round of 1.03 against a field average of 0.72 gets a Kill sub-rating of about 1.43 — they are landing 43 percent more kills per round than the typical player here. An exactly average player scores 1.00 on every component. This is the core idea the whole rating rests on: every component is a ratio to its own baseline, so 1.00 always means "average."</p>
+
+                    <p><span class="mth-step-label">Stage 3 — Combine the components with weights, then recentre.</span> The six components do not matter equally. They are blended with fixed weights that follow HLTV's published structure — roughly a 60/40 split between output (kills, damage, multi-kills) and the cost paid for it (survival, KAST) — with kills carrying the single heaviest weight, and Round Swing layered on as a reduced context modifier rather than a co-equal term. The weights are not secret here: they can be changed, and everything downstream recalculates. After combining, the population average is nudged back to exactly 1.00 by a single divisor, so the average map in the pool reads as exactly 1.00 and the scale means what it says.</p>
+
+                    <div class="mth-h2">The six components</div>
+                    <p>Each component is a per-round rate expressed relative to the field, centred on 1.00. Five of them describe what a player did; the sixth adds the context of when they did it.</p>
+
+                    <p><span class="mth-step-label">Kill Rating.</span> Kills per round divided by the field average. This is the backbone of the rating and carries the most weight — how much a player frags, relative to everyone else in the pool. It is the closest thing to "how hard does this player hit." One simplification is worth naming: HLTV discounts kills where the player personally dealt very little damage (cleanup taps on an enemy a teammate already broke). That discount needs per-kill damage data, which these aggregates do not contain, so it is omitted. The backbone — kills per round against the field — is intact.</p>
+
+                    <p><span class="mth-step-label">Survival Rating.</span> Built from how often a player stays alive, but refined the way HLTV refined it. A raw survival rate would flatter a player who saves every lost round and punish an entry fragger who dies usefully. So two adjustments are made: surviving a lost round (a save) counts for only half of a normal survival, and a death that a teammate immediately traded counts for only half of a normal death — because the team recovered the man, so the death cost little. This rewards dying usefully and stops treating cowardly saves as elite play.</p>
+
+                    <p><span class="mth-step-label">Damage Rating.</span> Average damage per round divided by the field average. It captures the contribution that does not always show up as a kill — the shots that soften enemies for teammates, the spread damage across a site hit. Because damage and kills are correlated but not identical, this rewards players who do work the scoreboard's kill column misses.</p>
+
+                    <p><span class="mth-step-label">KAST Rating.</span> The share of rounds in which a player got a kill, an assist, survived, or was traded, divided by the field average. It is a consistency stat: it asks whether a player contributed something useful most rounds, rather than going missing. Because almost every player lands somewhere between 60 and 85 percent, KAST is naturally compressed and pulls everyone toward the middle.</p>
+
+                    <p><span class="mth-step-label">Multi-kill Rating.</span> Multi-kill rounds per round divided by the field average. This is an explosivity measure — the player who takes over rounds with 3Ks and 4Ks rather than trading one-for-one. It has the widest natural spread of the five, because multi-kills are volatile from map to map.</p>
+
+                    <p><span class="mth-step-label">Round Swing.</span> The one component that is not a simple rate. Swing measures how much each kill actually changed the outcome of the round, using round-win-probability: a kill in a tense 3-on-3 counts for far more than an anti-eco tap in a round the team already wins 96 times out of 100. It is converted from raw win-probability points into a modifier centred on 1.00 and blended at a deliberately moderate weight. HLTV originally released Swing heavy, found it overshadowed raw fragging, and dialled it back to an impact modifier — this rating follows that corrected, current form rather than the first version.</p>
+
+                    <div class="mth-h2">Combining and recentring</div>
+                    <p>The six components are combined into one number, then a single adjustment fixes the scale.</p>
+
+                    <p><span class="mth-step-label">Recentring.</span> Because Swing carries a small residual offset and ratios do not average perfectly to 1.00, the combined figure is divided by its own pool average. This pins the average map in the pool to exactly 1.00, so the scale means what it says: a player above 1.00 was above the field on that map, a player below it was below, and the distance from 1.00 is the size of the gap.</p>
+
+                    <div class="mth-h2">How to read the scores honestly</div>
+                    <p>The rating is built to be accurate about what it measures, which means being clear about what it does not. None of the points below are flaws to work around — they are direct consequences of how the system works.</p>
+
+                    <div class="mth-point"><span class="lead">Scores are relative to this pool, not absolute.</span> A 1.20 means "1.20 compared to these players." The same player measured against a different field would score differently. Comparing a rating built on this pool against a number from anywhere else is not meaningful — the baselines were computed here.</div>
+
+                    <div class="mth-point"><span class="lead">This is a rate, and it averages toward the middle over many maps.</span> A single-map rating can soar to 2.0 or crater below 0.5, but a player's average over hundreds of maps will always be tamer, because it folds their brilliant games in with their ordinary and poor ones. A career average of 1.26 is elite; it looks modest only next to the highlight maps you remember. To see the peaks, look at single maps or short windows, not the lifetime average.</div>
+
+                    <div class="mth-point"><span class="lead">It is HLTV-shaped, not HLTV-exact.</span> The skeleton matches HLTV Rating 3.0 — the same components, the same output-versus-cost balance, kills weighted heaviest, Swing as a modifier. But two things HLTV does are deliberately absent: the economy adjustment that filters out anti-eco farming, and the low-damage kill discount. Both need demo-level data these aggregates lack. In practice this means eco-heavy fraggers and force-buy stat-padders will read slightly higher here than they would on the real site.</div>
+
+                    <div class="mth-point"><span class="lead">The weights are choices, and they are visible.</span> Every weight — the five sub-rating weights, the Swing weight, the save and trade discounts — are all editable. They follow HLTV's published structure where HLTV has stated it, and reasoned estimates where HLTV keeps the exact figures private. They are defensible, not divine. Change them and the whole rating moves, which is exactly as it should be.</div>
+                </div>
+            </div>
+        </div>
+
 
     </div>
 
@@ -4618,7 +4675,7 @@
                         <div class="player-maps">${player.matches} maps</div>
                         <div class="player-stats-label">statistics</div>
                         <div class="player-rating-row">
-                            <span class="player-rating-label">Rating 3.0</span>
+                            <span class="player-rating-label">Rating 3.0<span class="info-tip info-tip--link" onclick="openRating()" data-tip="One number per map where 1.00 is average for this pool; higher is better, lower is worse. Combines kills, damage, survival, consistency, multi-kills, and round impact. HLTV 3.0-style, relative to these players only. Click to open full methodology.">i</span></span>
                             <span class="player-rating-value">${parseFloat(player.rating).toFixed(2)}</span>
                         </div>
                         <div class="player-attribute">
@@ -6395,6 +6452,33 @@
             if (btn) btn.addEventListener('click', closeRoundSwing);
         })();
 
+        // ===== Rating 3.0 view: open + return-to-origin =====
+        // Same pattern as the methodology and Round Swing views: captures whichever
+        // page the user was on at click time so Back returns them there. Reachable
+        // ONLY through the Rating 3.0 info tooltips.
+        let ratingReturnPage = 'overview';
+
+        function openRating() {
+            const current = document.querySelector('.page.active');
+            if (current && current.id) ratingReturnPage = current.id;
+
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('rating').classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function closeRating() {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const target = document.getElementById(ratingReturnPage) || document.getElementById('overview');
+            target.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        (function wireRatingBack() {
+            const btn = document.getElementById('rating-back');
+            if (btn) btn.addEventListener('click', closeRating);
+        })();
+
         // Load maps data from Google Sheets and calculate statistics
         async function loadMapsData() {
             const container = document.getElementById('maps-container');
@@ -7939,7 +8023,7 @@
                             <th>HS%</th>
                             <th>KAST<span class="info-tip info-tip--down" data-tip="Rounds in which a player killed, assisted, survived or was traded">i</span></th>
                             <th>Round Swing<span class="info-tip info-tip--link info-tip--down" onclick="openRoundSwing()" data-tip="How much this player's actions shift their team's chance of winning the round. Click to open full methodology.">i</span></th>
-                            <th>Rating 3.0</th>
+                            <th>Rating 3.0<span class="info-tip info-tip--link info-tip--down" onclick="openRating()" data-tip="One number per map where 1.00 is average for this pool; higher is better, lower is worse. Combines kills, damage, survival, consistency, multi-kills, and round impact. HLTV 3.0-style, relative to these players only. Click to open full methodology.">i</span></th>
                             ${showExtraColumn ? `<th>${selectedStatLabel}</th>` : ''}
                         </tr>
                     </thead>
