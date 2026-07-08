@@ -2569,7 +2569,7 @@
                                 <span class="player-detail-stat-value" id="detail-rating">0.00</span>
                             </div>
                             <div class="player-detail-stat-row">
-                                <span class="player-detail-stat-label">Round Swing<a class="info-tip info-tip--link" href="https://grepsonka.github.io/matrix/cs2_round_win_matrix.html" target="_blank" rel="noopener noreferrer" data-tip="How much this player's actions shift their team's chance of winning the round. Click to open the probability matrix.">i</a></span>
+                                <span class="player-detail-stat-label">Round Swing<span class="info-tip info-tip--link" onclick="openRoundSwing()" data-tip="How much this player's actions shift their team's chance of winning the round. Click to open full methodology.">i</span></span>
                                 <span class="player-detail-stat-value" id="detail-round-swing">0.00%</span>
                             </div>
                             <div class="player-detail-stat-row">
@@ -3602,6 +3602,110 @@
                 </div>
             </div>
         </div>
+        <div id="round-swing" class="page">
+            <div class="section">
+                <button class="back-button" id="round-swing-back">← Back</button>
+
+                <div class="mth-wrap">
+                    <div class="mth-title">How Round Swing works</div>
+                    <div class="mth-subtitle">What the metric is, how each number is built, and how to read it honestly.</div>
+
+                    <p>Round Swing measures how much each player changed their team's chance of winning the round, added up across a match and averaged per round. It does not count kills, reward damage, or score good play in the abstract. It asks one question of every event on the server — did this move the round toward a win or away from it, and by how much — and assigns the answer to the players responsible. A kill that flips a coin-toss round into a near-certain win is worth a great deal. A kill traded back immediately, or taken when the round was already decided, is worth almost nothing. The metric prices impact on the one thing that actually matters at the end of a round: whether you won it.</p>
+
+                    <p>The number is expressed as a percentage. A Round Swing of +5 means that, on average, the player personally added five percentage points of round-win probability every round. Across a match that compounds into the difference between winning and losing. The scale is small on purpose — round-win probability only ranges from 0 to 100, and a single player can only be responsible for part of each round's movement — so the values that look modest are not. Anything above roughly +8 is an elite, match-carrying performance; anything below roughly -8 means a player was actively costing their team rounds. Most players land between those bounds.</p>
+
+                    <p class="muted">Everything below explains, in order, where the win-probability numbers come from, how a single kill is priced, how that price is split between the players involved, how the special moments of a round (the bomb plant, the clutch, the save) are handled, and — at the end — how to read the final number honestly, including the things it cannot tell you.</p>
+
+                    <div class="mth-h2">The foundation: win probability tables</div>
+                    <p>Every swing in this system is a difference between two probabilities, so the whole metric rests on one question: given the state of a round, how likely is each side to win?</p>
+
+                    <p>The answer comes from data, not theory. For each map, every round played in a large sample is broken down into the situations it passed through, and the eventual winner is recorded. From that, the system builds a table of empirical win rates. The table is indexed by three things: how many Terrorists are alive, how many Counter-Terrorists are alive, and whether the bomb has been planted. Each cell holds the share of historical rounds in that exact situation that the Terrorists went on to win.</p>
+
+                    <p>So a cell might say: with 5 Terrorists and 4 Counter-Terrorists alive and no bomb down, the Terrorists won 70.9% of the time. With 5 alive on each side and no plant, it is roughly a coin flip — 50%, as you would expect, since the sides are even. As players die, the number moves toward one extreme or the other. As the bomb is planted, the whole table shifts in the Terrorists' favor, because a planted bomb wins on its own timer unless defused.</p>
+
+                    <p>There are two tables per map — one for before the plant, one for after — and each is a six-by-six grid running from five players alive down to zero. These tables are the reference against which every event is measured. They are specific to each map, because maps play differently: a 5-versus-4 situation is not equally winnable on every layout, and the data reflects that. The tool carries a separate pair of tables for each map and uses the correct one based on which map the game was played on.</p>
+
+                    <p>See the probability matrices here → <a href="https://grepsonka.github.io/matrix/cs2_round_win_matrix.html" target="_blank" rel="noopener noreferrer" style="color: var(--accent-tertiary);">cs2_round_win_matrix</a></p>
+
+                    <p>Two properties of these tables matter for reading the numbers later. First, they are empirical, so they inherit the sample they were built from — a situation that occurred thousands of times gives a trustworthy number, while a situation that occurred a handful of times gives a noisy one. Second, some situations essentially never happen — a bomb planted while all five Counter-Terrorists are still alive, for instance — and those cells have no data at all. The system treats a no-data cell as undefined and refuses to compute through it, rather than inventing a number. That refusal is deliberate and is discussed later.</p>
+
+                    <div class="mth-h2">How a single kill is priced</div>
+                    <p>With the tables in place, pricing an event is simple in principle: look at the win probability before the event, look at it after, and take the difference.</p>
+
+                    <p>Concretely, suppose the round is 5-versus-5 with no plant, and your team is on the Terrorist side. The table says your win probability is 50%. One of your players kills an opponent. Now it is 5-versus-4, and the table says 70.9%. The kill moved your team from 50% to 70.9% — a swing of +20.9 percentage points. That swing is the value of the kill, and it is credited to the player who made it.</p>
+
+                    <p>The same logic runs in reverse for deaths. If instead one of your players had died, taking the round to 4-versus-5, the table says your win probability drops to 29.1% (the mirror of the opponents' 70.9%). That is a swing of -20.9, and it is charged to the player who died. Every death costs the victim the probability the team lost by their dying. This is intentional: dying is the single most consequential thing a player does to a round, and the metric holds them accountable for it in exact proportion to how much it hurt.</p>
+
+                    <p>There is one wrinkle that has to be handled carefully: sides. The tables are always written from the Terrorists' point of view — every cell is a Terrorist win probability. But your team is only on the Terrorist side for one half of the match; after the switch, you are the Counter-Terrorists. When your team is on the Counter-Terrorist side, the metric flips the table read: your win probability is 100 minus the Terrorist number. A Terrorist kill that the table prices as good for Terrorists is, from your Counter-Terrorist perspective, bad — and the sign of the swing flips accordingly. The tool determines which side you are on for each round directly from the match data, so this is automatic, but it is the reason the same event can be worth +20 to one team and -20 to the other. Every point one team gains, the other loses. At the level of a single kill, Round Swing is zero-sum between the two teams.</p>
+
+                    <div class="mth-h2">Splitting the credit: assists and trades</div>
+                    <p>A kill is rarely the work of one player alone. Someone may have dealt damage or thrown the flash that set it up; someone may have died a moment earlier, and this kill is the revenge that trades them back. The metric does not hand the entire swing to the player who happened to land the final bullet. It splits the swing among the players who contributed, using a fixed set of rules. The splits are the same for every kill of a given type, so the system is consistent and never makes a judgment call in the moment.</p>
+
+                    <p>There are four cases.</p>
+
+                    <p><span class="mth-step-label">A plain kill</span>, with no assist and no trade, gives the entire swing to the killer. If the kill was worth +20.9, the killer gets +20.9.</p>
+
+                    <p><span class="mth-step-label">An assisted kill</span> splits the swing between the killer and the assister, 76.9% to the killer and 23.1% to the assister. The killer did most of the work — they won the duel — but the assist mattered, and the roughly three-to-one split reflects that. On a +20.9 kill, the killer receives +16.1 and the assister +4.8. Only assists from your own team count; an assist credited to an enemy player is irrelevant to your team's numbers and is ignored.</p>
+
+                    <p><span class="mth-step-label">A trade kill</span> splits the swing between the killer and the teammate whose death is being avenged, 76.5% to the killer and 23.5% to the traded teammate. A trade is defined precisely: the player you just killed had, within the previous five seconds, killed one of your teammates. When that condition holds, the teammate who died gets a share of the trade, because their death created the opportunity — the opponent was exposed, out of position, or reloading, and your kill capitalized on it. If more than one teammate was recently killed by that opponent, the trade is attributed to the most recently killed one. The five-second window is the standard convention for what counts as a trade, and the split rewards the teammate's sacrifice without pretending it did as much as the kill itself.</p>
+
+                    <p><span class="mth-step-label">A kill that is both assisted and a trade</span> divides the swing three ways. If the assister and the traded teammate are different people, the killer takes 76.5%, the assister takes 17.65%, and the traded teammate takes 23.5%. If the assister and the traded teammate are the same person — the teammate who died is also the one who assisted the revenge — that person's two shares combine, and the split is 58.85% to the killer and 41.15% to the combined contributor. In every case the shares sum to the full swing; the credit is redistributed, never created or lost.</p>
+
+                    <p>These percentages are a chosen convention. They are not derived from a deeper truth about how much a flash "really" contributes versus a bullet; no such truth exists to derive them from. They are a consistent, defensible rule for dividing shared credit, applied identically to every kill, so that the system treats every player the same way. That consistency is what makes them fair, not any claim that 76.9 is the cosmically correct number.</p>
+
+                    <div class="mth-h2">The bomb plant</div>
+                    <p>The plant is not a kill, but it changes the round's win probability sharply, because it switches which table applies. Before the plant, a 2-versus-3 situation with your team on Terrorists might be worth 23.5%. The instant the bomb goes down, the same 2-versus-3 is read from the plant table, which might value it at 63.9% — the bomb now wins on its timer unless the Counter-Terrorists both defuse and survive. That is a swing of more than +40 percentage points, and it happens the moment the plant completes.</p>
+
+                    <p>The metric recognizes this jump and prices it, but credits it to no one. The plant is a team action — it depends on the player who planted, the players who cleared the site, the players who held the flanks — and attributing forty points of swing to whoever happened to press the plant button would badly misrepresent it. So the plant's swing is real, it moves the running probability that later events are measured against, but it appears in the calculation as belonging to nobody. This is the honest choice: the metric knows the plant mattered, and it declines to pretend it can say which single player deserves the credit.</p>
+
+                    <div class="mth-h2">The end of the round: clutches and saves</div>
+                    <p>When the round ends, there is usually a gap between the last win probability the table showed and the actual outcome. The table might say your lone survivor had a 42% chance in their 1-versus-1, but they won — reality delivered 100%, not 42%. That leftover 58 points has to go somewhere, and how the metric assigns it is what lets it value clutches and saves correctly.</p>
+
+                    <p>The rule is one formula, applied to every round the same way: take the final outcome (100 if your team won, 0 if it lost) and subtract the last win probability the round reached. The difference is the resolution, and it is assigned to the players who were still alive at the end.</p>
+
+                    <p>Consider a clutch win. Your last player is alive in a 1-versus-2, which the table values at, say, 16%. They win both duels and take the round. The resolution is 100 minus 16, or +84, and it goes entirely to that surviving player. They earned it — they converted a situation the data said they should lose most of the time — and the metric rewards them with the full gap between expectation and result. This is on top of the swings from the two kills themselves, so a clutch is valued richly, as it should be.</p>
+
+                    <p>Now consider a clutch loss, or a save. Your last player is alive in that same 1-versus-2, and this time they lose, or they choose to save their weapon and not contest. The round ends with your team losing. The resolution is 0 minus 16, or -16, charged to that last player. This is the honest counterpart to the clutch win: if surviving players get the full credit when they beat the odds, they must take the debit when they fail to, or choose not to try. A player who saves repeatedly in winnable situations will accumulate these small negative resolutions, and the metric will show it.</p>
+
+                    <p>The same formula handles the case where your whole team is wiped. If nobody survives, there are no survivors to assign the resolution to, so it falls on the last player to die. And when your team wins by eliminating the opponents entirely, the final probability is already 100 and the resolution is zero — there is nothing left to assign, because the kills already told the whole story. One formula, final outcome minus last probability, covers the clutch win, the clutch loss, the save, the wipe, and the clean elimination, without any special cases.</p>
+
+                    <div class="mth-h2">Putting a match together</div>
+                    <p>Each round produces a set of per-player awards: swings from kills and deaths, splits from assists and trades, and the end-of-round resolution. These are summed within the round to give each player's round total, and the round totals are summed across the match. The match total is then divided by the number of rounds played to give the final Round Swing — the average probability the player added or cost per round.</p>
+
+                    <p>The divisor is the actual number of rounds in the match, not a fixed number. A game that ends 13-7 has twenty rounds and divides by twenty; a game that goes the full distance divides by twenty-four; a game that reaches overtime divides by however many rounds overtime actually ran. Dividing by rounds played, rather than a constant, keeps the metric comparable across games of different lengths: it is always "probability added per round," whatever the round count happened to be.</p>
+
+                    <div class="mth-h2">A worked round, start to finish</div>
+                    <p>To see the whole system at once, follow a single round. Your team is on Terrorists, 5-versus-5, no plant, win probability 50%.</p>
+
+                    <div class="mth-example">
+                        <div class="calc">Your player kills an opponent. State goes to 5-versus-4, probability 70.9%. Swing +20.9, a plain kill, all to the killer.</div>
+                        <div class="calc">An opponent kills one of your players. State 4-versus-4, probability back to 50%. Swing -20.9, charged to the player who died.</div>
+                        <div class="calc">Your player kills the opponent who just made that kill, within five seconds. This is a trade. State 4-versus-3, probability 75.5%. Swing +25.5, split 76.5% to the killer (+19.5) and 23.5% to the teammate who was just killed (+6.0).</div>
+                        <div class="calc">Your team plants the bomb. The table switches. The same 4-versus-3 is now worth, say, 81.4% under the plant table. Swing +5.9, credited to nobody, but the running probability is now 81.4%.</div>
+                        <div class="calc">The round trades down to your last player alive in a 1-versus-1, planted, valued at 60.1%. They win the duel; the bomb detonates; your team takes the round.</div>
+                        <div class="calc">The resolution is 100 minus 60.1, or +39.9, awarded to the surviving player on top of whatever kills they made.</div>
+                    </div>
+
+                    <p>Add up every award in the round, and you have each player's contribution to a round that started as a coin flip and ended as a win.</p>
+
+                    <div class="mth-h2">How to read the scores honestly</div>
+                    <p>The metric is built to be accurate about the one thing it measures, which means being clear about what it does not measure. None of the points below are flaws to work around; they are direct consequences of how the system works.</p>
+
+                    <div class="mth-point"><span class="lead">Round Swing prices probability movement, and nothing else.</span> It does not know that a kill was mechanically spectacular, that a player held an impossible angle, or that a call won the round. It knows only how much the win probability moved and who moved it. A player can play beautifully and score modestly if their beautiful play happened in rounds that were already decided, and a player can score well on unremarkable kills that happened to land at high-leverage moments. This is intentional — the metric measures leverage, not aesthetics — but it means the number is not a complete account of how someone played.</div>
+
+                    <div class="mth-point"><span class="lead">The tables are empirical, so thin situations are noisy.</span> Common situations — a 5-versus-4, a 3-versus-3 — rest on enormous samples and are trustworthy. Rare situations, especially planted rounds with unusual player counts, rest on little data and can produce jumpy values. A round that passes through one of these thin cells may show a swing that looks larger or smaller than it intuitively should. The value is still the best empirical estimate available, but it carries less confidence than a value drawn from a common situation.</div>
+
+                    <div class="mth-point"><span class="lead">A few rounds usually drive most of a player's total.</span> Because high-leverage moments are worth so much more than routine ones, a player's Round Swing is often dominated by a small number of decisive rounds — a clutch won, a pistol round lost, an eco defended. This is honest — those rounds genuinely mattered most — but it means the metric is more volatile over a single match than a per-round average might suggest. Over more games, the decisive moments accumulate and the number settles.</div>
+
+                    <div class="mth-point"><span class="lead">Events after the round is decided count for nothing.</span> Once one team is eliminated, the round is won, and the win probability is already at its final value. Anything that happens afterward — a player dying to a stray grenade after the round is secured, a straggler frag — moves no probability and is credited to no one. A player is not penalized for dying after their team has already won, because that death did not cost the round anything. The metric ignores these events entirely, which is why a player who dies to their own nade after a won round keeps their positive number intact.</div>
+
+                    <div class="mth-point"><span class="lead">The scale is small, and that is correct.</span> Round-win probability runs from 0 to 100, and a single player is responsible for only part of each round's movement, so the per-round averages are small numbers. A +5 is a strong player; a +8 is a match-winner; the difference between a good player and a poor one across a match can be a handful of points. Do not let the small magnitudes fool you into thinking the differences are trivial — over twenty-four rounds, a few points of Round Swing per round is the margin of the game.</div>
+
+                    <div class="mth-point"><span class="lead">Round Swing is zero-sum between teams, but not between teammates.</span> Every point your team gains, the enemy loses, because every probability shift is a shift for one side and against the other. But within your own team the metric is not zero-sum: a great play lifts the player who made it without lowering their teammates, and the resolution at the end of a round can reward or charge specific players without a corresponding entry elsewhere on the same team. The metric is a statement about each player's contribution to the round result, not a fixed pie divided among five teammates.</div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- Chart.js moved here from <head>: as a parser-blocking script it was delaying
@@ -6264,6 +6368,33 @@
             if (btn) btn.addEventListener('click', closeMethodology);
         })();
 
+        // ===== Round Swing view: open + return-to-origin =====
+        // Same pattern as the methodology view: captures whichever page the user
+        // was on at click time so Back returns them there. This page is reachable
+        // ONLY through the Round Swing info tooltips — nothing else links to it.
+        let roundSwingReturnPage = 'overview';
+
+        function openRoundSwing() {
+            const current = document.querySelector('.page.active');
+            if (current && current.id) roundSwingReturnPage = current.id;
+
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('round-swing').classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function closeRoundSwing() {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const target = document.getElementById(roundSwingReturnPage) || document.getElementById('overview');
+            target.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        (function wireRoundSwingBack() {
+            const btn = document.getElementById('round-swing-back');
+            if (btn) btn.addEventListener('click', closeRoundSwing);
+        })();
+
         // Load maps data from Google Sheets and calculate statistics
         async function loadMapsData() {
             const container = document.getElementById('maps-container');
@@ -7807,7 +7938,7 @@
                             <th>ADR</th>
                             <th>HS%</th>
                             <th>KAST<span class="info-tip info-tip--down" data-tip="Rounds in which a player killed, assisted, survived or was traded">i</span></th>
-                            <th>Round Swing<a class="info-tip info-tip--link info-tip--down" href="https://grepsonka.github.io/matrix/cs2_round_win_matrix.html" target="_blank" rel="noopener noreferrer" data-tip="How much this player's actions shift their team's chance of winning the round. Click to open the probability matrix.">i</a></th>
+                            <th>Round Swing<span class="info-tip info-tip--link info-tip--down" onclick="openRoundSwing()" data-tip="How much this player's actions shift their team's chance of winning the round. Click to open full methodology.">i</span></th>
                             <th>Rating 3.0</th>
                             ${showExtraColumn ? `<th>${selectedStatLabel}</th>` : ''}
                         </tr>
