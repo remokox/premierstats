@@ -5021,10 +5021,9 @@
             
             // Update sidebar stats
             document.getElementById('detail-rating').textContent = formatValue(playerRow[cols.rating]);
-            // Round Swing: signed percentage with a comma decimal separator
-            // (e.g. "+4,68%" / "-2,14%"). Reads column AR of the map-filtered
-            // playerRow, so it tracks the sidebar's map filter like every other
-            // stat here. Non-numeric/blank falls back to "-".
+            // Round Swing: signed percentage (e.g. "+4.68%" / "-2.14%"). Reads
+            // column AR of the map-filtered playerRow, so it tracks the sidebar's
+            // map filter like every other stat here. Non-numeric/blank falls back to "-".
             (() => {
                 const num = parseFloat(playerRow[cols.roundSwing]);
                 const el = document.getElementById('detail-round-swing');
@@ -5032,7 +5031,7 @@
                     el.textContent = '-';
                 } else {
                     const sign = num >= 0 ? '+' : '-';
-                    el.textContent = sign + Math.abs(num).toFixed(2).replace('.', ',') + '%';
+                    el.textContent = sign + Math.abs(num).toFixed(2) + '%';
                 }
             })();
             document.getElementById('detail-dpr').textContent = formatValue(playerRow[cols.dprSidebar]);
