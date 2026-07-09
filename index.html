@@ -2195,16 +2195,16 @@
 
         /* Dropdown panel: anchored under the button, left-aligned to it. */
         .methodology-menu {
-            position: absolute;
-            top: calc(50% + 42px);
-            left: 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
             min-width: 240px;
             background: var(--bg-tertiary);
             border: 1px solid var(--border);
             border-radius: 10px;
             padding: 6px;
             box-shadow: 0 8px 24px var(--shadow);
-            z-index: 60;
+            z-index: 1000;
             display: none;
             flex-direction: column;
             gap: 2px;
@@ -6636,13 +6636,38 @@
         (function wireMethodologyMenu() {
             const wrap = document.getElementById('methodology-wrap');
             const btn = document.getElementById('methodology-button');
-            if (!wrap || !btn) return;
+            const menu = document.getElementById('methodology-menu');
+            if (!wrap || !btn || !menu) return;
+
+            // Because the menu is position:fixed (to escape every ancestor's
+            // clipping/stacking context), its coordinates must be set in JS from
+            // the button's on-screen box. Only applies on desktop; the mobile
+            // media query switches the menu back to static in-flow.
+            function positionMenu() {
+                if (window.matchMedia('(max-width: 768px)').matches) {
+                    menu.style.top = '';
+                    menu.style.left = '';
+                    return;
+                }
+                const r = btn.getBoundingClientRect();
+                menu.style.top = (r.bottom + 8) + 'px';
+                menu.style.left = r.left + 'px';
+            }
 
             btn.addEventListener('click', function (e) {
                 e.stopPropagation();
                 const open = wrap.getAttribute('data-open') === 'true';
+                if (!open) positionMenu();
                 wrap.setAttribute('data-open', open ? 'false' : 'true');
                 btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+            });
+
+            // Keep it glued to the button if the page scrolls or resizes while open.
+            window.addEventListener('scroll', function () {
+                if (wrap.getAttribute('data-open') === 'true') positionMenu();
+            }, { passive: true });
+            window.addEventListener('resize', function () {
+                if (wrap.getAttribute('data-open') === 'true') positionMenu();
             });
 
             // Outside-click closes. Clicks inside the menu are handled by the
