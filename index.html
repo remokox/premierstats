@@ -2210,7 +2210,7 @@
             gap: 2px;
         }
 
-        .methodology-wrap[data-open="true"] .methodology-menu {
+        .methodology-menu.is-open {
             display: flex;
         }
 
@@ -2242,11 +2242,6 @@
                 margin: 12px auto 0;
             }
             .methodology-button:hover { transform: scale(1.04); }
-            .methodology-menu {
-                position: static;
-                margin: 8px auto 0;
-                left: auto;
-            }
         }
         /* Winrate Details sub-tabs */
         .winrate-buttons {
@@ -2559,6 +2554,11 @@
     </style>
 </head>
 <body>
+    <div class="methodology-menu" id="methodology-menu" role="menu">
+        <button type="button" role="menuitem" onclick="openMethodology(); closeMethodologyMenu();">Attributes methodology</button>
+        <button type="button" role="menuitem" onclick="openRoundSwing(); closeMethodologyMenu();">Round swing methodology</button>
+        <button type="button" role="menuitem" onclick="openRating(); closeMethodologyMenu();">Rating 3.0 methodology</button>
+    </div>
     <div class="background-grid"></div>
     
     <header>
@@ -2569,11 +2569,6 @@
                     METHODOLOGY
                     <span class="mth-caret">▾</span>
                 </button>
-                <div class="methodology-menu" id="methodology-menu" role="menu">
-                    <button type="button" role="menuitem" onclick="openMethodology(); closeMethodologyMenu();">Attributes methodology</button>
-                    <button type="button" role="menuitem" onclick="openRoundSwing(); closeMethodologyMenu();">Round swing methodology</button>
-                    <button type="button" role="menuitem" onclick="openRating(); closeMethodologyMenu();">Rating 3.0 methodology</button>
-                </div>
             </div>
             <button class="awards-button" id="awards-button" type="button" aria-label="Awards">
                 <span class="medal">🥇</span>
@@ -6629,8 +6624,10 @@
         function closeMethodologyMenu() {
             const wrap = document.getElementById('methodology-wrap');
             const btn = document.getElementById('methodology-button');
+            const menu = document.getElementById('methodology-menu');
             if (wrap) wrap.setAttribute('data-open', 'false');
             if (btn) btn.setAttribute('aria-expanded', 'false');
+            if (menu) menu.classList.remove('is-open');
         }
 
         (function wireMethodologyMenu() {
@@ -6639,19 +6636,19 @@
             const menu = document.getElementById('methodology-menu');
             if (!wrap || !btn || !menu) return;
 
-            // Because the menu is position:fixed (to escape every ancestor's
-            // clipping/stacking context), its coordinates must be set in JS from
-            // the button's on-screen box. Only applies on desktop; the mobile
-            // media query switches the menu back to static in-flow.
+            // The menu is a top-level <body> child (moved out of the header) and
+            // position:fixed, so NO header element can clip or overpaint it. Its
+            // coordinates are set here from the button's on-screen box. On mobile
+            // the media query switches it back to static in-flow, so we skip
+            // positioning there.
             function positionMenu() {
-                if (window.matchMedia('(max-width: 768px)').matches) {
-                    menu.style.top = '';
-                    menu.style.left = '';
-                    return;
-                }
                 const r = btn.getBoundingClientRect();
+                let left = r.left;
+                // Keep the panel inside the viewport on narrow screens.
+                const maxLeft = window.innerWidth - menu.offsetWidth - 8;
+                if (left > maxLeft) left = Math.max(8, maxLeft);
                 menu.style.top = (r.bottom + 8) + 'px';
-                menu.style.left = r.left + 'px';
+                menu.style.left = left + 'px';
             }
 
             btn.addEventListener('click', function (e) {
@@ -6660,6 +6657,7 @@
                 if (!open) positionMenu();
                 wrap.setAttribute('data-open', open ? 'false' : 'true');
                 btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+                menu.classList.toggle('is-open', !open);
             });
 
             // Keep it glued to the button if the page scrolls or resizes while open.
@@ -6670,11 +6668,10 @@
                 if (wrap.getAttribute('data-open') === 'true') positionMenu();
             });
 
-            // Outside-click closes. Clicks inside the menu are handled by the
-            // items themselves (which call closeMethodologyMenu), so we only need
-            // to catch clicks that land elsewhere on the document.
+            // Outside-click closes. The menu now lives outside the wrap, so the
+            // check must cover BOTH the wrap (button) and the menu itself.
             document.addEventListener('click', function (e) {
-                if (!wrap.contains(e.target)) closeMethodologyMenu();
+                if (!wrap.contains(e.target) && !menu.contains(e.target)) closeMethodologyMenu();
             });
 
             document.addEventListener('keydown', function (e) {
