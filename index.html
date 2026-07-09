@@ -10100,20 +10100,9 @@
 
             const rowsHtml = NOTABLE_STATS_LOW.map(stat => {
                 const rawSelf = playerRow[stat.col - 1];
-                const selfNum = parseFloat(String(rawSelf).replace('%', '').trim());
-
-                let placeText = '-';
-                if (!isNaN(selfNum)) {
-                    const allNums = rows
-                        .map(r => parseFloat(String(r[stat.col - 1]).replace('%', '').trim()))
-                        .filter(v => !isNaN(v));
-                    placeText = ordinal(competitionRank(selfNum, allNums));
-                }
-
                 return `<tr>
                     <td class="ns-name">${stat.label}</td>
                     <td class="ns-value">${formatStatValue(rawSelf, stat.fmt)}</td>
-                    <td class="ns-place">${placeText}</td>
                 </tr>`;
             }).join('');
 
