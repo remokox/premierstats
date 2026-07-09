@@ -2421,6 +2421,30 @@
         .ns-body {
             color: var(--text-secondary);
         }
+        /* Mid-sample explainer under the header. */
+        .ns-note {
+            font-size: 0.8rem;
+            font-style: italic;
+            color: var(--text-muted);
+            margin-bottom: 0.6rem;
+            line-height: 1.3;
+        }
+        /* High/mid three-column table: stat name | value | team average. */
+        .notable-stats-highmid { width: 100%; border-collapse: collapse; }
+        .notable-stats-highmid th {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-align: right;
+            padding: 0 0 0.35rem 0;
+        }
+        .notable-stats-highmid th.ns-name { text-align: left; }
+        .notable-stats-highmid td { padding: 0.28rem 0; }
+        .notable-stats-highmid .ns-name { text-align: left; color: var(--text-secondary); }
+        .notable-stats-highmid .ns-value { text-align: right; color: var(--text-primary); font-weight: 600; font-variant-numeric: tabular-nums; }
+        .notable-stats-highmid .ns-avg { text-align: right; color: var(--text-muted); font-variant-numeric: tabular-nums; padding-left: 1rem; }
 
         .aw-summary .summary-text {
             color: var(--text-secondary);
@@ -10027,6 +10051,185 @@
             { label: 'Rating 3.0', col: 45, fmt: 'dec2' }    // AS
         ];
 
+        // ===== High/Mid notable stats =====
+        // Metric definitions: each distinct metric maps to a fixed column + format.
+        // The same column holds the value for every map; which map is read is
+        // decided by the ROW BLOCK (column B), not by a different column. So a
+        // per-player stat entry pairs a metric key with a map scope ('All' for
+        // overall). fmt: dec2/dec1/pct1/int. All values live on gid 999727190.
+        const NS_METRICS = {
+            'rating30':        { col: 45,  fmt: 'dec2' },  // AS
+            'openingSuccess':  { col: 109, fmt: 'pct1' },  // DE
+            'clutchPtsRound':  { col: 129, fmt: 'dec2' },  // DY
+            'survivalRate':    { col: 173, fmt: 'dec2' },  // FQ
+            'multikillRate':   { col: 63,  fmt: 'pct1' },  // BK
+            'enemiesFlashedG': { col: 34,  fmt: 'dec2' },  // AH
+            'adr':             { col: 22,  fmt: 'dec1' },  // V
+            'mapsPlusRating':  { col: 237, fmt: 'pct1' },  // IC
+            'hs':              { col: 24,  fmt: 'pct1' },  // X  (headshot% / hs%)
+            'anubisTradeRatio':{ col: 32,  fmt: 'dec2' },  // AF ("Best Anubis trade/being traded ratio")
+            'sniperKillsRound':{ col: 147, fmt: 'dec2' },  // EQ
+            'utilKills100':    { col: 163, fmt: 'dec2' },  // FG
+            'openingKillsRound':{ col: 103, fmt: 'dec2' }, // CY
+            'supportRounds':   { col: 80,  fmt: 'pct1' },  // CB
+            'entryingScore':   { col: 82,  fmt: 'int'  },  // CD
+            'tradedDeaths':    { col: 72,  fmt: 'pct1' },  // BT
+            'assistedKills':   { col: 92,  fmt: 'pct1' },  // CN
+            'damagePerKill':   { col: 95,  fmt: 'int'  },  // CQ
+            'winAfterOpening': { col: 114, fmt: 'pct1' },  // DJ
+            'winRate':         { col: 9,   fmt: 'pct1' },  // I
+            'utilDamageGame':  { col: 36,  fmt: 'int'  },  // AJ
+            'assistsRound':    { col: 40,  fmt: 'dec2' },  // AN
+            'openingAttempts': { col: 107, fmt: 'pct1' },  // DC
+            'tradingScore':    { col: 96,  fmt: 'int'  },  // CR
+            'oneVoneWin':      { col: 136, fmt: 'pct1' },  // EF (1on1/1v1 win%)
+            'openingDeathsRound':{ col: 105, fmt: 'dec2' },// DA (less is better; display-only)
+            'savesPerLoss':    { col: 139, fmt: 'pct1' },  // EI
+            'kast':            { col: 26,  fmt: 'dec1' },  // Z
+            'firstKillWonRounds':{ col: 113, fmt: 'pct1' },// DI
+            'timeAliveRound':  { col: 134, fmt: 'int'  },  // ED
+            'sniperKillsPct':  { col: 148, fmt: 'pct1' }   // ER
+        };
+
+        // Per-player ordered stat lists (high + mid sample). Each entry:
+        //   label  — exact display text, INCLUDING the "#N " rank prefix
+        //   metric — key into NS_METRICS (column + format)
+        //   map    — row block to read ('All' = overall)
+        const NOTABLE_STATS_BY_PLAYER = {
+            // ---- High sample ----
+            'remokox': [
+                { label: '#1 rating 3.0',              metric: 'rating30',        map: 'All' },
+                { label: '#1 opening success %',       metric: 'openingSuccess',  map: 'All' },
+                { label: '#1 clutch points per round', metric: 'clutchPtsRound',  map: 'All' },
+                { label: '#1 survival rate',           metric: 'survivalRate',    map: 'All' },
+                { label: '#1 multikill rate',          metric: 'multikillRate',   map: 'All' },
+                { label: '#1 enemies flashed per game',metric: 'enemiesFlashedG', map: 'All' },
+                { label: '#1 ADR',                     metric: 'adr',             map: 'All' },
+                { label: '#1 maps with 1+ rating%',    metric: 'mapsPlusRating',  map: 'All' }
+            ],
+            'Große Cigarette': [
+                { label: '#2 headshot %',                        metric: 'hs',              map: 'All' },
+                { label: '#1 trader on Anubis',                  metric: 'anubisTradeRatio',map: 'Anubis' },
+                { label: '#1 sniper kills per round Nuke',       metric: 'sniperKillsRound',map: 'Nuke' },
+                { label: '#1 Nuke clutch points per round',      metric: 'clutchPtsRound',  map: 'Nuke' },
+                { label: '#1 Overpass utility kills per 100 rounds', metric: 'utilKills100',map: 'Overpass' },
+                { label: '#1 Dust II opening kills per round',   metric: 'openingKillsRound',map: 'Dust II' },
+                { label: '#1 Dust II clutch points per round',   metric: 'clutchPtsRound',  map: 'Dust II' },
+                { label: '#3 rating 3.0',                        metric: 'rating30',        map: 'All' }
+            ],
+            'MasnoPro Vulpes Wójcior': [
+                { label: '#1 support rounds%',                   metric: 'supportRounds',   map: 'All' },
+                { label: '#1 ENTRYING score',                    metric: 'entryingScore',   map: 'All' },
+                { label: '#1 traded deaths%',                    metric: 'tradedDeaths',    map: 'All' },
+                { label: '#1 assisted kills%',                   metric: 'assistedKills',   map: 'All' },
+                { label: '#1 damage per kill',                   metric: 'damagePerKill',   map: 'All' },
+                { label: '#1 Nuke win% after opening',           metric: 'winAfterOpening', map: 'Nuke' },
+                { label: '#1 Dust II utility kills per 100 rounds', metric: 'utilKills100', map: 'Dust II' },
+                { label: '#2 Overpass win rate',                 metric: 'winRate',         map: 'Overpass' }
+            ],
+            'Badum': [
+                { label: '#1 Inferno sniper kills per round',    metric: 'sniperKillsRound',map: 'Inferno' },
+                { label: '#1 Dust II sniper kills per round',    metric: 'sniperKillsRound',map: 'Dust II' },
+                { label: '#1 Mirage hs%',                        metric: 'hs',              map: 'Mirage' },
+                { label: '#1 Inferno 1v1 win%',                  metric: 'oneVoneWin',      map: 'Inferno' },
+                { label: '#1 Inferno utility kills per 100 rounds', metric: 'utilKills100', map: 'Inferno' },
+                { label: '#1 OPENING on Inferno',                metric: 'openingSuccess',  map: 'Inferno' },
+                { label: '#2 win rate on Mirage',                metric: 'winRate',         map: 'Mirage' },
+                { label: '#3 win rate on Overpass',              metric: 'winRate',         map: 'Overpass' }
+            ],
+            'MasnoCoach THUNDER': [
+                { label: '#1 utility damage per game',           metric: 'utilDamageGame',  map: 'All' },
+                { label: '#1 assists per round',                 metric: 'assistsRound',    map: 'All' },
+                { label: '#1 opening attempts%',                 metric: 'openingAttempts', map: 'All' },
+                { label: '#1 TRADING on Ancient',                metric: 'tradingScore',    map: 'Ancient' },
+                { label: '#1 Dust II win% after opening',        metric: 'winAfterOpening', map: 'Dust II' },
+                { label: '#1 Nuke support rounds%',              metric: 'supportRounds',   map: 'Nuke' },
+                { label: '#1 damage per kill',                   metric: 'damagePerKill',   map: 'All' },
+                { label: '#2 Overpass utility kills per 100 rounds', metric: 'utilKills100',map: 'Overpass' }
+            ],
+            'Torrek': [
+                { label: '#3 traded deaths%',                    metric: 'tradedDeaths',    map: 'All' },
+                { label: '#3 KAST',                              metric: 'kast',            map: 'All' },
+                { label: '#1 Ancient utility kills per 100 rounds', metric: 'utilKills100', map: 'Ancient' },
+                { label: '#1 Mirage 1v1 win%',                   metric: 'oneVoneWin',      map: 'Mirage' },
+                { label: '#3 Overpass opening success%',         metric: 'openingSuccess',  map: 'Overpass' },
+                { label: '#1 Overpass opening deaths per round', metric: 'openingDeathsRound',map: 'Overpass' },
+                { label: '#2 Anubis support rounds%',            metric: 'supportRounds',   map: 'Anubis' },
+                { label: '#2 saves per round loss',              metric: 'savesPerLoss',    map: 'All' }
+            ],
+            'monke': [
+                { label: '#1 win rate',                          metric: 'winRate',         map: 'All' },
+                { label: '#1 KAST',                              metric: 'kast',            map: 'All' },
+                { label: '#1 utility kills per 100 rounds',      metric: 'utilKills100',    map: 'All' },
+                { label: '#1 Ancient opening kills per round',   metric: 'openingKillsRound',map: 'Ancient' },
+                { label: '#1 Inferno clutch points per round',   metric: 'clutchPtsRound',  map: 'Inferno' },
+                { label: '#1 Nuke 1v1 win%',                     metric: 'oneVoneWin',      map: 'Nuke' },
+                { label: '#2 ADR',                               metric: 'adr',             map: 'All' },
+                { label: '#2 rating 3.0',                        metric: 'rating30',        map: 'All' }
+            ],
+            'Minion 2': [
+                { label: '#1 1on1 win%',                         metric: 'oneVoneWin',      map: 'All' },
+                { label: '#1 win% after opening',                metric: 'winAfterOpening', map: 'All' },
+                { label: '#1 hs%',                               metric: 'hs',              map: 'All' },
+                { label: '#1 first kill in won rounds%',         metric: 'firstKillWonRounds',map: 'All' },
+                { label: '#1 Ancient clutch points per round',   metric: 'clutchPtsRound',  map: 'Ancient' },
+                { label: '#1 Nuke saves per round loss',         metric: 'savesPerLoss',    map: 'Nuke' },
+                { label: '#1 Nuke traded deaths%',               metric: 'tradedDeaths',    map: 'Nuke' },
+                { label: '#1 Mirage utility kills per 100 rounds', metric: 'utilKills100',  map: 'Mirage' }
+            ],
+            'Twój Stary': [
+                { label: '#1 opening deaths per round',          metric: 'openingDeathsRound',map: 'All' },
+                { label: '#1 sniper kills%',                     metric: 'sniperKillsPct',  map: 'All' },
+                { label: '#1 opening deaths per round',          metric: 'openingDeathsRound',map: 'All' },
+                { label: '#1 Mirage time alive per round',       metric: 'timeAliveRound',  map: 'Mirage' },
+                { label: '#1 Ancient sniper kills per round',    metric: 'sniperKillsRound',map: 'Ancient' },
+                { label: '#1 Nuke assists per round',            metric: 'assistsRound',    map: 'Nuke' },
+                { label: '#2 Mirage sniper kills per round',     metric: 'sniperKillsRound',map: 'Mirage' },
+                { label: '#3 Nuke win rate',                     metric: 'winRate',         map: 'Nuke' }
+            ],
+            'flamezvitality': [
+                { label: '#1 Mirage opening success%',           metric: 'openingSuccess',  map: 'Mirage' },
+                { label: '#2 opening deaths per round',          metric: 'openingDeathsRound',map: 'All' },
+                { label: '#1 Overpass win% after opening',       metric: 'winAfterOpening', map: 'Overpass' },
+                { label: '#1 Overpass traded deaths%',           metric: 'tradedDeaths',    map: 'Overpass' },
+                { label: '#2 Nuke assists per round loss',       metric: 'savesPerLoss',    map: 'Nuke' },
+                { label: '#1 Ancient assists per round',         metric: 'assistsRound',    map: 'Ancient' },
+                { label: '#2 Inferno hs%',                       metric: 'hs',              map: 'Inferno' },
+                { label: '#2 Mirage time alive per round',       metric: 'timeAliveRound',  map: 'Mirage' }
+            ],
+            // ---- Mid sample ----
+            'Marnyr': [
+                { label: '#1 HS%',                               metric: 'hs',              map: 'All' },
+                { label: '#1 utility kills per 100 rounds',      metric: 'utilKills100',    map: 'All' },
+                { label: '#2 damage per kill',                   metric: 'damagePerKill',   map: 'All' },
+                { label: '#2 1on1 win%',                         metric: 'oneVoneWin',      map: 'All' },
+                { label: '#1 Nuke win% after opening',           metric: 'winAfterOpening', map: 'Nuke' },
+                { label: '#1 Nuke win rate',                     metric: 'winRate',         map: 'Nuke' },
+                { label: '#1 Inferno support rounds%',           metric: 'supportRounds',   map: 'Inferno' },
+                { label: '#3 Overpass opening success%',         metric: 'openingSuccess',  map: 'Overpass' }
+            ],
+            'tylman duduś': [
+                { label: '#1 sniper kills%',                     metric: 'sniperKillsPct',  map: 'All' },
+                { label: '#2 sniper kills per round',            metric: 'sniperKillsRound',map: 'All' },
+                { label: '#1 survival rate',                     metric: 'survivalRate',    map: 'All' },
+                { label: '#1 Ancient DPR',                       metric: 'openingDeathsRound',map: 'Ancient' },
+                { label: '#1 Overpass utility damage per game',  metric: 'utilDamageGame',  map: 'Overpass' },
+                { label: '#1 Overpass utility kills per 100 rounds', metric: 'utilKills100',map: 'Overpass' },
+                { label: '#1 Inferno utility damage per game',   metric: 'utilDamageGame',  map: 'Inferno' },
+                { label: '#1 Inferno utility kills per 100 rounds', metric: 'utilKills100', map: 'Inferno' }
+            ],
+            'dziad': [
+                { label: '#1 utility kills per 100 rounds',      metric: 'utilKills100',    map: 'All' },
+                { label: '#2 saves per round loss',              metric: 'savesPerLoss',    map: 'All' },
+                { label: '#2 sniper kills%',                     metric: 'sniperKillsPct',  map: 'All' },
+                { label: '#1 Overpass support rounds%',          metric: 'supportRounds',   map: 'Overpass' },
+                { label: '#1 Inferno HS%',                       metric: 'hs',              map: 'Inferno' },
+                { label: '#1 Dust II sniper kills per round',    metric: 'sniperKillsRound',map: 'Dust II' },
+                { label: '#2 Ancient support rounds',            metric: 'supportRounds',   map: 'Ancient' },
+                { label: '#1 Inferno opening success%',          metric: 'openingSuccess',  map: 'Inferno' }
+            ]
+        };
+
         function formatStatValue(raw, fmt) {
             // raw is a string from the sheet; strip a trailing % so "52.4" and
             // "52.4%" both parse. Assumes HS%/KAST are stored as whole percentages.
@@ -10067,14 +10270,6 @@
             const header = '<div class="ns-header">Notable stats</div>';
             const tier = getSampleTier(playerName);
 
-            // High/mid: header only for now — the body structure is being reworked
-            // and specific stats will be supplied later.
-            if (tier !== 'low') {
-                container.innerHTML = header;
-                return;
-            }
-
-            // Low sample: render the reworked/reordered stat set.
             container.innerHTML = header + '<div class="ns-body">Loading…</div>';
 
             const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
@@ -10084,30 +10279,95 @@
                 return;
             }
 
-            // Rows for this map block, restricted to the known roster players.
-            const rows = rowsForMap(data, mapName).filter(r => {
-                const name = (r[PLAYER_COLUMNS.name - 1] || '').toString().trim();
-                return PLAYER_INFO[name] !== undefined;
-            });
-
-            const playerRow = rows.find(r =>
-                (r[PLAYER_COLUMNS.name - 1] || '').toString().trim() === playerName);
-            if (!playerRow) {
+            // -------- Low sample: name / value, fixed reworked stat set --------
+            if (tier === 'low') {
+                const rows = rowsForMap(data, mapName).filter(r => {
+                    const name = (r[PLAYER_COLUMNS.name - 1] || '').toString().trim();
+                    return PLAYER_INFO[name] !== undefined;
+                });
+                const playerRow = rows.find(r =>
+                    (r[PLAYER_COLUMNS.name - 1] || '').toString().trim() === playerName);
+                if (!playerRow) {
+                    container.innerHTML = header +
+                        '<div class="ns-body"><span style="color: var(--danger);">No stats for this player.</span></div>';
+                    return;
+                }
+                const rowsHtml = NOTABLE_STATS_LOW.map(stat => {
+                    const rawSelf = playerRow[stat.col - 1];
+                    return `<tr>
+                        <td class="ns-name">${stat.label}</td>
+                        <td class="ns-value">${formatStatValue(rawSelf, stat.fmt)}</td>
+                    </tr>`;
+                }).join('');
                 container.innerHTML = header +
-                    '<div class="ns-body"><span style="color: var(--danger);">No stats for this player.</span></div>';
+                    `<table class="notable-stats-table notable-stats-low"><tbody>${rowsHtml}</tbody></table>`;
                 return;
             }
 
-            const rowsHtml = NOTABLE_STATS_LOW.map(stat => {
-                const rawSelf = playerRow[stat.col - 1];
+            // -------- High / Mid sample: label / value / team average --------
+            // Per-stat map scope; team average is the mean across the 10 high-
+            // sample players in that stat's map block.
+            const statList = NOTABLE_STATS_BY_PLAYER[playerName];
+            if (!statList) {
+                container.innerHTML = header +
+                    '<div class="ns-body"><span style="color: var(--danger);">No notable-stats config for this player.</span></div>';
+                return;
+            }
+
+            // Cache one filtered row-set per map block so we don't refilter 8x.
+            const blockCache = {};
+            function blockRows(map) {
+                if (!blockCache[map]) blockCache[map] = rowsForMap(data, map);
+                return blockCache[map];
+            }
+            const HIGH_NAMES = SAMPLE_TIERS.high;
+
+            const rowsHtml = statList.map(stat => {
+                const def = NS_METRICS[stat.metric];
+                const rows = blockRows(stat.map);
+
+                // This player's value in the stat's map block.
+                const selfRow = rows.find(r =>
+                    (r[PLAYER_COLUMNS.name - 1] || '').toString().trim() === playerName);
+                const rawSelf = selfRow ? selfRow[def.col - 1] : '';
+                const valueText = formatStatValue(rawSelf, def.fmt);
+
+                // Team average across the 10 high-sample players in that block.
+                const vals = [];
+                for (const r of rows) {
+                    const nm = (r[PLAYER_COLUMNS.name - 1] || '').toString().trim();
+                    if (HIGH_NAMES.indexOf(nm) === -1) continue;
+                    const v = parseFloat(String(r[def.col - 1]).replace('%', '').trim());
+                    if (!isNaN(v)) vals.push(v);
+                }
+                let avgText = '—';
+                if (vals.length) {
+                    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+                    // Re-apply the stat's format to the raw average. formatStatValue
+                    // strips %, so pass a bare number string.
+                    avgText = formatStatValue(String(avg), def.fmt);
+                }
+
                 return `<tr>
                     <td class="ns-name">${stat.label}</td>
-                    <td class="ns-value">${formatStatValue(rawSelf, stat.fmt)}</td>
+                    <td class="ns-value">${valueText}</td>
+                    <td class="ns-avg">${avgText}</td>
                 </tr>`;
             }).join('');
 
-            container.innerHTML = header +
-                `<table class="notable-stats-table"><tbody>${rowsHtml}</tbody></table>`;
+            const midNote = (tier === 'mid')
+                ? '<div class="ns-note">Showing ranks if a player was added to high sample size players - &gt;=30 games</div>'
+                : '';
+
+            container.innerHTML = header + midNote +
+                `<table class="notable-stats-table notable-stats-highmid">
+                    <thead><tr>
+                        <th class="ns-name"></th>
+                        <th class="ns-value">Value</th>
+                        <th class="ns-avg">Team avg</th>
+                    </tr></thead>
+                    <tbody>${rowsHtml}</tbody>
+                </table>`;
         }
 
         (function initAwardsSelector() {
