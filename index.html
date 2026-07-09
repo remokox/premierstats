@@ -2397,6 +2397,31 @@
             text-align: center;
         }
 
+        /* Trophy sits to the LEFT of the award title, on the same line. */
+        #awards-award-name {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        #awards-award-name .award-trophy {
+            font-size: 1.5rem;
+            line-height: 1;
+            flex: 0 0 auto;
+        }
+
+        /* Notable-stats header, persistent above the (tier-dependent) body. */
+        .ns-header {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-bottom: 0.5rem;
+        }
+        .ns-body {
+            color: var(--text-secondary);
+        }
+
         .aw-summary .summary-text {
             color: var(--text-secondary);
             font-size: 1rem;
@@ -8960,6 +8985,41 @@
             if (prompt) prompt.style.display = 'block';
         }
 
+        // ===== Awards: sample-size tiers =====
+        // Each roster player belongs to one of three sample tiers, which governs
+        // how the Awards page renders (award name, summary, notable stats, etc.).
+        // Membership is an explicit per-name list (not a games-count threshold),
+        // so tiers can be curated by hand. Any name not listed defaults to 'low'
+        // as the safe fallback (treat unknown/thin data as untrustworthy).
+        const SAMPLE_TIERS = {
+            high: [
+                'remokox', 'Große Cigarette', 'MasnoPro Vulpes Wójcior', 'Badum',
+                'MasnoCoach THUNDER', 'Torrek', 'flamezvitality', 'monke',
+                'Minion 2', 'Twój Stary'
+            ],
+            mid: [
+                'Marnyr', 'tylman duduś', 'dziad'
+            ],
+            low: [
+                'Yao Ming', 'Jeffrey Epstein', 'Szymon Gwiazda Rocka',
+                'Pan Piorun Ciechanów'
+            ]
+        };
+
+        // Reverse index: player name -> tier ('high' | 'mid' | 'low').
+        const PLAYER_SAMPLE_TIER = (() => {
+            const map = {};
+            for (const tier of ['high', 'mid', 'low']) {
+                for (const name of SAMPLE_TIERS[tier]) map[name] = tier;
+            }
+            return map;
+        })();
+
+        // Resolve a player's sample tier; unknown names fall back to 'low'.
+        function getSampleTier(playerName) {
+            return PLAYER_SAMPLE_TIER[playerName] || 'low';
+        }
+
         function renderAwards(playerName) {
             const info = PLAYER_INFO[playerName];
             if (!info) return;
@@ -8977,6 +9037,42 @@
             }
 
             // Performance graph — to be remade.
+
+            // Tier-dependent presentation.
+            const tier = getSampleTier(playerName);
+
+            // Award name: a trophy on the left + tier-dependent text.
+            const awardNameEl = document.getElementById('awards-award-name');
+            if (awardNameEl) {
+                let awardText;
+                if (tier === 'mid') {
+                    awardText = 'Occasional support';
+                } else if (tier === 'low') {
+                    awardText = 'Participation trophy';
+                } else {
+                    // high: specific per-player awards come later; keep placeholder.
+                    awardText = 'Award name — coming later';
+                }
+                awardNameEl.classList.remove('awards-placeholder');
+                awardNameEl.innerHTML =
+                    '<span class="award-trophy">🏆</span>' +
+                    '<span class="award-title-text">' + awardText + '</span>';
+            }
+
+            // Text summary: only low sample has fixed copy; high/mid come later.
+            const summaryEl = document.getElementById('awards-summary');
+            if (summaryEl) {
+                if (tier === 'low') {
+                    summaryEl.classList.remove('awards-placeholder');
+                    summaryEl.textContent =
+                        'This player has not played enough games for his aggregate ' +
+                        'statistics to be trustworthy. Thanks for participating though!';
+                } else {
+                    // high/mid: leave the existing placeholder for now.
+                    summaryEl.classList.add('awards-placeholder');
+                    summaryEl.textContent = 'Text summary — coming later';
+                }
+            }
 
             // Boosters (placeholder shell — real per-booster computation added one at a time)
             renderBoosters(playerName);
@@ -9919,6 +10015,18 @@
             { label: 'Saves/loss',    col: 139, fmt: 'pct1' }    // EI (saves per round loss, already a %)
         ];
 
+        // Low-sample notable stats: a reordered/reworked set (all on gid 999727190).
+        const NOTABLE_STATS_LOW = [
+            { label: 'K/D',        col: 14, fmt: 'dec2' },   // N
+            { label: 'ADR',        col: 22, fmt: 'dec1' },   // V
+            { label: 'HS%',        col: 24, fmt: 'pct1' },   // X
+            { label: 'KAST',       col: 26, fmt: 'pct1' },   // Z
+            { label: 'FK/FD',      col: 29, fmt: 'dec2' },   // AC
+            { label: 'UD',         col: 36, fmt: 'int'  },   // AJ (ud/g, whole numbers)
+            { label: 'EF',         col: 34, fmt: 'dec2' },   // AH (ef/g, 2 decimals)
+            { label: 'Rating 3.0', col: 45, fmt: 'dec2' }    // AS
+        ];
+
         function formatStatValue(raw, fmt) {
             // raw is a string from the sheet; strip a trailing % so "52.4" and
             // "52.4%" both parse. Assumes HS%/KAST are stored as whole percentages.
@@ -9954,15 +10062,29 @@
             const container = document.getElementById('awards-notable');
             if (!container) return;
             container.classList.remove('awards-placeholder');
-            container.innerHTML = 'Loading…';
 
-            const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
-            if (!data) {
-                container.innerHTML = '<span style="color: var(--danger);">Failed to load stats.</span>';
+            // Persistent header, always present regardless of tier.
+            const header = '<div class="ns-header">Notable stats</div>';
+            const tier = getSampleTier(playerName);
+
+            // High/mid: header only for now — the body structure is being reworked
+            // and specific stats will be supplied later.
+            if (tier !== 'low') {
+                container.innerHTML = header;
                 return;
             }
 
-            // Rows for this map block, restricted to the 17 known roster players.
+            // Low sample: render the reworked/reordered stat set.
+            container.innerHTML = header + '<div class="ns-body">Loading…</div>';
+
+            const data = await fetchSheetData(SHEET_GIDS.sum_stats_maps);
+            if (!data) {
+                container.innerHTML = header +
+                    '<div class="ns-body"><span style="color: var(--danger);">Failed to load stats.</span></div>';
+                return;
+            }
+
+            // Rows for this map block, restricted to the known roster players.
             const rows = rowsForMap(data, mapName).filter(r => {
                 const name = (r[PLAYER_COLUMNS.name - 1] || '').toString().trim();
                 return PLAYER_INFO[name] !== undefined;
@@ -9971,11 +10093,12 @@
             const playerRow = rows.find(r =>
                 (r[PLAYER_COLUMNS.name - 1] || '').toString().trim() === playerName);
             if (!playerRow) {
-                container.innerHTML = '<span style="color: var(--danger);">No stats for this player.</span>';
+                container.innerHTML = header +
+                    '<div class="ns-body"><span style="color: var(--danger);">No stats for this player.</span></div>';
                 return;
             }
 
-            const rowsHtml = NOTABLE_STATS.map(stat => {
+            const rowsHtml = NOTABLE_STATS_LOW.map(stat => {
                 const rawSelf = playerRow[stat.col - 1];
                 const selfNum = parseFloat(String(rawSelf).replace('%', '').trim());
 
@@ -9994,7 +10117,8 @@
                 </tr>`;
             }).join('');
 
-            container.innerHTML = `<table class="notable-stats-table"><tbody>${rowsHtml}</tbody></table>`;
+            container.innerHTML = header +
+                `<table class="notable-stats-table"><tbody>${rowsHtml}</tbody></table>`;
         }
 
         (function initAwardsSelector() {
