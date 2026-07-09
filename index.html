@@ -10088,7 +10088,9 @@
             'kast':            { col: 26,  fmt: 'dec1' },  // Z
             'firstKillWonRounds':{ col: 113, fmt: 'pct1' },// DI
             'timeAliveRound':  { col: 134, fmt: 'int'  },  // ED
-            'sniperKillsPct':  { col: 148, fmt: 'pct1' }   // ER
+            'sniperKillsPct':  { col: 148, fmt: 'pct1' },  // ER
+            'openingScore':    { col: 116, fmt: 'int'  },  // DL ("OPENING on <map>" score)
+            'dpr':             { col: 38,  fmt: 'dec2' }   // AL (deaths per round)
         };
 
         // Per-player ordered stat lists (high + mid sample). Each entry:
@@ -10098,31 +10100,31 @@
         const NOTABLE_STATS_BY_PLAYER = {
             // ---- High sample ----
             'remokox': [
-                { label: '#1 rating 3.0',              metric: 'rating30',        map: 'All' },
-                { label: '#1 opening success %',       metric: 'openingSuccess',  map: 'All' },
-                { label: '#1 clutch points per round', metric: 'clutchPtsRound',  map: 'All' },
-                { label: '#1 survival rate',           metric: 'survivalRate',    map: 'All' },
-                { label: '#1 multikill rate',          metric: 'multikillRate',   map: 'All' },
-                { label: '#1 enemies flashed per game',metric: 'enemiesFlashedG', map: 'All' },
+                { label: '#1 Rating 3.0',              metric: 'rating30',        map: 'All' },
+                { label: '#1 Opening success %',       metric: 'openingSuccess',  map: 'All' },
+                { label: '#1 Clutch points per round', metric: 'clutchPtsRound',  map: 'All' },
+                { label: '#1 Survival rate',           metric: 'survivalRate',    map: 'All' },
+                { label: '#1 Multikill rate',          metric: 'multikillRate',   map: 'All' },
+                { label: '#1 Enemies flashed per game',metric: 'enemiesFlashedG', map: 'All' },
                 { label: '#1 ADR',                     metric: 'adr',             map: 'All' },
-                { label: '#1 maps with 1+ rating%',    metric: 'mapsPlusRating',  map: 'All' }
+                { label: '#1 Maps with 1+ rating%',    metric: 'mapsPlusRating',  map: 'All' }
             ],
             'Große Cigarette': [
-                { label: '#2 headshot %',                        metric: 'hs',              map: 'All' },
-                { label: '#1 trader on Anubis',                  metric: 'anubisTradeRatio',map: 'Anubis' },
-                { label: '#1 sniper kills per round Nuke',       metric: 'sniperKillsRound',map: 'Nuke' },
+                { label: '#2 Headshot %',                        metric: 'hs',              map: 'All' },
+                { label: '#1 Trader on Anubis',                  metric: 'anubisTradeRatio',map: 'Anubis' },
+                { label: '#1 Sniper kills per round Nuke',       metric: 'sniperKillsRound',map: 'Nuke' },
                 { label: '#1 Nuke clutch points per round',      metric: 'clutchPtsRound',  map: 'Nuke' },
                 { label: '#1 Overpass utility kills per 100 rounds', metric: 'utilKills100',map: 'Overpass' },
                 { label: '#1 Dust II opening kills per round',   metric: 'openingKillsRound',map: 'Dust II' },
                 { label: '#1 Dust II clutch points per round',   metric: 'clutchPtsRound',  map: 'Dust II' },
-                { label: '#3 rating 3.0',                        metric: 'rating30',        map: 'All' }
+                { label: '#3 Rating 3.0',                        metric: 'rating30',        map: 'All' }
             ],
             'MasnoPro Vulpes Wójcior': [
-                { label: '#1 support rounds%',                   metric: 'supportRounds',   map: 'All' },
+                { label: '#1 Support rounds%',                   metric: 'supportRounds',   map: 'All' },
                 { label: '#1 ENTRYING score',                    metric: 'entryingScore',   map: 'All' },
-                { label: '#1 traded deaths%',                    metric: 'tradedDeaths',    map: 'All' },
-                { label: '#1 assisted kills%',                   metric: 'assistedKills',   map: 'All' },
-                { label: '#1 damage per kill',                   metric: 'damagePerKill',   map: 'All' },
+                { label: '#1 Traded deaths%',                    metric: 'tradedDeaths',    map: 'All' },
+                { label: '#1 Assisted kills%',                   metric: 'assistedKills',   map: 'All' },
+                { label: '#2 Damage per kill',                   metric: 'damagePerKill',   map: 'All' },
                 { label: '#1 Nuke win% after opening',           metric: 'winAfterOpening', map: 'Nuke' },
                 { label: '#1 Dust II utility kills per 100 rounds', metric: 'utilKills100', map: 'Dust II' },
                 { label: '#2 Overpass win rate',                 metric: 'winRate',         map: 'Overpass' }
@@ -10130,78 +10132,78 @@
             'Badum': [
                 { label: '#1 Inferno sniper kills per round',    metric: 'sniperKillsRound',map: 'Inferno' },
                 { label: '#1 Dust II sniper kills per round',    metric: 'sniperKillsRound',map: 'Dust II' },
-                { label: '#1 Mirage hs%',                        metric: 'hs',              map: 'Mirage' },
+                { label: '#1 Mirage HS%',                        metric: 'hs',              map: 'Mirage' },
                 { label: '#1 Inferno 1v1 win%',                  metric: 'oneVoneWin',      map: 'Inferno' },
                 { label: '#1 Inferno utility kills per 100 rounds', metric: 'utilKills100', map: 'Inferno' },
-                { label: '#1 OPENING on Inferno',                metric: 'openingSuccess',  map: 'Inferno' },
-                { label: '#2 win rate on Mirage',                metric: 'winRate',         map: 'Mirage' },
-                { label: '#3 win rate on Overpass',              metric: 'winRate',         map: 'Overpass' }
+                { label: '#1 OPENING on Inferno',                metric: 'openingScore',    map: 'Inferno' },
+                { label: '#2 Win rate on Mirage',                metric: 'winRate',         map: 'Mirage' },
+                { label: '#3 Win rate on Overpass',              metric: 'winRate',         map: 'Overpass' }
             ],
             'MasnoCoach THUNDER': [
-                { label: '#1 utility damage per game',           metric: 'utilDamageGame',  map: 'All' },
-                { label: '#1 assists per round',                 metric: 'assistsRound',    map: 'All' },
-                { label: '#1 opening attempts%',                 metric: 'openingAttempts', map: 'All' },
+                { label: '#1 Utility damage per game',           metric: 'utilDamageGame',  map: 'All' },
+                { label: '#1 Assists per round',                 metric: 'assistsRound',    map: 'All' },
+                { label: '#1 Opening attempts%',                 metric: 'openingAttempts', map: 'All' },
                 { label: '#1 TRADING on Ancient',                metric: 'tradingScore',    map: 'Ancient' },
                 { label: '#1 Dust II win% after opening',        metric: 'winAfterOpening', map: 'Dust II' },
                 { label: '#1 Nuke support rounds%',              metric: 'supportRounds',   map: 'Nuke' },
-                { label: '#1 damage per kill',                   metric: 'damagePerKill',   map: 'All' },
+                { label: '#1 Damage per kill',                   metric: 'damagePerKill',   map: 'All' },
                 { label: '#2 Overpass utility kills per 100 rounds', metric: 'utilKills100',map: 'Overpass' }
             ],
             'Torrek': [
-                { label: '#3 traded deaths%',                    metric: 'tradedDeaths',    map: 'All' },
+                { label: '#3 Traded deaths%',                    metric: 'tradedDeaths',    map: 'All' },
                 { label: '#3 KAST',                              metric: 'kast',            map: 'All' },
                 { label: '#1 Ancient utility kills per 100 rounds', metric: 'utilKills100', map: 'Ancient' },
                 { label: '#1 Mirage 1v1 win%',                   metric: 'oneVoneWin',      map: 'Mirage' },
                 { label: '#3 Overpass opening success%',         metric: 'openingSuccess',  map: 'Overpass' },
                 { label: '#1 Overpass opening deaths per round', metric: 'openingDeathsRound',map: 'Overpass' },
                 { label: '#2 Anubis support rounds%',            metric: 'supportRounds',   map: 'Anubis' },
-                { label: '#2 saves per round loss',              metric: 'savesPerLoss',    map: 'All' }
+                { label: '#2 Saves per round loss',              metric: 'savesPerLoss',    map: 'All' }
             ],
             'monke': [
-                { label: '#1 win rate',                          metric: 'winRate',         map: 'All' },
+                { label: '#1 1on1 win%',                         metric: 'oneVoneWin',      map: 'All' },
+                { label: '#1 Win% after opening',                metric: 'winAfterOpening', map: 'All' },
+                { label: '#1 HS%',                               metric: 'hs',              map: 'All' },
+                { label: '#1 First kill in won rounds%',         metric: 'firstKillWonRounds',map: 'All' },
+                { label: '#1 Ancient clutch points per round',   metric: 'clutchPtsRound',  map: 'Ancient' },
+                { label: '#1 Ancient sniper kills per round',    metric: 'sniperKillsRound',map: 'Ancient' },
+                { label: '#1 Nuke traded deaths%',               metric: 'tradedDeaths',    map: 'Nuke' },
+                { label: '#1 Mirage utility kills per 100 rounds', metric: 'utilKills100',  map: 'Mirage' }
+            ],
+            'Minion 2': [
+                { label: '#1 Opening deaths per round',          metric: 'openingDeathsRound',map: 'All' },
+                { label: '#1 Sniper kills%',                     metric: 'sniperKillsPct',  map: 'All' },
+                { label: '#1 Mirage win% after opening',         metric: 'winAfterOpening', map: 'Mirage' },
+                { label: '#1 Mirage time alive per round',       metric: 'timeAliveRound',  map: 'Mirage' },
+                { label: '#2 Nuke saves per round loss',         metric: 'savesPerLoss',    map: 'Nuke' },
+                { label: '#2 Nuke traded deaths%',               metric: 'tradedDeaths',    map: 'Nuke' },
+                { label: '#2 Mirage sniper kills per round',     metric: 'sniperKillsRound',map: 'Mirage' },
+                { label: '#3 Nuke win rate',                     metric: 'winRate',         map: 'Nuke' }
+            ],
+            'Twój Stary': [
+                { label: '#1 Mirage opening success%',           metric: 'openingSuccess',  map: 'Mirage' },
+                { label: '#2 Opening deaths per round',          metric: 'openingDeathsRound',map: 'All' },
+                { label: '#1 Overpass win% after opening',       metric: 'winAfterOpening', map: 'Overpass' },
+                { label: '#1 Overpass traded deaths%',           metric: 'tradedDeaths',    map: 'Overpass' },
+                { label: '#2 Nuke assists per round',            metric: 'assistsRound',    map: 'Nuke' },
+                { label: '#2 Ancient assists per round',         metric: 'assistsRound',    map: 'Ancient' },
+                { label: '#2 Inferno HS%',                       metric: 'hs',              map: 'Inferno' },
+                { label: '#2 Mirage time alive per round',       metric: 'timeAliveRound',  map: 'Mirage' }
+            ],
+            'flamezvitality': [
+                { label: '#1 Win rate',                          metric: 'winRate',         map: 'All' },
                 { label: '#1 KAST',                              metric: 'kast',            map: 'All' },
-                { label: '#1 utility kills per 100 rounds',      metric: 'utilKills100',    map: 'All' },
+                { label: '#1 Utility kills per 100 rounds',      metric: 'utilKills100',    map: 'All' },
                 { label: '#1 Ancient opening kills per round',   metric: 'openingKillsRound',map: 'Ancient' },
                 { label: '#1 Inferno clutch points per round',   metric: 'clutchPtsRound',  map: 'Inferno' },
                 { label: '#1 Nuke 1v1 win%',                     metric: 'oneVoneWin',      map: 'Nuke' },
                 { label: '#2 ADR',                               metric: 'adr',             map: 'All' },
-                { label: '#2 rating 3.0',                        metric: 'rating30',        map: 'All' }
-            ],
-            'Minion 2': [
-                { label: '#1 1on1 win%',                         metric: 'oneVoneWin',      map: 'All' },
-                { label: '#1 win% after opening',                metric: 'winAfterOpening', map: 'All' },
-                { label: '#1 hs%',                               metric: 'hs',              map: 'All' },
-                { label: '#1 first kill in won rounds%',         metric: 'firstKillWonRounds',map: 'All' },
-                { label: '#1 Ancient clutch points per round',   metric: 'clutchPtsRound',  map: 'Ancient' },
-                { label: '#1 Nuke saves per round loss',         metric: 'savesPerLoss',    map: 'Nuke' },
-                { label: '#1 Nuke traded deaths%',               metric: 'tradedDeaths',    map: 'Nuke' },
-                { label: '#1 Mirage utility kills per 100 rounds', metric: 'utilKills100',  map: 'Mirage' }
-            ],
-            'Twój Stary': [
-                { label: '#1 opening deaths per round',          metric: 'openingDeathsRound',map: 'All' },
-                { label: '#1 sniper kills%',                     metric: 'sniperKillsPct',  map: 'All' },
-                { label: '#1 opening deaths per round',          metric: 'openingDeathsRound',map: 'All' },
-                { label: '#1 Mirage time alive per round',       metric: 'timeAliveRound',  map: 'Mirage' },
-                { label: '#1 Ancient sniper kills per round',    metric: 'sniperKillsRound',map: 'Ancient' },
-                { label: '#1 Nuke assists per round',            metric: 'assistsRound',    map: 'Nuke' },
-                { label: '#2 Mirage sniper kills per round',     metric: 'sniperKillsRound',map: 'Mirage' },
-                { label: '#3 Nuke win rate',                     metric: 'winRate',         map: 'Nuke' }
-            ],
-            'flamezvitality': [
-                { label: '#1 Mirage opening success%',           metric: 'openingSuccess',  map: 'Mirage' },
-                { label: '#2 opening deaths per round',          metric: 'openingDeathsRound',map: 'All' },
-                { label: '#1 Overpass win% after opening',       metric: 'winAfterOpening', map: 'Overpass' },
-                { label: '#1 Overpass traded deaths%',           metric: 'tradedDeaths',    map: 'Overpass' },
-                { label: '#2 Nuke assists per round loss',       metric: 'savesPerLoss',    map: 'Nuke' },
-                { label: '#1 Ancient assists per round',         metric: 'assistsRound',    map: 'Ancient' },
-                { label: '#2 Inferno hs%',                       metric: 'hs',              map: 'Inferno' },
-                { label: '#2 Mirage time alive per round',       metric: 'timeAliveRound',  map: 'Mirage' }
+                { label: '#2 Rating 3.0',                        metric: 'rating30',        map: 'All' }
             ],
             // ---- Mid sample ----
             'Marnyr': [
                 { label: '#1 HS%',                               metric: 'hs',              map: 'All' },
-                { label: '#1 utility kills per 100 rounds',      metric: 'utilKills100',    map: 'All' },
-                { label: '#2 damage per kill',                   metric: 'damagePerKill',   map: 'All' },
+                { label: '#1 Utility kills per 100 rounds',      metric: 'utilKills100',    map: 'All' },
+                { label: '#2 Damage per kill',                   metric: 'damagePerKill',   map: 'All' },
                 { label: '#2 1on1 win%',                         metric: 'oneVoneWin',      map: 'All' },
                 { label: '#1 Nuke win% after opening',           metric: 'winAfterOpening', map: 'Nuke' },
                 { label: '#1 Nuke win rate',                     metric: 'winRate',         map: 'Nuke' },
@@ -10209,19 +10211,19 @@
                 { label: '#3 Overpass opening success%',         metric: 'openingSuccess',  map: 'Overpass' }
             ],
             'tylman duduś': [
-                { label: '#1 sniper kills%',                     metric: 'sniperKillsPct',  map: 'All' },
-                { label: '#2 sniper kills per round',            metric: 'sniperKillsRound',map: 'All' },
-                { label: '#1 survival rate',                     metric: 'survivalRate',    map: 'All' },
-                { label: '#1 Ancient DPR',                       metric: 'openingDeathsRound',map: 'Ancient' },
+                { label: '#1 Sniper kills%',                     metric: 'sniperKillsPct',  map: 'All' },
+                { label: '#2 Sniper kills per round',            metric: 'sniperKillsRound',map: 'All' },
+                { label: '#1 Survival rate',                     metric: 'survivalRate',    map: 'All' },
+                { label: '#1 Ancient DPR',                       metric: 'dpr',             map: 'Ancient' },
                 { label: '#1 Overpass utility damage per game',  metric: 'utilDamageGame',  map: 'Overpass' },
                 { label: '#1 Overpass utility kills per 100 rounds', metric: 'utilKills100',map: 'Overpass' },
                 { label: '#1 Inferno utility damage per game',   metric: 'utilDamageGame',  map: 'Inferno' },
                 { label: '#1 Inferno utility kills per 100 rounds', metric: 'utilKills100', map: 'Inferno' }
             ],
             'dziad': [
-                { label: '#1 utility kills per 100 rounds',      metric: 'utilKills100',    map: 'All' },
-                { label: '#2 saves per round loss',              metric: 'savesPerLoss',    map: 'All' },
-                { label: '#2 sniper kills%',                     metric: 'sniperKillsPct',  map: 'All' },
+                { label: '#1 Utility kills per 100 rounds',      metric: 'utilKills100',    map: 'All' },
+                { label: '#2 Saves per round loss',              metric: 'savesPerLoss',    map: 'All' },
+                { label: '#2 Sniper kills%',                     metric: 'sniperKillsPct',  map: 'All' },
                 { label: '#1 Overpass support rounds%',          metric: 'supportRounds',   map: 'Overpass' },
                 { label: '#1 Inferno HS%',                       metric: 'hs',              map: 'Inferno' },
                 { label: '#1 Dust II sniper kills per round',    metric: 'sniperKillsRound',map: 'Dust II' },
