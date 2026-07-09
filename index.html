@@ -2196,7 +2196,7 @@
         /* Dropdown panel: anchored under the button, left-aligned to it. */
         .methodology-menu {
             position: absolute;
-            top: calc(50% + 34px);
+            top: calc(50% + 42px);
             left: 20px;
             min-width: 240px;
             background: var(--bg-tertiary);
@@ -2204,7 +2204,7 @@
             border-radius: 10px;
             padding: 6px;
             box-shadow: 0 8px 24px var(--shadow);
-            z-index: 6;
+            z-index: 60;
             display: none;
             flex-direction: column;
             gap: 2px;
@@ -2624,7 +2624,7 @@
                             <th class="sortable" data-column="7">K/D</th>
                             <th class="sortable" data-column="8">ADR</th>
                             <th class="sortable" data-column="9">HS%</th>
-                            <th class="sortable" data-column="10">Rating 3.0<span class="info-tip info-tip--link info-tip--down" onclick="event.stopPropagation(); openRating()" data-tip="One number per map where 1.00 is average for this pool; higher is better, lower is worse. Combines kills, damage, survival, consistency, multi-kills, and round impact. HLTV 3.0-style, relative to these players only. Click to open full methodology.">i</span></th>
+                            <th class="sortable" data-column="10">Rating 3.0<span class="info-tip info-tip--down" data-tip="One number per map where 1.00 is average for this pool; higher is better, lower is worse. Combines kills, damage, survival, consistency, multi-kills, and round impact. HLTV 3.0-style, relative to these players only.">i</span></th>
                         </tr>
                     </thead>
                     <tbody id="overview-tbody">
@@ -2695,11 +2695,11 @@
                         
                         <div class="player-detail-stats">
                             <div class="player-detail-stat-row highlight">
-                                <span class="player-detail-stat-label">Rating 3.0<span class="info-tip info-tip--link" onclick="openRating()" data-tip="One number per map where 1.00 is average for this pool; higher is better, lower is worse. Combines kills, damage, survival, consistency, multi-kills, and round impact. HLTV 3.0-style, relative to these players only. Click to open full methodology.">i</span></span>
+                                <span class="player-detail-stat-label">Rating 3.0<span class="info-tip" data-tip="One number per map where 1.00 is average for this pool; higher is better, lower is worse. Combines kills, damage, survival, consistency, multi-kills, and round impact. HLTV 3.0-style, relative to these players only.">i</span></span>
                                 <span class="player-detail-stat-value" id="detail-rating">0.00</span>
                             </div>
                             <div class="player-detail-stat-row">
-                                <span class="player-detail-stat-label">Round Swing<span class="info-tip info-tip--link" onclick="openRoundSwing()" data-tip="How much this player's actions shift their team's chance of winning the round. Click to open full methodology.">i</span></span>
+                                <span class="player-detail-stat-label">Round Swing<span class="info-tip" data-tip="How much this player's actions shift their team's chance of winning the round.">i</span></span>
                                 <span class="player-detail-stat-value" id="detail-round-swing">0.00%</span>
                             </div>
                             <div class="player-detail-stat-row">
@@ -2724,31 +2724,31 @@
                             </div>
                             
                             <div class="player-detail-stat-row highlight">
-                                <span class="player-detail-stat-label">Firepower<span class="info-tip info-tip--link" onclick="openMethodology()" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool. Click the tooltip for the full methodology.">i</span></span>
+                                <span class="player-detail-stat-label">Firepower<span class="info-tip" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool.">i</span></span>
                                 <span class="player-detail-stat-value" id="detail-firepower">0/100</span>
                             </div>
                             <div class="player-detail-stat-row highlight">
-                                <span class="player-detail-stat-label">Entrying<span class="info-tip info-tip--link" onclick="openMethodology()" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool. Click the tooltip for the full methodology.">i</span></span>
+                                <span class="player-detail-stat-label">Entrying<span class="info-tip" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool.">i</span></span>
                                 <span class="player-detail-stat-value" id="detail-entrying">0/100</span>
                             </div>
                             <div class="player-detail-stat-row highlight">
-                                <span class="player-detail-stat-label">Trading<span class="info-tip info-tip--link" onclick="openMethodology()" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool. Click the tooltip for the full methodology.">i</span></span>
+                                <span class="player-detail-stat-label">Trading<span class="info-tip" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool.">i</span></span>
                                 <span class="player-detail-stat-value" id="detail-trading">0/100</span>
                             </div>
                             <div class="player-detail-stat-row highlight">
-                                <span class="player-detail-stat-label">Opening<span class="info-tip info-tip--link" onclick="openMethodology()" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool. Click the tooltip for the full methodology.">i</span></span>
+                                <span class="player-detail-stat-label">Opening<span class="info-tip" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool.">i</span></span>
                                 <span class="player-detail-stat-value" id="detail-opening">0/100</span>
                             </div>
                             <div class="player-detail-stat-row highlight">
-                                <span class="player-detail-stat-label">Clutching<span class="info-tip info-tip--link" onclick="openMethodology()" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool. Click the tooltip for the full methodology.">i</span></span>
+                                <span class="player-detail-stat-label">Clutching<span class="info-tip" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool.">i</span></span>
                                 <span class="player-detail-stat-value" id="detail-clutching">0/100</span>
                             </div>
                             <div class="player-detail-stat-row highlight">
-                                <span class="player-detail-stat-label">Sniping<span class="info-tip info-tip--link" onclick="openMethodology()" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool. Click the tooltip for the full methodology.">i</span></span>
+                                <span class="player-detail-stat-label">Sniping<span class="info-tip" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool.">i</span></span>
                                 <span class="player-detail-stat-value" id="detail-sniping">0/100</span>
                             </div>
                             <div class="player-detail-stat-row highlight">
-                                <span class="player-detail-stat-label">Utility<span class="info-tip info-tip--link" onclick="openMethodology()" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool. Click the tooltip for the full methodology.">i</span></span>
+                                <span class="player-detail-stat-label">Utility<span class="info-tip" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool.">i</span></span>
                                 <span class="player-detail-stat-value" id="detail-utility">0/100</span>
                             </div>
                         </div>
@@ -2771,25 +2771,25 @@
                                 <tr><td>Assists/round</td><td>-</td></tr>
                                 <tr><td>Deaths/round</td><td>-</td></tr>
                                 <tr><td>Maps played</td><td>-</td></tr>
-                                <tr><td>Rating 3.0<span class="info-tip info-tip--link" onclick="openRating()" data-tip="One number per map where 1.00 is average for this pool; higher is better, lower is worse. Combines kills, damage, survival, consistency, multi-kills, and round impact. HLTV 3.0-style, relative to these players only. Click to open full methodology.">i</span></td><td>-</td></tr>
+                                <tr><td>Rating 3.0<span class="info-tip" data-tip="One number per map where 1.00 is average for this pool; higher is better, lower is worse. Combines kills, damage, survival, consistency, multi-kills, and round impact. HLTV 3.0-style, relative to these players only.">i</span></td><td>-</td></tr>
                             </tbody>
                         </table>
 
                         <!-- Firepower Section -->
-                        <div class="player-detail-section-title">Firepower<span class="info-tip info-tip--link" onclick="openMethodology()" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool. Click the tooltip for the full methodology.">i</span> <span style="float: right; color: var(--accent-primary);" id="detail-firepower-score">0/100</span></div>
+                        <div class="player-detail-section-title">Firepower<span class="info-tip" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool.">i</span> <span style="float: right; color: var(--accent-primary);" id="detail-firepower-score">0/100</span></div>
                         <table class="player-detail-table">
                             <tbody>
                                 <tr><td>Kills per round</td><td>-</td></tr>
                                 <tr><td>Kills per round win</td><td>-</td></tr>
                                 <tr><td>Damage per round</td><td>-</td></tr>
-                                <tr><td>Rating 3.0<span class="info-tip info-tip--link" onclick="openRating()" data-tip="One number per map where 1.00 is average for this pool; higher is better, lower is worse. Combines kills, damage, survival, consistency, multi-kills, and round impact. HLTV 3.0-style, relative to these players only. Click to open full methodology.">i</span></td><td>-</td></tr>
+                                <tr><td>Rating 3.0<span class="info-tip" data-tip="One number per map where 1.00 is average for this pool; higher is better, lower is worse. Combines kills, damage, survival, consistency, multi-kills, and round impact. HLTV 3.0-style, relative to these players only.">i</span></td><td>-</td></tr>
                                 <tr><td>Rounds with a multikill</td><td>-</td></tr>
                                 <tr><td>Rounds with a kill</td><td>-</td></tr>
                             </tbody>
                         </table>
 
                         <!-- Entrying Section -->
-                        <div class="player-detail-section-title">Entrying<span class="info-tip info-tip--link" onclick="openMethodology()" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool. Click the tooltip for the full methodology.">i</span> <span style="float: right; color: var(--accent-primary);" id="detail-entrying-score">0/100</span></div>
+                        <div class="player-detail-section-title">Entrying<span class="info-tip" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool.">i</span> <span style="float: right; color: var(--accent-primary);" id="detail-entrying-score">0/100</span></div>
                         <table class="player-detail-table">
                             <tbody>
                                 <tr><td>Traded deaths per round</td><td>-</td></tr>
@@ -2801,7 +2801,7 @@
                         </table>
 
                         <!-- Trading Section -->
-                        <div class="player-detail-section-title">Trading<span class="info-tip info-tip--link" onclick="openMethodology()" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool. Click the tooltip for the full methodology.">i</span> <span style="float: right; color: var(--accent-primary);" id="detail-trading-score">0/100</span></div>
+                        <div class="player-detail-section-title">Trading<span class="info-tip" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool.">i</span> <span style="float: right; color: var(--accent-primary);" id="detail-trading-score">0/100</span></div>
                         <table class="player-detail-table">
                             <tbody>
                                 <tr><td>Trade kills per round</td><td>-</td></tr>
@@ -2812,7 +2812,7 @@
                         </table>
 
                         <!-- Opening Section -->
-                        <div class="player-detail-section-title">Opening<span class="info-tip info-tip--link" onclick="openMethodology()" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool. Click the tooltip for the full methodology.">i</span> <span style="float: right; color: var(--accent-primary);" id="detail-opening-score">0/100</span></div>
+                        <div class="player-detail-section-title">Opening<span class="info-tip" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool.">i</span> <span style="float: right; color: var(--accent-primary);" id="detail-opening-score">0/100</span></div>
                         <table class="player-detail-table">
                             <tbody>
                                 <tr><td>Opening kills per round</td><td>-</td></tr>
@@ -2824,7 +2824,7 @@
                         </table>
 
                         <!-- Clutching Section -->
-                        <div class="player-detail-section-title">Clutching<span class="info-tip info-tip--link" onclick="openMethodology()" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool. Click the tooltip for the full methodology.">i</span> <span style="float: right; color: var(--accent-primary);" id="detail-clutching-score">0/100</span></div>
+                        <div class="player-detail-section-title">Clutching<span class="info-tip" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool.">i</span> <span style="float: right; color: var(--accent-primary);" id="detail-clutching-score">0/100</span></div>
                         <table class="player-detail-table">
                             <tbody>
                                 <tr><td>Clutch points per round<span class="info-tip info-tip--down" data-tip="1 clutch point for a 1v1, 2 for a 1v2, 4 for a 1v3, 8 for a 1v4 and 16 for a 1v5">i</span></td><td>-</td></tr>
@@ -2836,7 +2836,7 @@
                         </table>
 
                         <!-- Sniping Section -->
-                        <div class="player-detail-section-title">Sniping<span class="info-tip info-tip--link" onclick="openMethodology()" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool. Click the tooltip for the full methodology.">i</span> <span style="float: right; color: var(--accent-primary);" id="detail-sniping-score">0/100</span></div>
+                        <div class="player-detail-section-title">Sniping<span class="info-tip" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool.">i</span> <span style="float: right; color: var(--accent-primary);" id="detail-sniping-score">0/100</span></div>
                         <table class="player-detail-table">
                             <tbody>
                                 <tr><td>Sniper kills per round</td><td>-</td></tr>
@@ -2847,7 +2847,7 @@
                         </table>
 
                         <!-- Utility Section -->
-                        <div class="player-detail-section-title">Utility<span class="info-tip info-tip--link" onclick="openMethodology()" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool. Click the tooltip for the full methodology.">i</span> <span style="float: right; color: var(--accent-primary);" id="detail-utility-score">0/100</span></div>
+                        <div class="player-detail-section-title">Utility<span class="info-tip" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool.">i</span> <span style="float: right; color: var(--accent-primary);" id="detail-utility-score">0/100</span></div>
                         <table class="player-detail-table">
                             <tbody>
                                 <tr><td>Utility damage per round</td><td>-</td></tr>
@@ -2962,7 +2962,7 @@
                                     <th>Score</th>
                                     <th>K-D</th>
                                     <th>+/-</th>
-                                    <th>Rating 3.0<span class="info-tip info-tip--link info-tip--down" onclick="openRating()" data-tip="One number per map where 1.00 is average for this pool; higher is better, lower is worse. Combines kills, damage, survival, consistency, multi-kills, and round impact. HLTV 3.0-style, relative to these players only. Click to open full methodology.">i</span></th>
+                                    <th>Rating 3.0<span class="info-tip info-tip--down" data-tip="One number per map where 1.00 is average for this pool; higher is better, lower is worse. Combines kills, damage, survival, consistency, multi-kills, and round impact. HLTV 3.0-style, relative to these players only.">i</span></th>
                                 </tr>
                             </thead>
                             <tbody id="matches-tbody">
@@ -4805,35 +4805,35 @@
                         <div class="player-maps">${player.matches} maps</div>
                         <div class="player-stats-label">statistics</div>
                         <div class="player-rating-row">
-                            <span class="player-rating-label">Rating 3.0<span class="info-tip info-tip--link" onclick="openRating()" data-tip="One number per map where 1.00 is average for this pool; higher is better, lower is worse. Combines kills, damage, survival, consistency, multi-kills, and round impact. HLTV 3.0-style, relative to these players only. Click to open full methodology.">i</span></span>
+                            <span class="player-rating-label">Rating 3.0<span class="info-tip" data-tip="One number per map where 1.00 is average for this pool; higher is better, lower is worse. Combines kills, damage, survival, consistency, multi-kills, and round impact. HLTV 3.0-style, relative to these players only.">i</span></span>
                             <span class="player-rating-value">${parseFloat(player.rating).toFixed(2)}</span>
                         </div>
                         <div class="player-attribute">
-                            <span class="player-attribute-label">Firepower<span class="info-tip info-tip--link" onclick="openMethodology()" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool. Click the tooltip for the full methodology.">i</span></span>
+                            <span class="player-attribute-label">Firepower<span class="info-tip" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool.">i</span></span>
                             <span class="player-attribute-value">${player.firepower}</span>
                         </div>
                         <div class="player-attribute">
-                            <span class="player-attribute-label">Entrying<span class="info-tip info-tip--link" onclick="openMethodology()" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool. Click the tooltip for the full methodology.">i</span></span>
+                            <span class="player-attribute-label">Entrying<span class="info-tip" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool.">i</span></span>
                             <span class="player-attribute-value">${player.entrying}</span>
                         </div>
                         <div class="player-attribute">
-                            <span class="player-attribute-label">Trading<span class="info-tip info-tip--link" onclick="openMethodology()" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool. Click the tooltip for the full methodology.">i</span></span>
+                            <span class="player-attribute-label">Trading<span class="info-tip" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool.">i</span></span>
                             <span class="player-attribute-value">${player.trading}</span>
                         </div>
                         <div class="player-attribute">
-                            <span class="player-attribute-label">Opening<span class="info-tip info-tip--link" onclick="openMethodology()" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool. Click the tooltip for the full methodology.">i</span></span>
+                            <span class="player-attribute-label">Opening<span class="info-tip" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool.">i</span></span>
                             <span class="player-attribute-value">${player.opening}</span>
                         </div>
                         <div class="player-attribute">
-                            <span class="player-attribute-label">Clutching<span class="info-tip info-tip--link" onclick="openMethodology()" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool. Click the tooltip for the full methodology.">i</span></span>
+                            <span class="player-attribute-label">Clutching<span class="info-tip" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool.">i</span></span>
                             <span class="player-attribute-value">${player.clutching}</span>
                         </div>
                         <div class="player-attribute">
-                            <span class="player-attribute-label">Sniping<span class="info-tip info-tip--link" onclick="openMethodology()" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool. Click the tooltip for the full methodology.">i</span></span>
+                            <span class="player-attribute-label">Sniping<span class="info-tip" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool.">i</span></span>
                             <span class="player-attribute-value">${player.sniping}</span>
                         </div>
                         <div class="player-attribute">
-                            <span class="player-attribute-label">Utility<span class="info-tip info-tip--link" onclick="openMethodology()" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool. Click the tooltip for the full methodology.">i</span></span>
+                            <span class="player-attribute-label">Utility<span class="info-tip" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool.">i</span></span>
                             <span class="player-attribute-value">${player.utility}</span>
                         </div>
                         <a href="#" class="player-complete-stats" data-player-name="${player.name}">Complete statistics for ${info.nickname}</a>
@@ -8200,8 +8200,8 @@
                             <th>ADR</th>
                             <th>HS%</th>
                             <th>KAST<span class="info-tip info-tip--down" data-tip="Rounds in which a player killed, assisted, survived or was traded">i</span></th>
-                            <th>Round Swing<span class="info-tip info-tip--link info-tip--down" onclick="openRoundSwing()" data-tip="How much this player's actions shift their team's chance of winning the round. Click to open full methodology.">i</span></th>
-                            <th>Rating 3.0<span class="info-tip info-tip--link info-tip--down" onclick="openRating()" data-tip="One number per map where 1.00 is average for this pool; higher is better, lower is worse. Combines kills, damage, survival, consistency, multi-kills, and round impact. HLTV 3.0-style, relative to these players only. Click to open full methodology.">i</span></th>
+                            <th>Round Swing<span class="info-tip info-tip--down" data-tip="How much this player's actions shift their team's chance of winning the round.">i</span></th>
+                            <th>Rating 3.0<span class="info-tip info-tip--down" data-tip="One number per map where 1.00 is average for this pool; higher is better, lower is worse. Combines kills, damage, survival, consistency, multi-kills, and round impact. HLTV 3.0-style, relative to these players only.">i</span></th>
                             ${showExtraColumn ? `<th>${selectedStatLabel}</th>` : ''}
                         </tr>
                     </thead>
