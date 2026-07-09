@@ -3606,7 +3606,6 @@
 
         <div id="methodology" class="page">
             <div class="section">
-                <button class="back-button" id="methodology-back">← Back</button>
 
                 <div class="mth-wrap">
                     <div class="mth-title">How the ratings work</div>
@@ -3729,7 +3728,6 @@
         </div>
         <div id="round-swing" class="page">
             <div class="section">
-                <button class="back-button" id="round-swing-back">← Back</button>
 
                 <div class="mth-wrap">
                     <div class="mth-title">How Round Swing works</div>
@@ -3832,7 +3830,6 @@
         </div>
         <div id="rating" class="page">
             <div class="section">
-                <button class="back-button" id="rating-back">← Back</button>
 
                 <div class="mth-wrap">
                     <div class="mth-title">How the rating works</div>
@@ -6547,22 +6544,6 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function closeMethodology() {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            // Defensive fallback to 'overview' so Back can never strand the user
-            // on a blank screen if the stored id is somehow missing/invalid.
-            const target = document.getElementById(methodologyReturnPage) || document.getElementById('overview');
-            target.classList.add('active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        // Wire the methodology Back button (the page div is static HTML, so the
-        // element exists at load; guard in case the markup is ever removed).
-        (function wireMethodologyBack() {
-            const btn = document.getElementById('methodology-back');
-            if (btn) btn.addEventListener('click', closeMethodology);
-        })();
-
         // ===== Round Swing view: open + return-to-origin =====
         // Same pattern as the methodology view: captures whichever page the user
         // was on at click time so Back returns them there. This page is reachable
@@ -6578,18 +6559,6 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function closeRoundSwing() {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            const target = document.getElementById(roundSwingReturnPage) || document.getElementById('overview');
-            target.classList.add('active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        (function wireRoundSwingBack() {
-            const btn = document.getElementById('round-swing-back');
-            if (btn) btn.addEventListener('click', closeRoundSwing);
-        })();
-
         // ===== Rating 3.0 view: open + return-to-origin =====
         // Same pattern as the methodology and Round Swing views: captures whichever
         // page the user was on at click time so Back returns them there. Reachable
@@ -6604,18 +6573,6 @@
             document.getElementById('rating').classList.add('active');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-
-        function closeRating() {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            const target = document.getElementById(ratingReturnPage) || document.getElementById('overview');
-            target.classList.add('active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        (function wireRatingBack() {
-            const btn = document.getElementById('rating-back');
-            if (btn) btn.addEventListener('click', closeRating);
-        })();
 
         // ===== Methodology header dropdown =====
         // Toggles the three-item menu open/closed. Each item calls one of the
