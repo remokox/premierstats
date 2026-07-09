@@ -9179,6 +9179,66 @@
             return PLAYER_SAMPLE_TIER[playerName] || 'low';
         }
 
+        // ===== Awards: per-player title + summary content =====
+        // Keyed by the app nick (PLAYER_INFO key). High-tier players have a locked
+        // award title + extended summary. Mid-tier (low-sample) players have NO
+        // title (title: null) and a short strengths-focused summary. The lowest
+        // sample tier is handled by the existing 'low' branch and is not here.
+        const AWARDS_CONTENT = {
+            'remokox': {
+                title: 'The Ceiling',
+                summary: "Remo is the best player on the roster, and the stats don't leave much room to argue otherwise — a 1.43 rating that sits clear of the field, with the top marks in K/D, ADR, opening duels, clutches, and survival. What makes the title fit isn't just that he's first, it's what kind of first he is. He carries the entrying load, the part of the game where you're supposed to trade your life for space, and somehow posts the best survival rate on the team while doing it. Those two things usually pull against each other; in his profile they coexist. He also does the quieter work — team-best flash support — which is the sort of thing star fraggers often leave to lesser players. Over 260 matches there's no sample-size caveat to lean on, so this is just the shape of him. The honest framing is that he's the height the rest of the roster is measured against: not because everyone else is bad, but because he's set the bar a notch above where second place lives. He'll have off maps like anyone, and Mirage is a genuine soft spot. But across the season, when the team needs a round opened, a clutch closed, or simply someone to out-frag the other side's best, he's the answer more often than not."
+            },
+            'Große Cigarette': {
+                title: 'The Precision Instrument',
+                summary: "Where Remo overwhelms, Nefik dissects, and the difference between them is a real stylistic split rather than just a gap in level. His defining number is a headshot rate above 52% — and crucially, not as a one-map fluke but as the team's best on Ancient, Anubis, Inferno, and Overpass individually. That's not the byproduct of aggression, it's accuracy as a method: he wins duels by putting the first bullet where it ends the fight, rather than trading damage until someone falls. The instrument label reaches past raw aim, though. On Nuke he's the AWP and the round-closer, leading the map in clutch points per round — the guy left in the 1vX who walks out of it. On Anubis he's the best on the team at disciplined trading and isolated 1v1s. He's unmistakably the #2 star, but the role is distinct enough from Remo's that they don't overlap: one kicks the door in, the other reliably hits what he aims at when the round is on the line. Across 242 matches, none of this is projection — the precision is a proven, repeatable feature, the kind of consistency that lets a team build structure around him rather than hoping he shows up."
+            },
+            'Badum': {
+                title: 'Feast or Nap',
+                summary: "Badum is the team's second sniper and its single most map-dependent player, and the title owns both halves without flinching. On his comfort maps, he feasts: top-tier AWP output on Dust II and Inferno, the team-best headshot rate on Mirage, and the kind of patient angle-holding that gives him the longest time-alive-per-round on Inferno alongside the best isolated-duel win rate there. When the map suits him, he's a genuine second sniper threat — not a stand-in, a real one. Then there are the naps. On his weak maps, Dust II especially, his rating sags below replacement level even though his AWP usage stays high, and no other regular swings this far from his best map to his worst. That's less a flaw than a usage instruction. Badum is a lever, not a constant: deployed where he feasts, he tilts a map; asked to carry one where he naps, the numbers quietly collapse. The coaching value is in knowing which is which ahead of time, because the data draws the line clearly. He's the player whose ceiling and floor sit further apart than anyone's — and the trick to getting the ceiling is simply not putting him in a position to hit the floor."
+            },
+            'MasnoPro Vulpes Wójcior': {
+                title: 'The Sacrifice Play',
+                summary: "Vulpes has one of the lowest K/D figures among the regulars, and it genuinely doesn't matter, because fragging was never the assignment. He is the purest support anchor on the roster — #1 in support rounds on six separate maps, #1 in entrying — and the number that redeems the modest K/D is his league-best traded-deaths percentage. When Vulpes dies, his death gets used: converted into a teammate's trade kill more often than anyone else's, rather than thrown away for nothing. That is the sacrifice play written in numbers. He takes first contact, opens the site, and sells his life at a price the team actually collects, which is a completely different thing from dying uselessly. On a scoreboard he looks quiet, sometimes near the bottom; on a round-by-round basis he's doing the structural work that makes everyone else's kills possible. The important caveat is that this value only exists inside a team that knows how to cash it — a disorganized side would let his deaths go to waste and he'd just look bad. This one doesn't, which is exactly why the sacrifice keeps paying off. He's not a passenger dressed up in kind words; he's a role player doing a hard, thankless job well."
+            },
+            'MasnoCoach THUNDER': {
+                title: 'The Softening Agent',
+                summary: "Krakers has the lowest K/D of any regular on the roster, and like Vulpes, that fact is almost beside the point once you see what he actually does. He throws the most damaging grenades on the team by a clear margin — #1 in utility damage per game — and leads in assists per round while posting the highest damage-per-kill of the regulars. Those three numbers tell one coherent story: he isn't finishing kills, he's manufacturing them for other people. The high damage-per-kill means he's consistently chipping enemies down without landing the final shot; the utility and the assists mean that chip damage keeps turning into someone else's frag. He's the softening agent in the most literal sense — the one who breaks the target down so a teammate can put it away. There's a real honesty required here: in isolation, a sub-0.51 K/D looks alarming, and a solo-queue version of Krakers would struggle. But in a structured side that trades his aggression and uses his utility, he's doing high-value work that simply doesn't show up where casual observers look. The right way to measure him isn't his own scoreboard line — it's the kills his teammates get because of him, and by that measure he's one of the most valuable role players here."
+            },
+            'Torrek': {
+                title: 'Mr. Dependable',
+                summary: "Torrek is the strongest of the roster's not-a-star regulars, and his entire appeal is that you always know what you're getting from him. An even 1.01 K/D, a positive 1.12 rating, the team lead in assists per game, and a top-three KAST that means he almost never has a genuinely useless round — this is a profile built on floor, not ceiling. He's the connector, the piece that links the fraggers to the support core, and his best map, Ancient, is where every facet of his game peaks at once: opening duels, utility damage, and assists all top out together there. What he doesn't have is a signature elite stat, and he doesn't need one. His value is the absence of variance. He rarely throws his life away, rarely vanishes from a round, and reliably turns in the kind of quietly-positive game that gives the stars the stable base they need to take risks. Teams that live and die by their top two players tend to collapse when those two have an off night; a Torrek is the insurance against that, the player whose steady 1.0-ish contribution keeps the floor from falling out. The thin spots are honest — a slightly negative round swing on Overpass, and per-map samples modest enough that his map splits are indicators rather than gospel — but the core trait, dependability, is exactly what the title promises and exactly what the numbers show."
+            },
+            'flamezvitality': {
+                title: 'The Winning Habit',
+                summary: "Ołmi has the simplest case on the whole roster: his teams win more than anyone else's, a 62.9% win rate that holds up map after map rather than riding one hot stretch, and the underlying numbers say it's earned rather than lucky. He's #1 in KAST, meaning he contributes something useful — a kill, an assist, a survival, a trade — in nearly four of every five rounds he plays, and he's #1 in utility, so that contribution isn't one-dimensional. He's the second-best-rated player on the team behind only Remo, and unlike the other high-raters, his profile is genuinely two-way: he frags, he survives, and he throws lethal utility, all at once, without a glaring hole. The habit in the title is the point — winning, for Ołmi, doesn't look like a spike, it looks like a baseline. The one caveat worth stating plainly is the sample: at 66 matches he's played meaningfully less than the true regulars, and a couple of his gaudier map win rates come from small handfuls of games. But the stats doing the heavy lifting for his case — win rate, KAST, utility — are precisely the ones that stabilize fastest and are least likely to be sample noise. The likeliest read isn't that he got lucky over 66 games; it's that he's quietly one of the two best players here and the results follow him around because of it."
+            },
+            'monke': {
+                title: 'The Duelist',
+                summary: "Give Jano a fair fight and he tends to win it. His signature is the team's best 1v1 win rate — north of three-quarters — propped up by the top headshot rate on the roster and the best win-percentage-after-opening among the regulars. String those together and you get a clear picture: when he takes the opening duel, the round leans the team's way; when he's stranded in an isolated standoff, he usually walks out of it. He's a precise, duel-winning fragger cut from the same cloth as the game's aggressive stars, the kind of player who turns a coinflip situation into a favorable one through raw mechanics. The caveat has to be loud, though, because it's the whole context: at 31 matches this is a promising sketch rather than a finished portrait, and several of his flashier map splits rest on six or seven games where a single good series moves the number a lot. What keeps it from being empty hype is which stats are carrying it — accuracy and duel-winning are among the traits that show through fastest on a small sample, so the signal is more trustworthy than, say, a win rate would be at the same volume. The duelist looks real. He just needs the games to prove the ceiling is as high as the early numbers hint."
+            },
+            'Minion 2': {
+                title: 'The Careful Sniper',
+                summary: "Tytan is the roster's most cautious AWPer, and every word of that is a compliment in context. His defining stat is the lowest opening-death rate on the team — he simply refuses to give up cheap first blood — paired with being the most sniper-committed player by share of kills. Put those together and you get a back-line sniper who treats his own life as the resource to protect: he holds his angle, waits for the shot, and doesn't peek into a duel he hasn't already half-won. The supporting numbers back the picture. He posts the longest time-alive-per-round on Mirage and top-two weapon-saving discipline on Nuke, both hallmarks of a player who'd rather bank a rifle for next round than throw it away on a lost one. The honest frame is that he's a sub-1.0 player overall who effectively plays two maps, so the ceiling here is narrow and nobody should pretend otherwise — this is a role, not a star turn. But within that lane, the careful sniper is genuinely useful: a low-risk AWP you slot onto his comfort maps and trust not to lose you the opening round through impatience. He won't win you a map by himself, but he also won't quietly bleed you one, and there's real value in a sniper you never have to worry about."
+            },
+            'Twój Stary': {
+                title: 'The Careful Aggressor',
+                summary: "Kapi's title is a tension he lives inside comfortably, but it needs stating precisely, because the easy version of it is wrong. He is not a high-volume entry who's always first through the door — in fact he has one of the lowest opening-attempts rates on the roster, taking first contact less often than almost anyone. The \"aggressor\" half is about quality, not quantity: when he does choose to enter, he's efficient about it, winning the opening duel more than twice as often as he loses it on Mirage and posting some of the lowest opening-death rates on several maps. That's the careful half doing the real work. He picks his moments, and when he picks them he rarely hands the enemy a free pick. He also leads the team in the TRADING composite, so the aggression he does commit to feeds the round structure rather than gambling it away. His overall rating sits just under 1.0, so this isn't a carry profile — it's a disciplined, selective role player whose value is in risk management. The honest summary is that he's an aggressor by precision rather than by volume: he doesn't open many rounds, but the ones he opens, he tends to open cleanly, and he almost never dies cheaply doing it. For a structured team, that restraint is worth more than a busier, sloppier entry would be."
+            },
+            'Marnyr': {
+                title: null,
+                summary: "Everything here rests on a small sample (about 16 games), so treat it as an early sketch rather than a verdict. The most trustworthy thing in it is his aim: a headshot rate near 57% over those games, which if it holds would be among the most precise on the roster. He pairs that with heavy, lethal utility usage — top-tier grenade damage per game — suggesting a precise, utility-forward rifler. His per-map splits are dominated by one-to-four-game noise and shouldn't be read literally, but the two traits that stabilize fastest, accuracy and utility, are both encouraging. A promising profile waiting on volume."
+            },
+            'tylman duduś': {
+                title: null,
+                summary: "This rests on a small sample (about 11 games), so read it as an early sketch, not a verdict — but it's the most coherent of the low-sample profiles and the most encouraging. Over those games he grades as an even-rated sniper-utility hybrid: he'd rank at or near the top in sniper-kill share and utility damage if the sample held, an unusual combination of AWP threat and grenade contribution rather than a one-note role. The map splits are single-game spikes and mean little, but the 11-game aggregate genuinely points somewhere. Worth more minutes to confirm."
+            },
+            'dziad': {
+                title: null,
+                summary: "This rests on the thinnest sample of the group (about 9 games), so it's a sketch and the verdict is modest — but there's a real thread. Over those games he grades as the most active participant in the trade game and a heavy utility user: a support-leaning profile built on trading and grenades rather than fragging. His overall rating sits below replacement so far, so this is a support sketch rather than a breakout, but the trading-and-utility identity is at least consistent across his fragments. Give it time before drawing conclusions either way."
+            }
+        };
+
         function renderAwards(playerName) {
             const info = PLAYER_INFO[playerName];
             if (!info) return;
@@ -9203,31 +9263,47 @@
             // Award name: a trophy on the left + tier-dependent text.
             const awardNameEl = document.getElementById('awards-award-name');
             if (awardNameEl) {
-                let awardText;
-                if (tier === 'mid') {
-                    awardText = 'Occasional support';
+                const content = AWARDS_CONTENT[playerName];
+                if (content && content.title) {
+                    // High-tier: locked award title.
+                    awardNameEl.classList.remove('awards-placeholder');
+                    awardNameEl.style.display = '';
+                    awardNameEl.innerHTML =
+                        '<span class="award-trophy">🏆</span>' +
+                        '<span class="award-title-text">' + content.title + '</span>';
+                } else if (content && content.title === null) {
+                    // Mid-tier (low sample): no award title at all.
+                    awardNameEl.classList.add('awards-placeholder');
+                    awardNameEl.style.display = 'none';
                 } else if (tier === 'low') {
-                    awardText = 'Participation trophy';
+                    // Lowest sample tier: existing participation copy (unchanged).
+                    awardNameEl.classList.remove('awards-placeholder');
+                    awardNameEl.style.display = '';
+                    awardNameEl.innerHTML =
+                        '<span class="award-trophy">🏆</span>' +
+                        '<span class="award-title-text">Participation trophy</span>';
                 } else {
-                    // high: specific per-player awards come later; keep placeholder.
-                    awardText = 'Award name — coming later';
+                    awardNameEl.classList.add('awards-placeholder');
+                    awardNameEl.style.display = '';
+                    awardNameEl.innerHTML =
+                        '<span class="award-trophy">🏆</span>' +
+                        '<span class="award-title-text">Award name — coming later</span>';
                 }
-                awardNameEl.classList.remove('awards-placeholder');
-                awardNameEl.innerHTML =
-                    '<span class="award-trophy">🏆</span>' +
-                    '<span class="award-title-text">' + awardText + '</span>';
             }
 
-            // Text summary: only low sample has fixed copy; high/mid come later.
+            // Text summary: per-player content for high/mid; low keeps its copy.
             const summaryEl = document.getElementById('awards-summary');
             if (summaryEl) {
-                if (tier === 'low') {
+                const content = AWARDS_CONTENT[playerName];
+                if (content && content.summary) {
+                    summaryEl.classList.remove('awards-placeholder');
+                    summaryEl.textContent = content.summary;
+                } else if (tier === 'low') {
                     summaryEl.classList.remove('awards-placeholder');
                     summaryEl.textContent =
                         'This player has not played enough games for his aggregate ' +
                         'statistics to be trustworthy. Thanks for participating though!';
                 } else {
-                    // high/mid: leave the existing placeholder for now.
                     summaryEl.classList.add('awards-placeholder');
                     summaryEl.textContent = 'Text summary — coming later';
                 }
