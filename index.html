@@ -10837,7 +10837,7 @@
         // pro data is stored as fractions (0-1). Divide the PLAYER value by 100 on
         // these axes so player and pro sit on the same scale for the overlay,
         // the shared bounds, and the stats panel. (1k+ is intentionally NOT here.)
-        const PCOMP_PLAYER_DIV100 = { '2k+': true, 'Opening success': true, '1on1 win': true };
+        const PCOMP_PLAYER_DIV100 = { '1k+': true, '2k+': true, 'Opening success': true, '1on1 win': true };
 
         // Read one player's 12 radar-axis raw values off the sheet row, applying
         // the /100 correction on the affected axes.
