@@ -1003,6 +1003,10 @@
             border-bottom: 1px solid var(--border);
         }
 
+        #winrate-duo-table.hide-partner .duo-partner-col {
+            display: none;
+        }
+
         .matches-table tbody tr:hover {
             background: rgba(255, 107, 53, 0.05);
         }
@@ -3632,6 +3636,7 @@
                         <table class="matches-table" id="winrate-duo-table">
                             <thead>
                                 <tr>
+                                    <th id="duo-partner-header" class="duo-partner-col">Partner</th>
                                     <th>Matches</th>
                                     <th>Wins</th>
                                     <th>Losses</th>
@@ -3642,7 +3647,7 @@
                                 </tr>
                             </thead>
                             <tbody id="winrate-duo-tbody">
-                                <tr><td colspan="7" style="color: var(--text-secondary);">Select two players to see their duo stats.</td></tr>
+                                <tr><td colspan="8" style="color: var(--text-secondary);">Select two players to see their duo stats.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -7607,11 +7612,13 @@
 
             const singleWrap = document.getElementById('duo-single-wrap');
             const leaderboard = document.getElementById('duo-leaderboard');
+            const duoTable = document.getElementById('winrate-duo-table');
 
             if (p1 === p2 && p1) {
                 // both selected but same — show a hint inside single table instead
                 if (singleWrap) singleWrap.style.display = 'block';
                 if (leaderboard) leaderboard.style.display = 'none';
+                if (duoTable) duoTable.classList.add('hide-partner');
                 tbody.innerHTML = '<tr><td colspan="7" style="color: var(--text-secondary);">Please pick two different players.</td></tr>';
                 return;
             }
@@ -7620,6 +7627,7 @@
             if ((p1 && !p2) || (!p1 && p2)) {
                 if (singleWrap) singleWrap.style.display = 'block';
                 if (leaderboard) leaderboard.style.display = 'none';
+                if (duoTable) duoTable.classList.remove('hide-partner');
                 await renderSinglePlayerDuos(p1 || p2, mapFilter);
                 return;
             }
@@ -7635,6 +7643,7 @@
             // A specific duo is selected: show the single-duo table
             if (singleWrap) singleWrap.style.display = 'block';
             if (leaderboard) leaderboard.style.display = 'none';
+            if (duoTable) duoTable.classList.add('hide-partner');
 
             showPanelLoading(['winrate-duo-tbody']);
 
@@ -7695,6 +7704,7 @@
             const avg2 = p2RatingCount > 0 ? (p2RatingSum / p2RatingCount).toFixed(2) : '-';
 
             tbody.innerHTML = `<tr>
+                <td class="duo-partner-col"></td>
                 <td>${matches}</td>
                 <td>${wins}</td>
                 <td>${losses}</td>
@@ -7710,17 +7720,19 @@
             const tbody = document.getElementById('winrate-duo-tbody');
             if (!tbody) return;
 
-            // Repurpose the two rating headers for this view
+            // Set headers for this view: Partner column (leftmost) + both ratings
+            const ph = document.getElementById('duo-partner-header');
             const h1 = document.getElementById('duo-p1-rating-header');
             const h2 = document.getElementById('duo-p2-rating-header');
-            if (h1) h1.textContent = 'Partner';
-            if (h2) h2.textContent = player + ' Rating 3.0';
+            if (ph) ph.textContent = 'Partner';
+            if (h1) h1.textContent = player + ' Rating 3.0';
+            if (h2) h2.textContent = 'Partner Rating 3.0';
 
             showPanelLoading(['winrate-duo-tbody']);
 
             const data = await fetchSheetData(SHEET_GIDS.ecohunters);
             if (!data) {
-                tbody.innerHTML = '<tr><td colspan="7" style="color: var(--danger);">Failed to load data.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="color: var(--danger);">Failed to load data.</td></tr>';
                 return;
             }
 
@@ -7730,7 +7742,7 @@
                 return name !== '' && n !== 'player' && n !== 'player details';
             });
 
-            // partner name -> { wins, losses, ties, ratingSum, ratingCount }
+            // partner name -> tallies for the selected player AND the partner's own rating
             const partners = new Map();
 
             for (let i = 0; i + 5 <= dataRows.length; i += 5) {
@@ -7752,13 +7764,15 @@
                     if (!mate || mate === player) continue;
 
                     let e = partners.get(mate);
-                    if (!e) { e = { wins: 0, losses: 0, ties: 0, ratingSum: 0, ratingCount: 0 }; partners.set(mate, e); }
+                    if (!e) { e = { wins: 0, losses: 0, ties: 0, selfSum: 0, selfCount: 0, mateSum: 0, mateCount: 0 }; partners.set(mate, e); }
 
                     if (outcome === 'win') e.wins++;
                     else if (outcome === 'loss') e.losses++;
                     else if (outcome === 'tie') e.ties++;
 
-                    if (!isNaN(selfRating)) { e.ratingSum += selfRating; e.ratingCount++; }
+                    if (!isNaN(selfRating)) { e.selfSum += selfRating; e.selfCount++; }
+                    const mateRating = parseFloat(r[ECO_RATING_COL]);
+                    if (!isNaN(mateRating)) { e.mateSum += mateRating; e.mateCount++; }
                 }
             }
 
@@ -7773,12 +7787,13 @@
                     winrate = pct.toFixed(1) + '%';
                     cls = pct > 50 ? 'text-green' : pct < 50 ? 'text-red' : 'text-yellow';
                 }
-                const avg = e.ratingCount > 0 ? (e.ratingSum / e.ratingCount).toFixed(2) : '-';
-                rows.push({ mate, matches, wins: e.wins, losses: e.losses, ties: e.ties, pct, winrate, cls, avg });
+                const selfAvg = e.selfCount > 0 ? (e.selfSum / e.selfCount).toFixed(2) : '-';
+                const mateAvg = e.mateCount > 0 ? (e.mateSum / e.mateCount).toFixed(2) : '-';
+                rows.push({ mate, matches, wins: e.wins, losses: e.losses, ties: e.ties, pct, winrate, cls, selfAvg, mateAvg });
             }
 
             if (rows.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="color: var(--text-secondary);">No matches found for ' + player + (mapFilter !== 'all' ? ' on ' + mapFilter : '') + '.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="color: var(--text-secondary);">No matches found for ' + player + (mapFilter !== 'all' ? ' on ' + mapFilter : '') + '.</td></tr>';
                 return;
             }
 
@@ -7786,13 +7801,14 @@
             rows.sort((a, b) => b.matches - a.matches || (b.pct ?? -1) - (a.pct ?? -1));
 
             tbody.innerHTML = rows.map(r => `<tr>
+                <td class="duo-partner-col">${r.mate}</td>
                 <td>${r.matches}</td>
                 <td>${r.wins}</td>
                 <td>${r.losses}</td>
                 <td>${r.ties}</td>
                 <td class="${r.cls}">${r.winrate}</td>
-                <td>${r.mate}</td>
-                <td>${r.avg}</td>
+                <td>${r.selfAvg}</td>
+                <td>${r.mateAvg}</td>
             </tr>`).join('');
         }
 
