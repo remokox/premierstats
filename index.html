@@ -7608,17 +7608,26 @@
             const singleWrap = document.getElementById('duo-single-wrap');
             const leaderboard = document.getElementById('duo-leaderboard');
 
-            if (!p1 || !p2 || p1 === p2) {
+            if (p1 === p2 && p1) {
+                // both selected but same — show a hint inside single table instead
+                if (singleWrap) singleWrap.style.display = 'block';
+                if (leaderboard) leaderboard.style.display = 'none';
+                tbody.innerHTML = '<tr><td colspan="7" style="color: var(--text-secondary);">Please pick two different players.</td></tr>';
+                return;
+            }
+
+            // Exactly one player selected: show their duo winrate with everyone
+            if ((p1 && !p2) || (!p1 && p2)) {
+                if (singleWrap) singleWrap.style.display = 'block';
+                if (leaderboard) leaderboard.style.display = 'none';
+                await renderSinglePlayerDuos(p1 || p2, mapFilter);
+                return;
+            }
+
+            if (!p1 || !p2) {
                 // Default view: best/worst duos leaderboard
                 if (singleWrap) singleWrap.style.display = 'none';
                 if (leaderboard) leaderboard.style.display = 'block';
-                if (p1 === p2 && p1) {
-                    // both selected but same — show a hint inside single table instead
-                    if (singleWrap) singleWrap.style.display = 'block';
-                    if (leaderboard) leaderboard.style.display = 'none';
-                    tbody.innerHTML = '<tr><td colspan="7" style="color: var(--text-secondary);">Please pick two different players.</td></tr>';
-                    return;
-                }
                 await renderDuoLeaderboard(mapFilter);
                 return;
             }
@@ -7694,6 +7703,97 @@
                 <td>${avg1}</td>
                 <td>${avg2}</td>
             </tr>`;
+        }
+
+        // One player selected: winrate paired with every teammate
+        async function renderSinglePlayerDuos(player, mapFilter) {
+            const tbody = document.getElementById('winrate-duo-tbody');
+            if (!tbody) return;
+
+            // Repurpose the two rating headers for this view
+            const h1 = document.getElementById('duo-p1-rating-header');
+            const h2 = document.getElementById('duo-p2-rating-header');
+            if (h1) h1.textContent = 'Partner';
+            if (h2) h2.textContent = player + ' Rating 3.0';
+
+            showPanelLoading(['winrate-duo-tbody']);
+
+            const data = await fetchSheetData(SHEET_GIDS.ecohunters);
+            if (!data) {
+                tbody.innerHTML = '<tr><td colspan="7" style="color: var(--danger);">Failed to load data.</td></tr>';
+                return;
+            }
+
+            const dataRows = data.filter(row => {
+                const name = (row[6] || '').toString().trim();
+                const n = name.toLowerCase();
+                return name !== '' && n !== 'player' && n !== 'player details';
+            });
+
+            // partner name -> { wins, losses, ties, ratingSum, ratingCount }
+            const partners = new Map();
+
+            for (let i = 0; i + 5 <= dataRows.length; i += 5) {
+                const chunk = dataRows.slice(i, i + 5);
+                const sig = r => (r[1] || '') + '|' + (r[2] || '') + '|' + (r[4] || '');
+                if (!chunk.every(r => sig(r) === sig(chunk[0]))) continue;
+
+                const mapName = (chunk[0][2] || '').toString().trim();
+                if (mapFilter !== 'all' && mapName !== mapFilter) continue;
+
+                const selfRow = chunk.find(r => (r[6] || '').toString().trim() === player);
+                if (!selfRow) continue; // selected player not in this match
+
+                const outcome = (chunk[0][3] || '').toString().toLowerCase().trim();
+                const selfRating = parseFloat(selfRow[ECO_RATING_COL]);
+
+                for (const r of chunk) {
+                    const mate = (r[6] || '').toString().trim();
+                    if (!mate || mate === player) continue;
+
+                    let e = partners.get(mate);
+                    if (!e) { e = { wins: 0, losses: 0, ties: 0, ratingSum: 0, ratingCount: 0 }; partners.set(mate, e); }
+
+                    if (outcome === 'win') e.wins++;
+                    else if (outcome === 'loss') e.losses++;
+                    else if (outcome === 'tie') e.ties++;
+
+                    if (!isNaN(selfRating)) { e.ratingSum += selfRating; e.ratingCount++; }
+                }
+            }
+
+            const rows = [];
+            for (const [mate, e] of partners) {
+                const matches = e.wins + e.losses + e.ties;
+                if (matches === 0) continue;
+                const decisive = e.wins + e.losses;
+                let pct = null, winrate = '-', cls = '';
+                if (decisive > 0) {
+                    pct = e.wins / decisive * 100;
+                    winrate = pct.toFixed(1) + '%';
+                    cls = pct > 50 ? 'text-green' : pct < 50 ? 'text-red' : 'text-yellow';
+                }
+                const avg = e.ratingCount > 0 ? (e.ratingSum / e.ratingCount).toFixed(2) : '-';
+                rows.push({ mate, matches, wins: e.wins, losses: e.losses, ties: e.ties, pct, winrate, cls, avg });
+            }
+
+            if (rows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="color: var(--text-secondary);">No matches found for ' + player + (mapFilter !== 'all' ? ' on ' + mapFilter : '') + '.</td></tr>';
+                return;
+            }
+
+            // Sort: most matches first, then highest winrate
+            rows.sort((a, b) => b.matches - a.matches || (b.pct ?? -1) - (a.pct ?? -1));
+
+            tbody.innerHTML = rows.map(r => `<tr>
+                <td>${r.matches}</td>
+                <td>${r.wins}</td>
+                <td>${r.losses}</td>
+                <td>${r.ties}</td>
+                <td class="${r.cls}">${r.winrate}</td>
+                <td>${r.mate}</td>
+                <td>${r.avg}</td>
+            </tr>`).join('');
         }
 
         // Best/worst duo leaderboard (default view before a duo is picked)
