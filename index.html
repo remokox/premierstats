@@ -5083,9 +5083,17 @@
 
             // Rank Change (sum of col I) and Avg Opponent (mean of col F) come
             // from the ecohunters sheet, keyed by PLAYER_INFO key. A failed fetch
-            // here must NOT block the primary table, so it degrades to no data.
+            // OR a parse error here must NOT block the primary table, so it
+            // degrades to no data rather than throwing and hanging the spinner.
             let ecoAgg = {};
-            if (ecoData) ecoAgg = computeOverviewEcoAggregates(ecoData);
+            if (ecoData) {
+                try {
+                    ecoAgg = computeOverviewEcoAggregates(ecoData);
+                } catch (err) {
+                    console.error('Overview eco aggregation failed; continuing without it:', err);
+                    ecoAgg = {};
+                }
+            }
 
             // Clear any prior rows (e.g. after a season switch) before rendering.
             const ovTbodyEl = document.getElementById('overview-tbody');
@@ -5093,31 +5101,35 @@
 
             // Find the "All" block rows by label (season-safe) instead of a fixed
             // row range — S5's All block sits at different rows than S4's.
-            const players = [];
-            const allRows = rowsForMap(data, 'All');
-            allRows.forEach(row => {
-                const name = row[OVERVIEW_COLUMNS.name - 1];
-                if (!name || name === '' || name.toString().includes('#DIV')) return;
-                
-                // Overview name IS the PLAYER_INFO key (see PLAYER_INFO[name] usage),
-                // which is the same key computeOverviewEcoAggregates is keyed by.
-                const agg = ecoAgg[name] || null;
-                players.push({
-                    name: name,
-                    matches: parseInt(row[OVERVIEW_COLUMNS.matches - 1]) || 0,
-                    winrate: parseFloat(row[OVERVIEW_COLUMNS.winrate - 1]) || 0,
-                    kd: parseFloat(row[OVERVIEW_COLUMNS.kd - 1]) || 0,
-                    adr: parseFloat(row[OVERVIEW_COLUMNS.adr - 1]) || 0,
-                    hs_pct: parseFloat(row[OVERVIEW_COLUMNS.hs_pct - 1]) || 0,
-                    rating: parseFloat(row[OVERVIEW_COLUMNS.rating - 1]) || 0,
-                    rankChange: agg ? agg.rankChange : null,
-                    avgOpponent: agg ? agg.avgOpponent : null,
-                    endRank: (PEAK_ENDRANK[name] && PEAK_ENDRANK[name].endRank != null) ? PEAK_ENDRANK[name].endRank : null,
-                    peak: (PEAK_ENDRANK[name] && PEAK_ENDRANK[name].peak != null) ? PEAK_ENDRANK[name].peak : null
+            try {
+                const players = [];
+                const allRows = rowsForMap(data, 'All');
+                allRows.forEach(row => {
+                    const name = row[OVERVIEW_COLUMNS.name - 1];
+                    if (!name || name === '' || name.toString().includes('#DIV')) return;
+                    
+                    const agg = ecoAgg[name] || null;
+                    players.push({
+                        name: name,
+                        matches: parseInt(row[OVERVIEW_COLUMNS.matches - 1]) || 0,
+                        winrate: parseFloat(row[OVERVIEW_COLUMNS.winrate - 1]) || 0,
+                        kd: parseFloat(row[OVERVIEW_COLUMNS.kd - 1]) || 0,
+                        adr: parseFloat(row[OVERVIEW_COLUMNS.adr - 1]) || 0,
+                        hs_pct: parseFloat(row[OVERVIEW_COLUMNS.hs_pct - 1]) || 0,
+                        rating: parseFloat(row[OVERVIEW_COLUMNS.rating - 1]) || 0,
+                        rankChange: agg ? agg.rankChange : null,
+                        avgOpponent: agg ? agg.avgOpponent : null,
+                        endRank: (typeof PEAK_ENDRANK !== 'undefined' && PEAK_ENDRANK[name] && PEAK_ENDRANK[name].endRank != null) ? PEAK_ENDRANK[name].endRank : null,
+                        peak: (typeof PEAK_ENDRANK !== 'undefined' && PEAK_ENDRANK[name] && PEAK_ENDRANK[name].peak != null) ? PEAK_ENDRANK[name].peak : null
+                    });
                 });
-            });
 
-            displayOverviewData(players);
+                displayOverviewData(players);
+            } catch (err) {
+                console.error('Overview render failed:', err);
+                const ovl = document.getElementById('overview-loading');
+                if (ovl) ovl.innerHTML = '<p style="color: var(--danger);">Error rendering overview: ' + (err && err.message ? err.message : err) + '</p>';
+            }
         }
 
         // Display overview data in table
