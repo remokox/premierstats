@@ -4905,6 +4905,7 @@
         const PLAYER_INFO_S5 = {
             'Remo': {
                 nickname: 'Remo',
+                longName: 'remokox',
                 realname: 'Remokox Dobraes',
                 flag: 'poland.png',
                 photo: 'remokox.png',
@@ -4912,6 +4913,7 @@
             },
             'Nefik': {
                 nickname: 'Nefik',
+                longName: 'Große Cigarette',
                 realname: 'Masny Nefer',
                 flag: 'poland.png',
                 photo: 'nefik.png',
@@ -4919,6 +4921,7 @@
             },
             'Badum': {
                 nickname: 'Badum',
+                longName: 'Badum',
                 realname: 'Assassin Badum28',
                 flag: 'temeria.png',
                 photo: 'badum.png',
@@ -4926,6 +4929,7 @@
             },
             'Vulpes': {
                 nickname: 'Vulpes',
+                longName: 'MasnoPro Vulpes Wójcior',
                 realname: 'Vulpes Wójcior',
                 flag: 'poland.png',
                 photo: 'vulpes.png',
@@ -4933,6 +4937,7 @@
             },
             'Krakers': {
                 nickname: 'Krakers',
+                longName: 'MasnoCoach THUNDER',
                 realname: 'Krakers Piorun Miśka',
                 flag: 'poland.png',
                 photo: 'krakers.png',
@@ -4940,6 +4945,7 @@
             },
             'Ołmi': {
                 nickname: 'Ołmi',
+                longName: 'flamezvitality',
                 realname: 'Ołmi Zyzik',
                 flag: 'israel.png',
                 photo: 'olmi.png',
@@ -4947,6 +4953,7 @@
             },
             'Torrek': {
                 nickname: 'Torrek',
+                longName: 'Torrek',
                 realname: 'Bliźniak Baduma',
                 flag: 'poland.png',
                 photo: 'torrek.png',
@@ -4954,6 +4961,7 @@
             },
             'Kapi': {
                 nickname: 'Kapi',
+                longName: 'Twój Stary',
                 realname: 'Kapi',
                 flag: 'poland.png',
                 photo: 'kapi.png',
@@ -4961,6 +4969,7 @@
             },
             'Jano': {
                 nickname: 'Jano',
+                longName: 'monke',
                 realname: 'Jano Głośnik',
                 flag: 'canada.png',
                 photo: 'monke.png',
@@ -5018,7 +5027,16 @@
 
             const promise = (async () => {
                 try {
-                    const response = await fetch(url);
+                    // Guard against a stalled request (e.g. transient Google
+                    // rate-limiting) hanging the UI forever: abort after 15s.
+                    const controller = new AbortController();
+                    const timer = setTimeout(() => controller.abort(), 15000);
+                    let response;
+                    try {
+                        response = await fetch(url, { signal: controller.signal });
+                    } finally {
+                        clearTimeout(timer);
+                    }
                     const text = await response.text();
                     return parseCSV(text);
                 } catch (error) {
@@ -5204,8 +5222,9 @@
                 }
 
                 const row = document.createElement('tr');
+                const displayName = (typeof PLAYER_INFO !== 'undefined' && PLAYER_INFO[player.name] && PLAYER_INFO[player.name].longName) ? PLAYER_INFO[player.name].longName : player.name;
                 row.innerHTML = `
-                    <td class="player-name">${player.name}</td>
+                    <td class="player-name">${displayName}</td>
                     ${endRankCell}
                     ${avgOppCell}
                     ${peakCell}
@@ -5365,7 +5384,7 @@
                 card.innerHTML = `
                     <img src="${imageUrl}" class="player-photo" alt="${info.nickname}">
                     <div class="player-info">
-                        <div class="player-nickname">${info.nickname}</div>
+                        <div class="player-nickname">${info.longName || info.nickname}</div>
                         <div class="player-identity">
                             <img src="${flagUrl}" class="player-flag" alt="flag">
                             <span class="player-realname">${info.realname}</span>
@@ -5404,7 +5423,7 @@
                             <span class="player-attribute-label">Utility<span class="info-tip" data-tip="Each attribute scores a player from 0 to 100 based on how they compare to everyone else in this pool. 50 is roughly average; higher is better. The system also pulls low-sample-size players toward the middle, so nobody gets an extreme score off a lucky handful of rounds. Every attribute uses the same scale, so a player's scores can be compared across attributes — an 80 in one means the same as an 80 in another. Scores are relative to the players in this pool.">i</span></span>
                             <span class="player-attribute-value">${player.utility}</span>
                         </div>
-                        <a href="#" class="player-complete-stats" data-player-name="${player.name}">Complete statistics for ${info.nickname}</a>
+                        <a href="#" class="player-complete-stats" data-player-name="${player.name}">Complete statistics for ${info.longName || info.nickname}</a>
                     </div>
                 `;
                 container.appendChild(card);
@@ -5436,7 +5455,7 @@
             
             // Populate player details
             document.getElementById('detail-photo').src = `https://raw.githubusercontent.com/remokox/premierstats/main/${info.photo}`;
-            document.getElementById('detail-nickname').textContent = info.nickname;
+            document.getElementById('detail-nickname').textContent = info.longName || info.nickname;
             document.getElementById('detail-flag').src = `https://raw.githubusercontent.com/remokox/premierstats/main/${info.flag}`;
             document.getElementById('detail-realname').textContent = info.realname;
             
@@ -11656,6 +11675,10 @@
         // to any page (or re-running the active page's loader) will re-fetch under
         // the currently-selected season. Called on every season switch.
         function resetAllPageData() {
+            // Clear the sheet-download cache so the new season always fetches
+            // fresh (and no stuck/stale promise from a prior season survives).
+            if (typeof sheetCache !== 'undefined' && sheetCache.clear) sheetCache.clear();
+
             // Overview
             const ovLoading = document.getElementById('overview-loading');
             if (ovLoading) { ovLoading.style.display = ''; ovLoading.innerHTML = '<div class="loading-spinner"></div>Loading data from Google Sheets...'; }
