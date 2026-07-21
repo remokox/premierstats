@@ -2694,9 +2694,129 @@
             }
             .awards-photo-img { max-height: 360px; }
         }
+        /* ── Season landing chooser ─────────────────────────────────────── */
+        .season-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            padding: 40px 20px;
+            background:
+                radial-gradient(circle at 50% 0%, rgba(255, 107, 53, 0.08), transparent 60%),
+                var(--bg-primary);
+            overflow-y: auto;
+        }
+        .season-overlay[hidden] { display: none; }
+
+        .season-overlay .so-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 50%, var(--accent-tertiary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .season-cards {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .season-card {
+            flex: 1 1 380px;
+            max-width: 460px;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px 32px;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 8px 30px var(--shadow);
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            font-weight: 600;
+            line-height: 1.6;
+            cursor: pointer;
+            transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        .season-card:hover,
+        .season-card:focus-visible {
+            transform: translateY(-4px);
+            border-color: var(--accent-primary);
+            box-shadow: 0 12px 40px rgba(255, 107, 53, 0.25);
+            outline: none;
+        }
+        .season-card .so-note {
+            display: block;
+            margin-top: 16px;
+            font-size: 0.95rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* "Change season" control shown once a season is active */
+        .season-switch {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            z-index: 900;
+            padding: 8px 14px;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: color 0.2s ease, border-color 0.2s ease;
+        }
+        .season-switch:hover {
+            color: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+        .season-switch[hidden] { display: none; }
     </style>
 </head>
 <body>
+    <!-- ── Season landing chooser ───────────────────────────────────────── -->
+    <div class="season-overlay" id="season-overlay">
+        <div class="so-title">Choose a season</div>
+        <div class="season-cards">
+            <div class="season-card" id="season-card-s4" role="button" tabindex="0"
+                 onclick="chooseSeason('s4')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();chooseSeason('s4');}">
+                Click to view complete Premier Season 4 Stats
+            </div>
+            <div class="season-card" id="season-card-s5" role="button" tabindex="0"
+                 onclick="chooseSeason('s5')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();chooseSeason('s5');}">
+                Click to view ongoing Premier Season 5 stats
+                <span class="so-note">Note: Round Swing is not present so the Rating 3.0 isn't as accurate as it should be. Keep in mind the low sample size when analyzing the data as well. Awards and Proplayer Comps will be populated when season ends.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Return-to-chooser control, hidden until a season is active -->
+    <button type="button" class="season-switch" id="season-switch" hidden onclick="openSeasonChooser()">↩ Change season</button>
+
     <div class="methodology-menu" id="methodology-menu" role="menu">
         <button type="button" role="menuitem" onclick="openMethodology(); closeMethodologyMenu();">Attributes methodology</button>
         <button type="button" role="menuitem" onclick="openRoundSwing(); closeMethodologyMenu();">Round swing methodology</button>
@@ -4088,14 +4208,164 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <script>
         // Google Sheets configuration
-        const SHEET_ID = '14dRJgt4aZUFMrBCP8KHkZ6_zhNZE2aInBU9U1kTJ3mg';
-        const SHEET_GIDS = {
-            'sum_stats_maps': '999727190',
-            'maps': '357077211',
-            'clutches': '1822466555',
-            'maps_data': '1115733287',
-            'ecohunters': '1037802432'
+        // ── Season configuration ─────────────────────────────────────────────
+        // Each season carries its own spreadsheet id + GID map. The active season
+        // is chosen on the landing screen; SHEET_ID / SHEET_GIDS below are then
+        // pointed at whichever season was picked, so every existing
+        // fetchSheetData(SHEET_GIDS.x) call keeps working unchanged.
+        const SEASONS = {
+            s4: {
+                label: 'Premier Season 4',
+                sheetId: '14dRJgt4aZUFMrBCP8KHkZ6_zhNZE2aInBU9U1kTJ3mg',
+                gids: {
+                    'sum_stats_maps': '999727190',
+                    'maps': '357077211',
+                    'clutches': '1822466555',
+                    'maps_data': '1115733287',
+                    'ecohunters': '1037802432'
+                }
+            },
+            s5: {
+                label: 'Premier Season 5',
+                sheetId: '1dcLFHiBSVAl1FWPZObuUsUW3GvsFTud8fCXqhkJBmw8',
+                gids: {
+                    'sum_stats_maps': '1404643388',
+                    'maps': '1262099570',
+                    'clutches': '321148997',
+                    'maps_data': '800719673',
+                    'ecohunters': '1796582251'
+                }
+            }
         };
+
+        // Active-season pointers. Populated by selectSeason(); intentionally left
+        // null until the user chooses, so nothing fetches on load.
+        let ACTIVE_SEASON = null;
+        let SHEET_ID = null;
+        let SHEET_GIDS = null;
+
+        function selectSeason(key) {
+            const s = SEASONS[key];
+            if (!s) return;
+            ACTIVE_SEASON = key;
+            SHEET_ID = s.sheetId;
+            SHEET_GIDS = s.gids;
+
+            // Repoint the player layer to the chosen season's config.
+            if (key === 's5') {
+                PLAYER_INFO = PLAYER_INFO_S5;
+                MATCHES_COLUMNS = MATCHES_COLUMNS_S5;
+                CLUTCHES_COLUMNS = CLUTCHES_COLUMNS_S5;
+            } else {
+                PLAYER_INFO = PLAYER_INFO_S4;
+                MATCHES_COLUMNS = MATCHES_COLUMNS_S4;
+                CLUTCHES_COLUMNS = CLUTCHES_COLUMNS_S4;
+            }
+        }
+
+        // Season-aware DISPLAY ordering. The S5 sheets store games oldest-first,
+        // while S4 stores newest-first and the UI expects newest-first. This
+        // returns a copy reversed for S5 so lists render newest-first in both
+        // seasons. Use ONLY for display — never for sequential calcs (streaks)
+        // that must run in the collected (chronological) order.
+        function displayOrder(arr) {
+            return ACTIVE_SEASON === 's5' ? arr.slice().reverse() : arr;
+        }
+
+        // Awards and Pro Comps aren't ready until the season ends. In S5, lock
+        // both tabs to a note and disable their selectors; in S4, leave them fully
+        // functional. Idempotent — safe to call on every season switch.
+        const SEASON_LOCKED_NOTE = 'This part of the site will be populated when the season ends.';
+        function applySeasonLockedTabs() {
+            const locked = ACTIVE_SEASON === 's5';
+
+            const awSelect = document.getElementById('awards-player-select');
+            const awCard = document.querySelector('#awards .awards-card');
+            const awPrompt = document.getElementById('awards-empty-prompt');
+            const pcSelect = document.getElementById('pcomp-player-select');
+            const pcCard = document.getElementById('pcomp-card');
+            const pcPrompt = document.getElementById('pcomp-empty-prompt');
+
+            if (locked) {
+                if (awSelect) { awSelect.value = ''; awSelect.disabled = true; }
+                if (awCard) awCard.style.display = 'none';
+                if (awPrompt) { awPrompt.style.display = 'block'; awPrompt.textContent = SEASON_LOCKED_NOTE; }
+                if (pcSelect) { pcSelect.value = ''; pcSelect.disabled = true; }
+                if (pcCard) pcCard.style.display = 'none';
+                if (pcPrompt) { pcPrompt.style.display = 'block'; pcPrompt.textContent = SEASON_LOCKED_NOTE; }
+            } else {
+                // Re-enable selectors for S4 and restore default prompts.
+                if (awSelect) awSelect.disabled = false;
+                if (pcSelect) pcSelect.disabled = false;
+                if (awPrompt) awPrompt.textContent = 'Select a player to view their awards.';
+                if (pcPrompt) pcPrompt.textContent = 'Select a player to view their pro comparison.';
+                if (typeof resetAwardsSelection === 'function') resetAwardsSelection();
+                if (typeof resetProCompSelection === 'function') resetProCompSelection();
+            }
+        }
+
+        // ── Season-aware map pools ───────────────────────────────────────────
+        // Each season's map filters are rebuilt from this list. S4 keeps Overpass
+        // in its original position; S5 uses Cache, alphabetically ordered.
+        const MAP_POOLS = {
+            s4: ['Ancient', 'Anubis', 'Dust II', 'Inferno', 'Mirage', 'Nuke', 'Overpass'],
+            s5: ['Ancient', 'Anubis', 'Cache', 'Dust II', 'Inferno', 'Mirage', 'Nuke']
+        };
+
+        // Display name -> lowercase slug used by the #map-filter dropdown and
+        // mapNameForBlock (e.g. "Dust II" -> "dust2").
+        function mapSlug(displayName) {
+            const slugs = {
+                'Dust II': 'dust2',
+                'Ancient': 'ancient',
+                'Anubis': 'anubis',
+                'Inferno': 'inferno',
+                'Mirage': 'mirage',
+                'Nuke': 'nuke',
+                'Overpass': 'overpass',
+                'Cache': 'cache'
+            };
+            return slugs[displayName] || displayName.toLowerCase();
+        }
+
+        // Each map dropdown uses one of three value conventions. This describes
+        // per-id: the value format for map options, and the leading "all" option
+        // (value + label) that must be preserved at the top.
+        const MAP_DROPDOWNS = {
+            'map-filter':            { fmt: 'slug',    allValue: 'all', allLabel: 'All' },
+            'records-map-filter':    { fmt: 'display', allValue: 'all', allLabel: 'All Maps' },
+            'winrate-ml-map-filter': { fmt: 'display', allValue: 'all', allLabel: 'All Maps' },
+            'winrate-fs-map-filter': { fmt: 'display', allValue: 'all', allLabel: 'All Maps' },
+            'duo-map-filter':        { fmt: 'display', allValue: 'all', allLabel: 'All Maps' },
+            'winrate-ww-map-filter': { fmt: 'display', allValue: 'all', allLabel: 'All Maps' },
+            'winrate-dow-map-filter':{ fmt: 'display', allValue: 'all', allLabel: 'All Maps' },
+            'graphs-map-filter':     { fmt: 'display', allValue: 'All', allLabel: 'All Maps' }
+        };
+
+        // Rebuild every map-filter dropdown from the active season's pool,
+        // honoring each dropdown's value format and leading "all" option, and
+        // preserving the current selection when that map still exists.
+        function rebuildMapDropdowns() {
+            const pool = MAP_POOLS[ACTIVE_SEASON] || MAP_POOLS.s4;
+            Object.keys(MAP_DROPDOWNS).forEach(id => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                const cfg = MAP_DROPDOWNS[id];
+                const prev = sel.value;
+
+                let html = `<option value="${cfg.allValue}">${cfg.allLabel}</option>`;
+                pool.forEach(mapName => {
+                    const val = cfg.fmt === 'slug' ? mapSlug(mapName) : mapName;
+                    html += `<option value="${val}">${mapName}</option>`;
+                });
+                sel.innerHTML = html;
+
+                // Restore prior selection if it's still a valid option.
+                if (Array.from(sel.options).some(o => o.value === prev)) {
+                    sel.value = prev;
+                }
+            });
+        }
 
         // Convert a nav-filter map value (e.g. "dust2", "ancient", "all") to the
         // exact map-name string used in the sheet block labels (e.g. "Dust II").
@@ -4109,7 +4379,8 @@
                 'inferno': 'Inferno',
                 'mirage': 'Mirage',
                 'nuke': 'Nuke',
-                'overpass': 'Overpass'
+                'overpass': 'Overpass',
+                'cache': 'Cache'
             };
             return special[m] || (m.charAt(0).toUpperCase() + m.slice(1));
         }
@@ -4122,7 +4393,7 @@
 
         // Column mappings (1-indexed)
         const OVERVIEW_COLUMNS = {
-            name: 3,        // C
+            get name() { return ACTIVE_SEASON === 's5' ? 4 : 3; }, // S4: C(3), S5: D(4) short name
             matches: 5,     // E
             winrate: 9,     // I
             kd: 14,         // N
@@ -4132,7 +4403,7 @@
         };
 
         const PLAYER_COLUMNS = {
-            name: 3,        // C
+            get name() { return ACTIVE_SEASON === 's5' ? 4 : 3; }, // S4: C(3), S5: D(4) short name
             matches: 5,     // E
             rating: 185,    // GC
             firepower: 68,  // BP
@@ -4172,7 +4443,7 @@
         };
 
         // Column mappings for Matches tab - each player has different columns in the maps sheet
-        const MATCHES_COLUMNS = {
+        const MATCHES_COLUMNS_S4 = {
             'Große Cigarette': {
                 date: 21,      // V
                 map: 23,       // X
@@ -4329,7 +4600,7 @@
         };
 
         // Column mappings for Clutches tab - each player has different columns in the clutches sheet
-        const CLUTCHES_COLUMNS = {
+        const CLUTCHES_COLUMNS_S4 = {
             'remokox': {
                 date: 3,       // D
                 map: 5,        // F
@@ -4503,7 +4774,7 @@
         };
 
         // Player data mapping
-        const PLAYER_INFO = {
+        const PLAYER_INFO_S4 = {
             'remokox': {
                 nickname: 'remokox',
                 realname: 'Remokox Dobraes',
@@ -4625,6 +4896,101 @@
             }
         };
 
+        const PLAYER_INFO_S5 = {
+            'Remo': {
+                nickname: 'Remo',
+                realname: 'Remokox Dobraes',
+                flag: 'poland.png',
+                photo: 'remokox.png',
+                ecoName: 'Remo'
+            },
+            'Nefik': {
+                nickname: 'Nefik',
+                realname: 'Masny Nefer',
+                flag: 'poland.png',
+                photo: 'nefik.png',
+                ecoName: 'Nefik'
+            },
+            'Badum': {
+                nickname: 'Badum',
+                realname: 'Assassin Badum28',
+                flag: 'temeria.png',
+                photo: 'badum.png',
+                ecoName: 'Badum'
+            },
+            'Vulpes': {
+                nickname: 'Vulpes',
+                realname: 'Vulpes Wójcior',
+                flag: 'poland.png',
+                photo: 'vulpes.png',
+                ecoName: 'Vulpes'
+            },
+            'Krakers': {
+                nickname: 'Krakers',
+                realname: 'Krakers Piorun Miśka',
+                flag: 'poland.png',
+                photo: 'krakers.png',
+                ecoName: 'Krakers'
+            },
+            'Ołmi': {
+                nickname: 'Ołmi',
+                realname: 'Ołmi Zyzik',
+                flag: 'israel.png',
+                photo: 'olmi.png',
+                ecoName: 'Ołmi'
+            },
+            'Torrek': {
+                nickname: 'Torrek',
+                realname: 'Bliźniak Baduma',
+                flag: 'poland.png',
+                photo: 'torrek.png',
+                ecoName: 'Torrek'
+            },
+            'Kapi': {
+                nickname: 'Kapi',
+                realname: 'Kapi',
+                flag: 'poland.png',
+                photo: 'kapi.png',
+                ecoName: 'Kapi'
+            },
+            'Jano': {
+                nickname: 'Jano',
+                realname: 'Jano Głośnik',
+                flag: 'canada.png',
+                photo: 'monke.png',
+                ecoName: 'Jano'
+            }
+        };
+
+        const MATCHES_COLUMNS_S5 = {
+            'Remo': { date: 1, map: 2, result: 3, score: 4, kd: 5, plusMinus: 6, rating: 7 },
+            'Nefik': { date: 9, map: 10, result: 11, score: 12, kd: 13, plusMinus: 14, rating: 15 },
+            'Badum': { date: 17, map: 18, result: 19, score: 20, kd: 21, plusMinus: 22, rating: 23 },
+            'Vulpes': { date: 25, map: 26, result: 27, score: 28, kd: 29, plusMinus: 30, rating: 31 },
+            'Krakers': { date: 33, map: 34, result: 35, score: 36, kd: 37, plusMinus: 38, rating: 39 },
+            'Ołmi': { date: 41, map: 42, result: 43, score: 44, kd: 45, plusMinus: 46, rating: 47 },
+            'Torrek': { date: 49, map: 50, result: 51, score: 52, kd: 53, plusMinus: 54, rating: 55 },
+            'Kapi': { date: 57, map: 58, result: 59, score: 60, kd: 61, plusMinus: 62, rating: 63 },
+            'Jano': { date: 65, map: 66, result: 67, score: 68, kd: 69, plusMinus: 70, rating: 71 }
+        };
+
+        const CLUTCHES_COLUMNS_S5 = {
+            'Remo': { date: 1, map: 2, oneVX: 3, status: 4, round: 5 },
+            'Nefik': { date: 7, map: 8, oneVX: 9, status: 10, round: 11 },
+            'Badum': { date: 13, map: 14, oneVX: 15, status: 16, round: 17 },
+            'Vulpes': { date: 19, map: 20, oneVX: 21, status: 22, round: 23 },
+            'Krakers': { date: 25, map: 26, oneVX: 27, status: 28, round: 29 },
+            'Ołmi': { date: 31, map: 32, oneVX: 33, status: 34, round: 35 },
+            'Torrek': { date: 37, map: 38, oneVX: 39, status: 40, round: 41 },
+            'Kapi': { date: 43, map: 44, oneVX: 45, status: 46, round: 47 },
+            'Jano': { date: 49, map: 50, oneVX: 51, status: 52, round: 53 }
+        };
+
+        // Active player-layer pointers, repointed per season in selectSeason().
+        let PLAYER_INFO = PLAYER_INFO_S4;
+        let MATCHES_COLUMNS = MATCHES_COLUMNS_S4;
+        let CLUTCHES_COLUMNS = CLUTCHES_COLUMNS_S4;
+
         // Fetch data from Google Sheets
         // Cache for sheet downloads. Every page/tab/filter used to re-download the
         // full CSV of a sheet it had already fetched (often several times per view).
@@ -4636,7 +5002,7 @@
         const sheetCache = new Map();
 
         async function fetchSheetData(gid, range = '') {
-            const cacheKey = gid + '|' + range;
+            const cacheKey = SHEET_ID + '|' + gid + '|' + range;
             const cached = sheetCache.get(cacheKey);
             if (cached && (Date.now() - cached.time) < SHEET_CACHE_TTL_MS) {
                 return cached.promise;
@@ -5173,45 +5539,15 @@
             
             console.log('Fetched data rows:', data.length);
             
-            // Define row ranges for each map (convert to 0-based indices)
-            const mapRowRanges = {
-                'all': [7, 23],          // rows 8-24
-                'ancient': [29, 45],     // rows 30-46
-                'anubis': [51, 67],      // rows 52-68
-                'dust2': [73, 89],       // rows 74-90
-                'inferno': [95, 111],    // rows 96-112
-                'mirage': [117, 133],    // rows 118-134
-                'nuke': [139, 155],      // rows 140-156
-                'overpass': [161, 177]   // rows 162-178
-            };
-            
-            const [startRow, endRow] = mapRowRanges[mapName.toLowerCase()];
-            console.log(`Searching in rows ${startRow + 1} to ${endRow + 1} (indices ${startRow}-${endRow})`);
-            
-            // Find the row for this player within the specified range
-            let playerRow = null;
-            for (let i = startRow; i <= endRow; i++) {
-                if (i >= data.length) break;
-                
-                const row = data[i];
-                const nicknameCell = row[2]; // Column C (index 2)
-                
-                console.log(`Row ${i + 1}: Checking nickname "${nicknameCell}" against "${info.nickname}"`);
-                
-                if (nicknameCell === info.nickname) {
-                    playerRow = row;
-                    console.log('Found matching row at index:', i, '(row', i + 1, 'in sheet)');
-                    console.log('Row data sample:', {
-                        nickname: nicknameCell,
-                        totalKills: row[10],
-                        rating: row[184]
-                    });
-                    break;
-                }
+            // Locate this player's row for the selected map by label (season-safe;
+            // no dependence on fixed row positions).
+            const playerRow = findPlayerMapRow(data, mapName, info.nickname);
+            if (playerRow) {
+                console.log('Found matching row for', info.nickname, 'on', mapName);
             }
             
             if (!playerRow) {
-                console.error(`No overview row for ${info.nickname} in rows ${startRow + 1} to ${endRow + 1}; loading other tabs anyway`);
+                console.error(`No overview row for ${info.nickname} on ${mapName}; loading other tabs anyway`);
                 // The individual tab is filled from the overview row, which is missing
                 // here — clear its overlay so it doesn't hang. (Streaks/score-stats are
                 // loaded below and clear their own overlays.)
@@ -5535,7 +5871,7 @@
             // Find the "All" row for this player to get attributes (rows 8-24, indices 7-23)
             for (let i = 7; i <= 23 && i < data.length; i++) {
                 const row = data[i];
-                if (row[2] === info.nickname) {
+                if (row[PLAYER_COLUMNS.name - 1] === info.nickname) {
                     return {
                         firepower: row[PLAYER_COLUMNS.firepower - 1] || '0/100',
                         entrying: row[PLAYER_COLUMNS.entrying - 1] || '0/100',
@@ -5717,11 +6053,11 @@
             document.getElementById('matches-1plus-rating').textContent = onePlusRatingPct.toFixed(1) + '%';
             document.getElementById('matches-best-streak').textContent = bestStreak;
             
-            // Populate matches table
+            // Populate matches table (newest-first in both seasons)
             const tbody = document.getElementById('matches-tbody');
             tbody.innerHTML = '';
             
-            matches.forEach(match => {
+            displayOrder(matches).forEach(match => {
                 const row = document.createElement('tr');
                 
                 // Determine +/- color class
@@ -5789,9 +6125,11 @@
                 });
             }
 
-            // Reverse the whole block so it reads oldest -> newest.
-            // After this, within each date the FIRST game encountered is that day's 1st game.
-            games.reverse();
+            // Normalize to oldest -> newest for the position-in-day walk below.
+            // S4 sheets are newest-first (reverse needed); S5 is already oldest-first.
+            if (ACTIVE_SEASON !== 's5') {
+                games.reverse();
+            }
 
             // Assign position-in-day by walking chronologically and resetting on date change.
             const buckets = {}; // position -> { games, kills, deaths, ratingSum, ratingCount }
@@ -5889,7 +6227,12 @@
                 });
             }
 
-            matches.reverse(); // chronological: oldest -> newest
+            // Normalize to chronological (oldest -> newest) for run detection and
+            // the "now" end-marker. S4 is newest-first (reverse needed); S5 is
+            // already oldest-first.
+            if (ACTIVE_SEASON !== 's5') {
+                matches.reverse();
+            }
             const n = matches.length;
 
             // Find all runs tied for the longest length for a predicate.
@@ -5982,7 +6325,10 @@
                     status: (row[clutchCols.status] || '').toString().toLowerCase().trim()
                 });
             }
-            clutchSeq.reverse(); // chronological: oldest -> newest, matching the match logic
+            // Chronological normalization, same rule as the match streaks above.
+            if (ACTIVE_SEASON !== 's5') {
+                clutchSeq.reverse();
+            }
             const cn = clutchSeq.length;
 
             // Longest tied runs over the clutch sequence (parallel to longestRuns above).
@@ -6521,11 +6867,11 @@
                 differenceElement.classList.add('text-red');
             }
             
-            // Populate clutches table
+            // Populate clutches table (newest-first in both seasons)
             const tbody = document.getElementById('clutches-tbody');
             tbody.innerHTML = '';
             
-            clutches.forEach(clutch => {
+            displayOrder(clutches).forEach(clutch => {
                 const row = document.createElement('tr');
                 
                 // Determine status color class
@@ -6558,34 +6904,8 @@
                 return;
             }
             
-            // Use same row finding logic as loadPlayerDetailData
-            const mapRowRanges = {
-                'all': [7, 23],          // rows 8-24
-                'ancient': [29, 45],     // rows 30-46
-                'anubis': [51, 67],      // rows 52-68
-                'dust2': [73, 89],       // rows 74-90
-                'inferno': [95, 111],    // rows 96-112
-                'mirage': [117, 133],    // rows 118-134
-                'nuke': [139, 155],      // rows 140-156
-                'overpass': [161, 177]   // rows 162-178
-            };
-            
-            const [startRow, endRow] = mapRowRanges[mapName.toLowerCase()];
-            
-            // Find the row for this player within the specified range
-            let playerRow = null;
-            for (let i = startRow; i <= endRow; i++) {
-                if (i >= data.length) break;
-                
-                const row = data[i];
-                const nicknameCell = row[2]; // Column C (index 2)
-                
-                if (nicknameCell === info.nickname) {
-                    playerRow = row;
-                    console.log('Found player row for weapons data at index:', i);
-                    break;
-                }
-            }
+            // Use same label-based row finding as loadPlayerDetailData (season-safe).
+            const playerRow = findPlayerMapRow(data, mapName, info.nickname);
             
             if (!playerRow) {
                 console.error(`No weapons data found for ${info.nickname}`);
@@ -6840,8 +7160,8 @@
                 return;
             }
             
-            // Map names we want to process
-            const mapNames = ['Ancient', 'Anubis', 'Dust II', 'Inferno', 'Mirage', 'Nuke', 'Overpass'];
+            // Map names we want to process — season-aware (S4 has Overpass, S5 has Cache).
+            const mapNames = (MAP_POOLS[ACTIVE_SEASON] || MAP_POOLS.s4).slice();
             const mapImages = {
                 'Ancient': 'ancient.png',
                 'Anubis': 'anubis.png',
@@ -6849,7 +7169,8 @@
                 'Inferno': 'inferno.png',
                 'Mirage': 'mirage.png',
                 'Nuke': 'nuke.png',
-                'Overpass': 'overpass.png'
+                'Overpass': 'overpass.png',
+                'Cache': 'cache.png'
             };
             
             const mapsStats = [];
@@ -7936,6 +8257,22 @@
                 const name = row[PLAYER_COLUMNS.name - 1];
                 return name && name !== '' && !name.toString().includes('#DIV');
             });
+        }
+
+        // Find a single player's row for a given map, by label rather than by
+        // hardcoded row positions — works for any sheet layout / season. mapName
+        // is a filter value (e.g. "dust2", "all"); it's converted to the sheet's
+        // block label via mapNameForBlock. Returns the matching row or null.
+        function findPlayerMapRow(data, mapName, nickname) {
+            const blockLabel = mapNameForBlock(mapName);
+            const nameCol = PLAYER_COLUMNS.name - 1;
+            for (let i = 0; i < data.length; i++) {
+                const row = data[i];
+                const block = normLabel(row[MAP_COL - 1]);
+                if (block !== blockLabel) continue;
+                if (normLabel(row[nameCol]) === normLabel(nickname)) return row;
+            }
+            return null;
         }
 
         function initGraphs(mapName) {
@@ -9356,6 +9693,7 @@
         };
 
         function renderAwards(playerName) {
+            if (ACTIVE_SEASON === 's5') { applySeasonLockedTabs(); return; }
             const info = PLAYER_INFO[playerName];
             if (!info) return;
 
@@ -11117,6 +11455,7 @@
         }
 
         async function renderProComp(nick) {
+            if (ACTIVE_SEASON === 's5') { applySeasonLockedTabs(); return; }
             const info = PLAYER_INFO[nick];
             if (!info) return;
             const eco = info.ecoName;
@@ -11241,10 +11580,43 @@
             resetAwardsSelection();
         })();
 
-        // Load data on page load
-        window.addEventListener('DOMContentLoaded', () => {
-            loadOverviewData();
-        });
+        // ── Season chooser flow ──────────────────────────────────────────────
+        // Nothing fetches on load. The user picks a season; that selection points
+        // SHEET_ID/SHEET_GIDS at the right config and then triggers the load.
+
+        let seasonHasLoaded = { s4: false, s5: false };
+
+        function chooseSeason(key) {
+            selectSeason(key);
+
+            // Reflow all map filters to the chosen season's pool (Overpass vs Cache).
+            rebuildMapDropdowns();
+
+            // Lock/unlock Awards + Pro Comps depending on season.
+            applySeasonLockedTabs();
+
+            // Hide the overlay, reveal the site + the change-season control.
+            const overlay = document.getElementById('season-overlay');
+            const switchBtn = document.getElementById('season-switch');
+            if (overlay) overlay.hidden = true;
+            if (switchBtn) switchBtn.hidden = false;
+
+            if (!seasonHasLoaded[key]) {
+                // Both seasons share the same page structure and load path; only
+                // the underlying spreadsheet id / GIDs differ (set by selectSeason).
+                loadOverviewData();
+                seasonHasLoaded[key] = true;
+            }
+        }
+
+        function openSeasonChooser() {
+            const overlay = document.getElementById('season-overlay');
+            const switchBtn = document.getElementById('season-switch');
+            if (overlay) overlay.hidden = false;
+            if (switchBtn) switchBtn.hidden = true;
+        }
+
+        // No auto-load on page load — the chooser gates everything.
     </script>
 </body>
 </html>
