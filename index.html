@@ -4905,7 +4905,7 @@
         const PLAYER_INFO_S5 = {
             'Remo': {
                 nickname: 'Remo',
-                longName: 'remokox',
+                longName: 'remococks',
                 realname: 'Remokox Dobraes',
                 flag: 'poland.png',
                 photo: 'remokox.png',
@@ -4913,7 +4913,7 @@
             },
             'Nefik': {
                 nickname: 'Nefik',
-                longName: 'Große Cigarette',
+                longName: 'Pr0boszcz ツ',
                 realname: 'Masny Nefer',
                 flag: 'poland.png',
                 photo: 'nefik.png',
@@ -4929,7 +4929,7 @@
             },
             'Vulpes': {
                 nickname: 'Vulpes',
-                longName: 'MasnoPro Vulpes Wójcior',
+                longName: 'Qba02',
                 realname: 'Vulpes Wójcior',
                 flag: 'poland.png',
                 photo: 'vulpes.png',
@@ -4937,7 +4937,7 @@
             },
             'Krakers': {
                 nickname: 'Krakers',
-                longName: 'MasnoCoach THUNDER',
+                longName: 'Ojciec Derektor',
                 realname: 'Krakers Piorun Miśka',
                 flag: 'poland.png',
                 photo: 'krakers.png',
@@ -4945,7 +4945,7 @@
             },
             'Ołmi': {
                 nickname: 'Ołmi',
-                longName: 'flamezvitality',
+                longName: 'MoNsTerEk;))',
                 realname: 'Ołmi Zyzik',
                 flag: 'israel.png',
                 photo: 'olmi.png',
@@ -5092,7 +5092,6 @@
 
         // Load overview page data
         async function loadOverviewData() {
-            console.log('[OV] start; season=', ACTIVE_SEASON, 'SHEET_ID=', SHEET_ID, 'gids=', SHEET_GIDS);
             // Both sheets are independent, so download them in parallel instead of
             // one after the other. fetchSheetData never rejects (it returns null on
             // failure), so Promise.all cannot reject here.
@@ -5100,7 +5099,6 @@
                 fetchSheetData(SHEET_GIDS.sum_stats_maps),
                 fetchSheetData(SHEET_GIDS.ecohunters)
             ]);
-            console.log('[OV] fetch done; data rows=', data && data.length, 'eco rows=', ecoData && ecoData.length);
 
             if (!data) {
                 document.getElementById('overview-loading').innerHTML = '<p style="color: var(--danger);">Error loading data. Please refresh the page.</p>';
@@ -5115,7 +5113,6 @@
             if (ecoData) {
                 try {
                     ecoAgg = computeOverviewEcoAggregates(ecoData);
-                    console.log('[OV] eco aggregation ok');
                 } catch (err) {
                     console.error('Overview eco aggregation failed; continuing without it:', err);
                     ecoAgg = {};
@@ -5131,7 +5128,6 @@
             try {
                 const players = [];
                 const allRows = rowsForMap(data, 'All');
-                console.log('[OV] rowsForMap(All) ->', allRows.length, 'rows');
                 allRows.forEach(row => {
                     const name = row[OVERVIEW_COLUMNS.name - 1];
                     if (!name || name === '' || name.toString().includes('#DIV')) return;
@@ -5152,9 +5148,7 @@
                     });
                 });
 
-                console.log('[OV] built players=', players.length, '-> displayOverviewData');
                 displayOverviewData(players);
-                console.log('[OV] render complete');
             } catch (err) {
                 console.error('Overview render failed:', err);
                 const ovl = document.getElementById('overview-loading');
