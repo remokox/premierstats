@@ -5087,14 +5087,17 @@
             let ecoAgg = {};
             if (ecoData) ecoAgg = computeOverviewEcoAggregates(ecoData);
 
-            // Extract rows 8-24 (indices 7-23 in 0-indexed array)
+            // Clear any prior rows (e.g. after a season switch) before rendering.
+            const ovTbodyEl = document.getElementById('overview-tbody');
+            if (ovTbodyEl) ovTbodyEl.innerHTML = '';
+
+            // Find the "All" block rows by label (season-safe) instead of a fixed
+            // row range — S5's All block sits at different rows than S4's.
             const players = [];
-            for (let i = 7; i < 24 && i < data.length; i++) {
-                const row = data[i];
+            const allRows = rowsForMap(data, 'All');
+            allRows.forEach(row => {
                 const name = row[OVERVIEW_COLUMNS.name - 1];
-                
-                // Skip empty rows or rows with #DIV/0! errors
-                if (!name || name === '' || name.includes('#DIV')) continue;
+                if (!name || name === '' || name.toString().includes('#DIV')) return;
                 
                 // Overview name IS the PLAYER_INFO key (see PLAYER_INFO[name] usage),
                 // which is the same key computeOverviewEcoAggregates is keyed by.
@@ -5112,7 +5115,7 @@
                     endRank: (PEAK_ENDRANK[name] && PEAK_ENDRANK[name].endRank != null) ? PEAK_ENDRANK[name].endRank : null,
                     peak: (PEAK_ENDRANK[name] && PEAK_ENDRANK[name].peak != null) ? PEAK_ENDRANK[name].peak : null
                 });
-            }
+            });
 
             displayOverviewData(players);
         }
@@ -11616,7 +11619,11 @@
         function resetAllPageData() {
             // Overview
             const ovLoading = document.getElementById('overview-loading');
-            if (ovLoading) { ovLoading.style.display = ''; }
+            if (ovLoading) { ovLoading.style.display = ''; ovLoading.innerHTML = '<div class="loading-spinner"></div>Loading data from Google Sheets...'; }
+            const ovTable = document.getElementById('overview-table');
+            if (ovTable) ovTable.style.display = 'none';
+            const ovTbody = document.getElementById('overview-tbody');
+            if (ovTbody) ovTbody.innerHTML = '';
             seasonHasLoaded = { s4: false, s5: false };
 
             // Players grid
@@ -11638,6 +11645,12 @@
 
             // Graphs
             if (typeof graphsInitialized !== 'undefined') { try { graphsInitialized = false; } catch(e){} }
+
+            // Game Records caches its sheet in a module var that outlives a season
+            // switch — clear it so records reload for the new season.
+            if (typeof cachedRecordsData !== 'undefined') { try { cachedRecordsData = null; } catch(e){} }
+            if (typeof cachedPlayerNicknames !== 'undefined') { try { cachedPlayerNicknames = null; } catch(e){} }
+            if (typeof boostersCache !== 'undefined') { try { boostersCache = null; } catch(e){} }
 
             // Player detail context
             currentPlayerName = null;
