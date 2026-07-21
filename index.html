@@ -4256,11 +4256,17 @@
                 PLAYER_INFO = PLAYER_INFO_S5;
                 MATCHES_COLUMNS = MATCHES_COLUMNS_S5;
                 CLUTCHES_COLUMNS = CLUTCHES_COLUMNS_S5;
+                PEAK_ENDRANK = PEAK_ENDRANK_S5;
             } else {
                 PLAYER_INFO = PLAYER_INFO_S4;
                 MATCHES_COLUMNS = MATCHES_COLUMNS_S4;
                 CLUTCHES_COLUMNS = CLUTCHES_COLUMNS_S4;
+                PEAK_ENDRANK = PEAK_ENDRANK_S4;
             }
+
+            // The ecoName->playerKey map depends on the active PLAYER_INFO, so
+            // rebuild it now (it was previously frozen to S4 at load time).
+            if (typeof rebuildEconameToPlayer === 'function') rebuildEconameToPlayer();
         }
 
         // Season-aware DISPLAY ordering. The S5 sheets store games oldest-first,
@@ -9840,17 +9846,20 @@
             { name: 'Kobe',              icon: 'kobe.png',            tip: 'The player gets 1 or more grenade kills on a map.' }
         ];
 
-        // ecoName -> playerKey lookup, built once from PLAYER_INFO.
-        // The ecohunters sheet identifies players by ecoName (e.g. "Remo"),
-        // NOT by the PLAYER_INFO nickname key (e.g. "remokox").
-        const ECONAME_TO_PLAYER = (function () {
+        // ecoName -> playerKey lookup, rebuilt from the ACTIVE season's PLAYER_INFO.
+        // The ecohunters sheet identifies players by ecoName (e.g. "Remo").
+        // NOTE: this must be rebuilt on season switch — it was previously frozen
+        // at load time (always S4), which broke S5's eco-derived stats.
+        let ECONAME_TO_PLAYER = {};
+        function rebuildEconameToPlayer() {
             const m = {};
             Object.keys(PLAYER_INFO).forEach(key => {
                 const eco = normLabel(PLAYER_INFO[key].ecoName).toLowerCase();
                 m[eco] = key;
             });
-            return m;
-        })();
+            ECONAME_TO_PLAYER = m;
+        }
+        rebuildEconameToPlayer();
 
         // Columns on the ecohunters sheet (gid 1037802432), 1-based.
         // Blank column A shifts everything right by one vs. the visible headers.
@@ -10293,7 +10302,7 @@
         // Keys must match PLAYER_INFO exactly (mind diacritics). null = no data,
         // which renders the dash placeholder; do NOT use 0 (0 is a real rank and
         // would band-color and display as an actual value).
-        const PEAK_ENDRANK = {
+        const PEAK_ENDRANK_S4 = {
             'remokox':                 { endRank: 27268, peak: 28158 },
             'Große Cigarette':         { endRank: 24058, peak: 25612 },
             'MasnoPro Vulpes Wójcior': { endRank: 16121, peak: 18241 },
@@ -10312,6 +10321,24 @@
             'Szymon Gwiazda Rocka':    { endRank: 22552, peak: 23697 },
             'Pan Piorun Ciechanów':    { endRank: 10113, peak: 10791 }
         };
+
+        // Season 5 rank data is not yet available (hand-entered when the season
+        // ends). All null -> every S5 player shows the "-" placeholder for End
+        // Rank and Peak instead of stale S4 values.
+        const PEAK_ENDRANK_S5 = {
+            'Remo':    { endRank: null, peak: null },
+            'Nefik':   { endRank: null, peak: null },
+            'Badum':   { endRank: null, peak: null },
+            'Vulpes':  { endRank: null, peak: null },
+            'Krakers': { endRank: null, peak: null },
+            'Ołmi':    { endRank: null, peak: null },
+            'Torrek':  { endRank: null, peak: null },
+            'Kapi':    { endRank: null, peak: null },
+            'Jano':    { endRank: null, peak: null }
+        };
+
+        // Active pointer, repointed per season in selectSeason().
+        let PEAK_ENDRANK = PEAK_ENDRANK_S4;
 
         // Best pistol round is the MANUAL booster: totals are supplied by hand
         // (not derived from any sheet). Fill in each player's total best-pistol
