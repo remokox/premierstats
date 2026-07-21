@@ -2864,7 +2864,7 @@
         <!-- OVERVIEW PAGE -->
         <div id="overview" class="page active">
             <div class="section">
-                <h2 class="section-header">Season 4 Premier CS2 Summary</h2>
+                <h2 class="section-header" id="overview-summary-header">Season 4 Premier CS2 Summary</h2>
                 <div class="loading" id="overview-loading">
                     <div class="loading-spinner"></div>
                     Loading data from Google Sheets...
@@ -4963,27 +4963,27 @@
         };
 
         const MATCHES_COLUMNS_S5 = {
-            'Remo': { date: 1, map: 2, result: 3, score: 4, kd: 5, plusMinus: 6, rating: 7 },
-            'Nefik': { date: 9, map: 10, result: 11, score: 12, kd: 13, plusMinus: 14, rating: 15 },
-            'Badum': { date: 17, map: 18, result: 19, score: 20, kd: 21, plusMinus: 22, rating: 23 },
-            'Vulpes': { date: 25, map: 26, result: 27, score: 28, kd: 29, plusMinus: 30, rating: 31 },
-            'Krakers': { date: 33, map: 34, result: 35, score: 36, kd: 37, plusMinus: 38, rating: 39 },
-            'Ołmi': { date: 41, map: 42, result: 43, score: 44, kd: 45, plusMinus: 46, rating: 47 },
-            'Torrek': { date: 49, map: 50, result: 51, score: 52, kd: 53, plusMinus: 54, rating: 55 },
-            'Kapi': { date: 57, map: 58, result: 59, score: 60, kd: 61, plusMinus: 62, rating: 63 },
-            'Jano': { date: 65, map: 66, result: 67, score: 68, kd: 69, plusMinus: 70, rating: 71 }
+            'Remo': { date: 0, map: 1, result: 2, score: 3, kd: 4, plusMinus: 5, rating: 6 },
+            'Nefik': { date: 8, map: 9, result: 10, score: 11, kd: 12, plusMinus: 13, rating: 14 },
+            'Badum': { date: 16, map: 17, result: 18, score: 19, kd: 20, plusMinus: 21, rating: 22 },
+            'Vulpes': { date: 24, map: 25, result: 26, score: 27, kd: 28, plusMinus: 29, rating: 30 },
+            'Krakers': { date: 32, map: 33, result: 34, score: 35, kd: 36, plusMinus: 37, rating: 38 },
+            'Ołmi': { date: 40, map: 41, result: 42, score: 43, kd: 44, plusMinus: 45, rating: 46 },
+            'Torrek': { date: 48, map: 49, result: 50, score: 51, kd: 52, plusMinus: 53, rating: 54 },
+            'Kapi': { date: 56, map: 57, result: 58, score: 59, kd: 60, plusMinus: 61, rating: 62 },
+            'Jano': { date: 64, map: 65, result: 66, score: 67, kd: 68, plusMinus: 69, rating: 70 }
         };
 
         const CLUTCHES_COLUMNS_S5 = {
-            'Remo': { date: 1, map: 2, oneVX: 3, status: 4, round: 5 },
-            'Nefik': { date: 7, map: 8, oneVX: 9, status: 10, round: 11 },
-            'Badum': { date: 13, map: 14, oneVX: 15, status: 16, round: 17 },
-            'Vulpes': { date: 19, map: 20, oneVX: 21, status: 22, round: 23 },
-            'Krakers': { date: 25, map: 26, oneVX: 27, status: 28, round: 29 },
-            'Ołmi': { date: 31, map: 32, oneVX: 33, status: 34, round: 35 },
-            'Torrek': { date: 37, map: 38, oneVX: 39, status: 40, round: 41 },
-            'Kapi': { date: 43, map: 44, oneVX: 45, status: 46, round: 47 },
-            'Jano': { date: 49, map: 50, oneVX: 51, status: 52, round: 53 }
+            'Remo': { date: 0, map: 1, oneVX: 2, status: 3, round: 4 },
+            'Nefik': { date: 6, map: 7, oneVX: 8, status: 9, round: 10 },
+            'Badum': { date: 12, map: 13, oneVX: 14, status: 15, round: 16 },
+            'Vulpes': { date: 18, map: 19, oneVX: 20, status: 21, round: 22 },
+            'Krakers': { date: 24, map: 25, oneVX: 26, status: 27, round: 28 },
+            'Ołmi': { date: 30, map: 31, oneVX: 32, status: 33, round: 34 },
+            'Torrek': { date: 36, map: 37, oneVX: 38, status: 39, round: 40 },
+            'Kapi': { date: 42, map: 43, oneVX: 44, status: 45, round: 46 },
+            'Jano': { date: 48, map: 49, oneVX: 50, status: 51, round: 52 }
         };
 
         // Active player-layer pointers, repointed per season in selectSeason().
@@ -7184,7 +7184,12 @@
                 });
                 
                 if (mapRows.length === 0) {
-                    console.log(`No data found for ${mapName}`);
+                    console.log(`No data found for ${mapName} — showing as not played`);
+                    mapsStats.push({
+                        name: mapName,
+                        image: mapImages[mapName],
+                        notPlayed: true
+                    });
                     return;
                 }
                 
@@ -7355,6 +7360,24 @@
             mapsStats.forEach(mapData => {
                 const card = document.createElement('div');
                 card.className = 'map-card';
+
+                // Maps in the pool that were never played this season show a
+                // simple placeholder instead of empty/zeroed stats.
+                if (mapData.notPlayed) {
+                    card.classList.add('map-card-not-played');
+                    card.innerHTML = `
+                        <img src="${mapData.image}" alt="${mapData.name}" class="map-card-image">
+                        <div class="map-card-header">
+                            <div class="map-card-title">${mapData.name}</div>
+                        </div>
+                        <div class="map-card-body" style="padding: 40px 20px; text-align: center; color: var(--text-secondary); font-size: 1.1rem;">
+                            Not played this season
+                        </div>
+                    `;
+                    container.appendChild(card);
+                    return;
+                }
+
                 card.innerHTML = `
                     <img src="${mapData.image}" alt="${mapData.name}" class="map-card-image">
                     <div class="map-card-header">
@@ -11586,7 +11609,62 @@
 
         let seasonHasLoaded = { s4: false, s5: false };
 
+        // Clear every populated container / state flag that the nav-click handler
+        // uses to decide whether a page still needs loading. After this, navigating
+        // to any page (or re-running the active page's loader) will re-fetch under
+        // the currently-selected season. Called on every season switch.
+        function resetAllPageData() {
+            // Overview
+            const ovLoading = document.getElementById('overview-loading');
+            if (ovLoading) { ovLoading.style.display = ''; }
+            seasonHasLoaded = { s4: false, s5: false };
+
+            // Players grid
+            const playersC = document.getElementById('players-container');
+            if (playersC) { playersC.innerHTML = ''; playersC.style.display = 'none'; }
+            const playersLoading = document.getElementById('players-loading');
+            if (playersLoading) playersLoading.style.display = '';
+
+            // Maps
+            const mapsC = document.getElementById('maps-container');
+            if (mapsC) mapsC.innerHTML = '';
+
+            // Ecohunters table body
+            document.querySelectorAll('.ecohunters-table tbody tr').forEach(tr => tr.remove());
+
+            // Winrate tables -> reset value cells to '-' so the guard re-triggers
+            document.querySelectorAll('#winrate-match-length-tbody tr[data-score] td:nth-child(2)')
+                .forEach(td => { td.textContent = '-'; });
+
+            // Graphs
+            if (typeof graphsInitialized !== 'undefined') { try { graphsInitialized = false; } catch(e){} }
+
+            // Player detail context
+            currentPlayerName = null;
+        }
+
+        // Re-run the loader for whichever page is currently visible, so the active
+        // view refreshes immediately on season switch without a manual reload.
+        function reloadActivePage() {
+            const active = document.querySelector('.nav-link.active');
+            const pageId = active ? active.getAttribute('data-page') : 'overview';
+            switch (pageId) {
+                case 'players': loadPlayersData(); break;
+                case 'maps': loadMapsData().then(() => setTimeout(initMapSlider, 200)); break;
+                case 'ecohunters': loadEcohuntersData(); break;
+                case 'records': loadGameRecords(); break;
+                case 'graphs': if (typeof initGraphs === 'function') initGraphs(); break;
+                case 'winrate':
+                    loadWinrateMatchLength(document.getElementById('winrate-ml-map-filter').value);
+                    break;
+                case 'proplayer': applySeasonLockedTabs(); break;
+                case 'overview':
+                default: loadOverviewData(); break;
+            }
+        }
+
         function chooseSeason(key) {
+            const switching = ACTIVE_SEASON && ACTIVE_SEASON !== key;
             selectSeason(key);
 
             // Reflow all map filters to the chosen season's pool (Overpass vs Cache).
@@ -11595,18 +11673,24 @@
             // Lock/unlock Awards + Pro Comps depending on season.
             applySeasonLockedTabs();
 
+            // Season-aware Overview header.
+            const ovHeader = document.getElementById('overview-summary-header');
+            if (ovHeader) {
+                ovHeader.textContent = (key === 's5' ? 'Season 5' : 'Season 4') + ' Premier CS2 Summary';
+            }
+
             // Hide the overlay, reveal the site + the change-season control.
             const overlay = document.getElementById('season-overlay');
             const switchBtn = document.getElementById('season-switch');
             if (overlay) overlay.hidden = true;
             if (switchBtn) switchBtn.hidden = false;
 
-            if (!seasonHasLoaded[key]) {
-                // Both seasons share the same page structure and load path; only
-                // the underlying spreadsheet id / GIDs differ (set by selectSeason).
-                loadOverviewData();
-                seasonHasLoaded[key] = true;
-            }
+            // Wipe any content/flags from a previous season and refresh the view.
+            // (The sheet cache is keyed by SHEET_ID so seasons don't collide, but
+            // we still clear per-page state so the guards re-trigger.)
+            resetAllPageData();
+            reloadActivePage();
+            seasonHasLoaded[key] = true;
         }
 
         function openSeasonChooser() {
