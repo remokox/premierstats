@@ -4397,6 +4397,25 @@
             return (s || '').toString().replace(/\u00A0/g, ' ').trim();
         }
 
+        // Locate the first real data row of a player+map block.
+        // S4 sheets have a blank row between the label and the header row; S5 does
+        // not. Hardcoding "label + 2" therefore skipped the first game of every S5
+        // block. Instead, walk down from the label and take the first row whose
+        // date cell actually looks like a date -- that skips blank rows and the
+        // "Date/Map/Result..." header alike, so both layouts work unchanged.
+        // Bounded: a malformed block returns -1 (handled as "no data") rather than
+        // scanning on into the next player's block and reporting their games.
+        const MAX_HEADER_SCAN = 5;
+        const DATE_RE = /^\d{1,2}\.\d{1,2}\.\d{4}$/;
+        function firstDataRow(data, labelRow, dateCol) {
+            const limit = Math.min(data.length, labelRow + 1 + MAX_HEADER_SCAN);
+            for (let r = labelRow + 1; r < limit; r++) {
+                const cell = data[r] && data[r][dateCol];
+                if (cell && DATE_RE.test(cell.toString().trim())) return r;
+            }
+            return -1;
+        }
+
         // Column mappings (1-indexed)
         const OVERVIEW_COLUMNS = {
             get name() { return ACTIVE_SEASON === 's5' ? 4 : 3; }, // S4: C(3), S5: D(4) short name
@@ -6042,7 +6061,7 @@
                 // Check all columns for the search string
                 for (let j = 0; j < data[i].length; j++) {
                     if (data[i][j] && normLabel(data[i][j]) === normLabel(searchString)) {
-                        startRow = i + 2; // Start from 2 rows below (skip merged empty row)
+                        startRow = firstDataRow(data, i, cols.date);
                         console.log('Found section at row', i, 'starting matches from row', startRow);
                         break;
                     }
@@ -6158,7 +6177,7 @@
             let startRow = -1;
             for (let i = 0; i < data.length; i++) {
                 for (let j = 0; j < data[i].length; j++) {
-                    if (data[i][j] && normLabel(data[i][j]) === normLabel(searchString)) { startRow = i + 2; break; }
+                    if (data[i][j] && normLabel(data[i][j]) === normLabel(searchString)) { startRow = firstDataRow(data, i, cols.date); break; }
                 }
                 if (startRow !== -1) break;
             }
@@ -6254,7 +6273,7 @@
             let startRow = -1;
             for (let i = 0; i < data.length; i++) {
                 for (let j = 0; j < data[i].length; j++) {
-                    if (data[i][j] && normLabel(data[i][j]) === normLabel(searchString)) { startRow = i + 2; break; }
+                    if (data[i][j] && normLabel(data[i][j]) === normLabel(searchString)) { startRow = firstDataRow(data, i, cols.date); break; }
                 }
                 if (startRow !== -1) break;
             }
@@ -6363,7 +6382,7 @@
             let cStart = -1;
             for (let i = 0; i < clutchData.length; i++) {
                 for (let j = 0; j < clutchData[i].length; j++) {
-                    if (clutchData[i][j] && normLabel(clutchData[i][j]) === normLabel(searchString)) { cStart = i + 2; break; }
+                    if (clutchData[i][j] && normLabel(clutchData[i][j]) === normLabel(searchString)) { cStart = firstDataRow(clutchData, i, clutchCols.date); break; }
                 }
                 if (cStart !== -1) break;
             }
@@ -6870,7 +6889,7 @@
                 // Check all columns for the search string
                 for (let j = 0; j < data[i].length; j++) {
                     if (data[i][j] && normLabel(data[i][j]) === normLabel(searchString)) {
-                        startRow = i + 2; // Start from 2 rows below (skip merged empty row)
+                        startRow = firstDataRow(data, i, cols.date);
                         console.log('Found clutches section at row', i, 'starting from row', startRow);
                         break;
                     }
