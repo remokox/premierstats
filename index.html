@@ -2795,6 +2795,58 @@
             border-color: var(--accent-primary);
         }
         .season-switch[hidden] { display: none; }
+
+        /* Hidden "S3" panel: small corner button -> password -> panel */
+        .s3-btn {
+            position: fixed; bottom: 12px; left: 12px; z-index: 1100;
+            width: 34px; height: 34px; padding: 0;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 600;
+            color: var(--text-muted); background: var(--bg-tertiary);
+            border: 1px solid var(--border); border-radius: 8px;
+            cursor: pointer; opacity: 0.6;
+            transition: opacity 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        }
+        .s3-btn:hover { opacity: 1; color: var(--accent-tertiary); border-color: var(--accent-tertiary); }
+        .s3-modal {
+            position: fixed; inset: 0; z-index: 1200;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0, 0, 0, 0.7); padding: 16px;
+        }
+        .s3-modal[hidden] { display: none; }
+        .s3-box {
+            position: relative; width: 100%; max-width: 360px;
+            max-height: 85vh; overflow: auto;
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: 12px; padding: 22px; box-shadow: 0 10px 40px var(--shadow);
+            color: var(--text-primary); font-family: 'Rajdhani', sans-serif;
+        }
+        .s3-box.wide { max-width: 900px; }
+        .s3-box h3 {
+            margin-bottom: 14px; font-size: 1.1rem; letter-spacing: 1px;
+            text-transform: uppercase; color: var(--accent-tertiary);
+        }
+        .s3-close {
+            position: absolute; top: 10px; right: 12px; background: none; border: none;
+            color: var(--text-muted); font-size: 1.3rem; cursor: pointer;
+        }
+        .s3-close:hover { color: var(--text-primary); }
+        .s3-box input {
+            width: 100%; padding: 10px 12px; margin-bottom: 10px;
+            background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px;
+            color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;
+        }
+        .s3-box input:focus { outline: none; border-color: var(--accent-tertiary); }
+        .s3-submit {
+            width: 100%; padding: 10px; border: none; border-radius: 8px; cursor: pointer;
+            background: var(--accent-tertiary); color: var(--bg-primary);
+            font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 0.95rem;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .s3-error { min-height: 1.2em; color: var(--danger); font-size: 0.85rem; }
+        .s3-placeholder {
+            padding: 40px 16px; text-align: center; color: var(--text-muted);
+            border: 1px dashed var(--border); border-radius: 8px; font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -11840,6 +11892,60 @@
         }
 
         // No auto-load on page load — the chooser gates everything.
+    </script>
+
+    <!-- S3 panel: corner button, password gate, placeholder content -->
+    <button type="button" class="s3-btn" id="s3-btn" title="S3" aria-label="Open S3 panel">S3</button>
+    <div class="s3-modal" id="s3-modal" hidden>
+        <div class="s3-box" id="s3-box" role="dialog" aria-modal="true">
+            <button type="button" class="s3-close" id="s3-close" aria-label="Close">×</button>
+            <form id="s3-login">
+                <h3>Password</h3>
+                <input type="password" id="s3-pass" autocomplete="off" placeholder="Enter password">
+                <div class="s3-error" id="s3-error"></div>
+                <button type="submit" class="s3-submit">Unlock</button>
+            </form>
+            <div id="s3-content" hidden>
+                <h3>S3</h3>
+                <div class="s3-placeholder">S3 data goes here (placeholder)</div>
+            </div>
+        </div>
+    </div>
+    <script>
+        (function () {
+            const PASS = 'dobraes';
+            const btn = document.getElementById('s3-btn');
+            const modal = document.getElementById('s3-modal');
+            const box = document.getElementById('s3-box');
+            const form = document.getElementById('s3-login');
+            const input = document.getElementById('s3-pass');
+            const err = document.getElementById('s3-error');
+            const content = document.getElementById('s3-content');
+            let unlocked = false;
+
+            function show(view) {
+                const isContent = view === 'content';
+                form.hidden = isContent;
+                content.hidden = !isContent;
+                box.classList.toggle('wide', isContent);
+            }
+            function open() {
+                modal.hidden = false;
+                show(unlocked ? 'content' : 'login');
+                if (!unlocked) { input.value = ''; err.textContent = ''; setTimeout(() => input.focus(), 0); }
+            }
+            function close() { modal.hidden = true; }
+
+            btn.addEventListener('click', open);
+            document.getElementById('s3-close').addEventListener('click', close);
+            modal.addEventListener('click', e => { if (e.target === modal) close(); });
+            document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) close(); });
+            form.addEventListener('submit', e => {
+                e.preventDefault();
+                if (input.value === PASS) { unlocked = true; show('content'); }
+                else { err.textContent = 'Wrong password'; input.select(); }
+            });
+        })();
     </script>
 </body>
 </html>
