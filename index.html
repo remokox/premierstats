@@ -4288,8 +4288,27 @@
                     'maps_data': '800719673',
                     'ecohunters': '1796582251'
                 }
+            },
+            // Hidden season, reachable only via the password-gated corner button.
+            s3: {
+                label: 'Premier Season 3',
+                sheetId: '1wlPHbs1hi0xeJXmp8-EtZQJt7xGgRYj4VtLw8I4IB0c',
+                gids: {
+                    'sum_stats_maps': '567120039',  // "sum stats - maps"
+                    'maps': '61877593',             // "maps"
+                    'clutches': '1787854461',       // "clutches"
+                    'maps_data': '923359751',       // "map details"
+                    'ecohunters': '0'               // "Database"
+                }
             }
         };
+
+        // S3 sheets follow the S5 layout (short name in col D, no blank row under
+        // block labels, games stored oldest-first). Everything that branched on
+        // "is S5" now asks this instead.
+        function isS5Layout() {
+            return ACTIVE_SEASON === 's5' || ACTIVE_SEASON === 's3';
+        }
 
         // Active-season pointers. Populated by selectSeason(); intentionally left
         // null until the user chooses, so nothing fetches on load.
@@ -4305,7 +4324,12 @@
             SHEET_GIDS = s.gids;
 
             // Repoint the player layer to the chosen season's config.
-            if (key === 's5') {
+            if (key === 's3') {
+                PLAYER_INFO = PLAYER_INFO_S3;
+                MATCHES_COLUMNS = MATCHES_COLUMNS_S3;
+                CLUTCHES_COLUMNS = CLUTCHES_COLUMNS_S3;
+                PEAK_ENDRANK = PEAK_ENDRANK_S3;
+            } else if (key === 's5') {
                 PLAYER_INFO = PLAYER_INFO_S5;
                 MATCHES_COLUMNS = MATCHES_COLUMNS_S5;
                 CLUTCHES_COLUMNS = CLUTCHES_COLUMNS_S5;
@@ -4328,15 +4352,17 @@
         // seasons. Use ONLY for display — never for sequential calcs (streaks)
         // that must run in the collected (chronological) order.
         function displayOrder(arr) {
-            return ACTIVE_SEASON === 's5' ? arr.slice().reverse() : arr;
+            return isS5Layout() ? arr.slice().reverse() : arr;
         }
 
         // Awards and Pro Comps aren't ready until the season ends. In S5, lock
         // both tabs to a note and disable their selectors; in S4, leave them fully
         // functional. Idempotent — safe to call on every season switch.
         const SEASON_LOCKED_NOTE = 'This part of the site will be populated when the season ends.';
+        const SEASON_LOCKED_NOTE_S3 = 'This part of the site is not available for Season 3.';
         function applySeasonLockedTabs() {
-            const locked = ACTIVE_SEASON === 's5';
+            const locked = ACTIVE_SEASON === 's5' || ACTIVE_SEASON === 's3';
+            const lockedNote = ACTIVE_SEASON === 's3' ? SEASON_LOCKED_NOTE_S3 : SEASON_LOCKED_NOTE;
 
             const awSelect = document.getElementById('awards-player-select');
             const awCard = document.querySelector('#awards .awards-card');
@@ -4348,10 +4374,10 @@
             if (locked) {
                 if (awSelect) { awSelect.value = ''; awSelect.disabled = true; }
                 if (awCard) awCard.style.display = 'none';
-                if (awPrompt) { awPrompt.style.display = 'block'; awPrompt.textContent = SEASON_LOCKED_NOTE; }
+                if (awPrompt) { awPrompt.style.display = 'block'; awPrompt.textContent = lockedNote; }
                 if (pcSelect) { pcSelect.value = ''; pcSelect.disabled = true; }
                 if (pcCard) pcCard.style.display = 'none';
-                if (pcPrompt) { pcPrompt.style.display = 'block'; pcPrompt.textContent = SEASON_LOCKED_NOTE; }
+                if (pcPrompt) { pcPrompt.style.display = 'block'; pcPrompt.textContent = lockedNote; }
             } else {
                 // Re-enable selectors for S4 and restore default prompts.
                 if (awSelect) awSelect.disabled = false;
@@ -4368,7 +4394,8 @@
         // in its original position; S5 uses Cache, alphabetically ordered.
         const MAP_POOLS = {
             s4: ['Ancient', 'Anubis', 'Dust II', 'Inferno', 'Mirage', 'Nuke', 'Overpass'],
-            s5: ['Ancient', 'Anubis', 'Cache', 'Dust II', 'Inferno', 'Mirage', 'Nuke']
+            s5: ['Ancient', 'Anubis', 'Cache', 'Dust II', 'Inferno', 'Mirage', 'Nuke'],
+            s3: ['Ancient', 'Dust II', 'Inferno', 'Mirage', 'Nuke', 'Overpass', 'Train']
         };
 
         // Display name -> lowercase slug used by the #map-filter dropdown and
@@ -4382,7 +4409,8 @@
                 'Mirage': 'mirage',
                 'Nuke': 'nuke',
                 'Overpass': 'overpass',
-                'Cache': 'cache'
+                'Cache': 'cache',
+                'Train': 'train'
             };
             return slugs[displayName] || displayName.toLowerCase();
         }
@@ -4439,7 +4467,8 @@
                 'mirage': 'Mirage',
                 'nuke': 'Nuke',
                 'overpass': 'Overpass',
-                'cache': 'Cache'
+                'cache': 'Cache',
+                'train': 'Train'
             };
             return special[m] || (m.charAt(0).toUpperCase() + m.slice(1));
         }
@@ -4471,7 +4500,7 @@
 
         // Column mappings (1-indexed)
         const OVERVIEW_COLUMNS = {
-            get name() { return ACTIVE_SEASON === 's5' ? 4 : 3; }, // S4: C(3), S5: D(4) short name
+            get name() { return isS5Layout() ? 4 : 3; }, // S4: C(3), S5: D(4) short name
             matches: 5,     // E
             winrate: 9,     // I
             kd: 14,         // N
@@ -4481,7 +4510,7 @@
         };
 
         const PLAYER_COLUMNS = {
-            get name() { return ACTIVE_SEASON === 's5' ? 4 : 3; }, // S4: C(3), S5: D(4) short name
+            get name() { return isS5Layout() ? 4 : 3; }, // S4: C(3), S5: D(4) short name
             matches: 5,     // E
             rating: 185,    // GC
             firepower: 68,  // BP
@@ -5113,6 +5142,65 @@
             'Marcinek': { date: 72, map: 73, oneVX: 74, status: 75, round: 76 }  // BU-BY
         };
 
+        // S3 players. Keyed by the short name in column D of 'sum stats - maps',
+        // which is also the 'RemoAll'-style block label and the Database PLAYER
+        // value. longName (column C) is display-only.
+        const PLAYER_INFO_S3 = {
+            'Remo': { nickname: 'Remo', longName: 'remokox', realname: 'Remokox Dobraes', flag: 'poland.png', photo: 'remokox.png', ecoName: 'Remo' },
+            'Nefik': { nickname: 'Nefik', longName: 'Große Cigarette', realname: 'Masny Nefer', flag: 'poland.png', photo: 'nefik.png', ecoName: 'Nefik' },
+            'Badum': { nickname: 'Badum', longName: 'Badum', realname: 'Assassin Badum28', flag: 'temeria.png', photo: 'badum.png', ecoName: 'Badum' },
+            'Vulpes': { nickname: 'Vulpes', longName: 'MasnoPro Vulpes Wójcior', realname: 'Vulpes Wójcior', flag: 'poland.png', photo: 'vulpes.png', ecoName: 'Vulpes' },
+            'Krakers': { nickname: 'Krakers', longName: 'MasnoCoach THUNDER', realname: 'Krakers Piorun Miśka', flag: 'poland.png', photo: 'krakers.png', ecoName: 'Krakers' },
+            'Ołmi': { nickname: 'Ołmi', longName: 'ołmi', realname: 'Ołmi Zyzik', flag: 'israel.png', photo: 'olmi.png', ecoName: 'Ołmi' },
+            'Torrek': { nickname: 'Torrek', longName: 'Torrek', realname: 'Bliźniak Baduma', flag: 'poland.png', photo: 'torrek.png', ecoName: 'Torrek' },
+            'Kapi': { nickname: 'Kapi', longName: 'Twój Stary', realname: 'Kapi', flag: 'poland.png', photo: 'kapi.png', ecoName: 'Kapi' },
+            'Jano': { nickname: 'Jano', longName: 'monke', realname: 'Jano Głośnik', flag: 'canada.png', photo: 'monke.png', ecoName: 'Jano' },
+            'Bator': { nickname: 'Bator', longName: 'betON', realname: 'Peter von Batorz', flag: 'niemcy.png', photo: 'bator.png', ecoName: 'Bator' },
+            'Tytan': { nickname: 'Tytan', longName: 'Minion 2', realname: 'Tytan Mikjas', flag: 'poland.png', photo: 'tytan.png', ecoName: 'Tytan' },
+            'Kapciuszek': { nickname: 'Kapciuszek', longName: 'Jurny Irek', realname: 'Kapi Kolega Torka', flag: 'poland.png', photo: 'kapciuszek.png', ecoName: 'Kapciuszek' },
+            'Ala': { nickname: 'Ala', longName: 'montke', realname: 'Ala', flag: 'poland.png', photo: 'ala.png', ecoName: 'Ala' },
+            'Olek': { nickname: 'Olek', longName: 'Minion 5', realname: 'Olek Gnom', flag: 'irlandia.png', photo: 'olek.png', ecoName: 'Olek' },
+            'Winiar': { nickname: 'Winiar', longName: 'Lord Kek', realname: 'Haha Pedau', flag: 'pride.png', photo: 'winiar.png', ecoName: 'Winiar' }
+        };
+
+        // S3 'maps' tab: 8-column blocks in the order above.
+        const MATCHES_COLUMNS_S3 = {
+            'Remo': { date: 0, map: 1, result: 2, score: 3, kd: 4, plusMinus: 5, rating: 6 },
+            'Nefik': { date: 8, map: 9, result: 10, score: 11, kd: 12, plusMinus: 13, rating: 14 },
+            'Badum': { date: 16, map: 17, result: 18, score: 19, kd: 20, plusMinus: 21, rating: 22 },
+            'Vulpes': { date: 24, map: 25, result: 26, score: 27, kd: 28, plusMinus: 29, rating: 30 },
+            'Krakers': { date: 32, map: 33, result: 34, score: 35, kd: 36, plusMinus: 37, rating: 38 },
+            'Ołmi': { date: 40, map: 41, result: 42, score: 43, kd: 44, plusMinus: 45, rating: 46 },
+            'Torrek': { date: 48, map: 49, result: 50, score: 51, kd: 52, plusMinus: 53, rating: 54 },
+            'Kapi': { date: 56, map: 57, result: 58, score: 59, kd: 60, plusMinus: 61, rating: 62 },
+            'Jano': { date: 64, map: 65, result: 66, score: 67, kd: 68, plusMinus: 69, rating: 70 },
+            'Bator': { date: 72, map: 73, result: 74, score: 75, kd: 76, plusMinus: 77, rating: 78 },
+            'Tytan': { date: 80, map: 81, result: 82, score: 83, kd: 84, plusMinus: 85, rating: 86 },
+            'Kapciuszek': { date: 88, map: 89, result: 90, score: 91, kd: 92, plusMinus: 93, rating: 94 },
+            'Ala': { date: 96, map: 97, result: 98, score: 99, kd: 100, plusMinus: 101, rating: 102 },
+            'Olek': { date: 104, map: 105, result: 106, score: 107, kd: 108, plusMinus: 109, rating: 110 },
+            'Winiar': { date: 112, map: 113, result: 114, score: 115, kd: 116, plusMinus: 117, rating: 118 }
+        };
+
+        // S3 'clutches' tab: 6-column blocks in the same order.
+        const CLUTCHES_COLUMNS_S3 = {
+            'Remo': { date: 0, map: 1, oneVX: 2, status: 3, round: 4 },
+            'Nefik': { date: 6, map: 7, oneVX: 8, status: 9, round: 10 },
+            'Badum': { date: 12, map: 13, oneVX: 14, status: 15, round: 16 },
+            'Vulpes': { date: 18, map: 19, oneVX: 20, status: 21, round: 22 },
+            'Krakers': { date: 24, map: 25, oneVX: 26, status: 27, round: 28 },
+            'Ołmi': { date: 30, map: 31, oneVX: 32, status: 33, round: 34 },
+            'Torrek': { date: 36, map: 37, oneVX: 38, status: 39, round: 40 },
+            'Kapi': { date: 42, map: 43, oneVX: 44, status: 45, round: 46 },
+            'Jano': { date: 48, map: 49, oneVX: 50, status: 51, round: 52 },
+            'Bator': { date: 54, map: 55, oneVX: 56, status: 57, round: 58 },
+            'Tytan': { date: 60, map: 61, oneVX: 62, status: 63, round: 64 },
+            'Kapciuszek': { date: 66, map: 67, oneVX: 68, status: 69, round: 70 },
+            'Ala': { date: 72, map: 73, oneVX: 74, status: 75, round: 76 },
+            'Olek': { date: 78, map: 79, oneVX: 80, status: 81, round: 82 },
+            'Winiar': { date: 84, map: 85, oneVX: 86, status: 87, round: 88 }
+        };
+
         // Active player-layer pointers, repointed per season in selectSeason().
         let PLAYER_INFO = PLAYER_INFO_S4;
         let MATCHES_COLUMNS = MATCHES_COLUMNS_S4;
@@ -5150,7 +5238,8 @@
                         clearTimeout(timer);
                     }
                     const text = await response.text();
-                    return parseCSV(text);
+                    const rows = parseCSV(text);
+                    return ACTIVE_SEASON === 's3' ? normalizeS3Dates(rows) : rows;
                 } catch (error) {
                     console.error('Error fetching sheet data:', error);
                     return null;
@@ -5162,6 +5251,29 @@
                 if (data === null) sheetCache.delete(cacheKey);
             });
             return promise;
+        }
+
+        // The S3 "Database" tab stores dates as mm-dd-yy / m/d/yyyy, but every
+        // parser on the page expects dd.mm.yyyy. Rewrite any such date cell to
+        // dd.mm.yyyy so S3 behaves like S4/S5. Month-first is assumed; if the first
+        // number is > 12 it must be the day, so the parts are swapped. Cells that
+        // already read dd.mm.yyyy, or aren't three-part dates (e.g. "22-8"), are
+        // left untouched.
+        const S3_DATE_RE = /^(\d{1,2})[-\/](\d{1,2})[-\/](\d{2}|\d{4})$/;
+        function normalizeS3Dates(rows) {
+            if (!rows) return rows;
+            for (const row of rows) {
+                for (let j = 0; j < row.length; j++) {
+                    const m = S3_DATE_RE.exec(row[j]);
+                    if (!m) continue;
+                    let month = parseInt(m[1], 10), day = parseInt(m[2], 10);
+                    if (month > 12 && day <= 12) [month, day] = [day, month];
+                    if (month < 1 || month > 12 || day < 1 || day > 31) continue;
+                    const year = m[3].length === 2 ? 2000 + parseInt(m[3], 10) : parseInt(m[3], 10);
+                    row[j] = String(day).padStart(2, '0') + '.' + String(month).padStart(2, '0') + '.' + year;
+                }
+            }
+            return rows;
         }
 
         // Simple CSV parser
@@ -6279,7 +6391,7 @@
 
             // Normalize to oldest -> newest for the position-in-day walk below.
             // S4 sheets are newest-first (reverse needed); S5 is already oldest-first.
-            if (ACTIVE_SEASON !== 's5') {
+            if (!isS5Layout()) {
                 games.reverse();
             }
 
@@ -6382,7 +6494,7 @@
             // Normalize to chronological (oldest -> newest) for run detection and
             // the "now" end-marker. S4 is newest-first (reverse needed); S5 is
             // already oldest-first.
-            if (ACTIVE_SEASON !== 's5') {
+            if (!isS5Layout()) {
                 matches.reverse();
             }
             const n = matches.length;
@@ -6478,7 +6590,7 @@
                 });
             }
             // Chronological normalization, same rule as the match streaks above.
-            if (ACTIVE_SEASON !== 's5') {
+            if (!isS5Layout()) {
                 clutchSeq.reverse();
             }
             const cn = clutchSeq.length;
@@ -6550,7 +6662,8 @@
             // loadScoreStatsData, which reads this same sheet).
             const MAP_NAMES = {
                 ancient: 'Ancient', anubis: 'Anubis', dust2: 'Dust II', inferno: 'Inferno',
-                mirage: 'Mirage', nuke: 'Nuke', overpass: 'Overpass'
+                mirage: 'Mirage', nuke: 'Nuke', overpass: 'Overpass',
+                cache: 'Cache', train: 'Train'
             };
             const wantMap = (mapName && mapName !== 'all') ? MAP_NAMES[mapName] : null;
 
@@ -6779,7 +6892,8 @@
             // Map nav filter value -> sheet map-name string
             const MAP_NAMES = {
                 ancient: 'Ancient', anubis: 'Anubis', dust2: 'Dust II', inferno: 'Inferno',
-                mirage: 'Mirage', nuke: 'Nuke', overpass: 'Overpass'
+                mirage: 'Mirage', nuke: 'Nuke', overpass: 'Overpass',
+                cache: 'Cache', train: 'Train'
             };
             const wantMap = (mapName && mapName !== 'all') ? MAP_NAMES[mapName] : null;
 
@@ -6863,7 +6977,9 @@
                 inferno: 'Inferno',
                 mirage: 'Mirage',
                 nuke: 'Nuke',
-                overpass: 'Overpass'
+                overpass: 'Overpass',
+                cache: 'Cache',
+                train: 'Train'
             };
             mapFilter = PLACEMENTS_MAP_NAMES[(mapFilter || 'all').toString().toLowerCase()] || mapFilter;
 
@@ -7322,7 +7438,8 @@
                 'Mirage': 'mirage.png',
                 'Nuke': 'nuke.png',
                 'Overpass': 'overpass.png',
-                'Cache': 'cache.png'
+                'Cache': 'cache.png',
+                'Train': 'train.png'
             };
             
             const mapsStats = [];
@@ -9868,7 +9985,7 @@
         };
 
         function renderAwards(playerName) {
-            if (ACTIVE_SEASON === 's5') { applySeasonLockedTabs(); return; }
+            if (ACTIVE_SEASON === 's5' || ACTIVE_SEASON === 's3') { applySeasonLockedTabs(); return; }
             const info = PLAYER_INFO[playerName];
             if (!info) return;
 
@@ -10470,6 +10587,25 @@
             'Tytan':    { endRank: null, peak: null },
             'Stachu':   { endRank: null, peak: null },
             'Marcinek': { endRank: null, peak: null }
+        };
+
+        // Season 3 ranks (hand-entered). null = no rank -> dash.
+        const PEAK_ENDRANK_S3 = {
+            'Remo': { endRank: 23960, peak: 25382 },
+            'Nefik': { endRank: 17897, peak: 19999 },
+            'Badum': { endRank: 19828, peak: 20399 },
+            'Vulpes': { endRank: 14773, peak: 15118 },
+            'Krakers': { endRank: 12576, peak: 14999 },
+            'Ołmi': { endRank: null, peak: null },
+            'Torrek': { endRank: null, peak: null },
+            'Kapi': { endRank: null, peak: null },
+            'Jano': { endRank: null, peak: 21989 },
+            'Bator': { endRank: 18095, peak: 18095 },
+            'Tytan': { endRank: null, peak: null },
+            'Kapciuszek': { endRank: null, peak: 18588 },
+            'Ala': { endRank: null, peak: null },
+            'Olek': { endRank: null, peak: null },
+            'Winiar': { endRank: null, peak: null }
         };
 
         // Active pointer, repointed per season in selectSeason().
@@ -11655,7 +11791,7 @@
         }
 
         async function renderProComp(nick) {
-            if (ACTIVE_SEASON === 's5') { applySeasonLockedTabs(); return; }
+            if (ACTIVE_SEASON === 's5' || ACTIVE_SEASON === 's3') { applySeasonLockedTabs(); return; }
             const info = PLAYER_INFO[nick];
             if (!info) return;
             const eco = info.ecoName;
@@ -11784,7 +11920,7 @@
         // Nothing fetches on load. The user picks a season; that selection points
         // SHEET_ID/SHEET_GIDS at the right config and then triggers the load.
 
-        let seasonHasLoaded = { s4: false, s5: false };
+        let seasonHasLoaded = { s4: false, s5: false, s3: false };
 
         // Clear every populated container / state flag that the nav-click handler
         // uses to decide whether a page still needs loading. After this, navigating
@@ -11802,7 +11938,7 @@
             if (ovTable) ovTable.style.display = 'none';
             const ovTbody = document.getElementById('overview-tbody');
             if (ovTbody) ovTbody.innerHTML = '';
-            seasonHasLoaded = { s4: false, s5: false };
+            seasonHasLoaded = { s4: false, s5: false, s3: false };
 
             // Players grid
             const playersC = document.getElementById('players-container');
@@ -11867,7 +12003,7 @@
             // Season-aware Overview header.
             const ovHeader = document.getElementById('overview-summary-header');
             if (ovHeader) {
-                ovHeader.textContent = (key === 's5' ? 'Season 5' : 'Season 4') + ' Premier CS2 Summary';
+                ovHeader.textContent = ({ s3: 'Season 3', s4: 'Season 4', s5: 'Season 5' }[key] || 'Season 4') + ' Premier CS2 Summary';
             }
 
             // Hide the overlay, reveal the site + the change-season control.
@@ -11905,10 +12041,6 @@
                 <div class="s3-error" id="s3-error"></div>
                 <button type="submit" class="s3-submit">Unlock</button>
             </form>
-            <div id="s3-content" hidden>
-                <h3>S3</h3>
-                <div class="s3-placeholder">S3 data goes here (placeholder)</div>
-            </div>
         </div>
     </div>
     <script>
@@ -11916,33 +12048,26 @@
             const PASS = 'dobraes';
             const btn = document.getElementById('s3-btn');
             const modal = document.getElementById('s3-modal');
-            const box = document.getElementById('s3-box');
             const form = document.getElementById('s3-login');
             const input = document.getElementById('s3-pass');
             const err = document.getElementById('s3-error');
-            const content = document.getElementById('s3-content');
             let unlocked = false;
 
-            function show(view) {
-                const isContent = view === 'content';
-                form.hidden = isContent;
-                content.hidden = !isContent;
-                box.classList.toggle('wide', isContent);
-            }
-            function open() {
-                modal.hidden = false;
-                show(unlocked ? 'content' : 'login');
-                if (!unlocked) { input.value = ''; err.textContent = ''; setTimeout(() => input.focus(), 0); }
-            }
             function close() { modal.hidden = true; }
+            function openS3() { close(); chooseSeason('s3'); }
 
-            btn.addEventListener('click', open);
+            btn.addEventListener('click', () => {
+                if (unlocked) { openS3(); return; }   // already unlocked: go straight in
+                modal.hidden = false;
+                input.value = ''; err.textContent = '';
+                setTimeout(() => input.focus(), 0);
+            });
             document.getElementById('s3-close').addEventListener('click', close);
             modal.addEventListener('click', e => { if (e.target === modal) close(); });
             document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) close(); });
             form.addEventListener('submit', e => {
                 e.preventDefault();
-                if (input.value === PASS) { unlocked = true; show('content'); }
+                if (input.value === PASS) { unlocked = true; openS3(); }
                 else { err.textContent = 'Wrong password'; input.select(); }
             });
         })();
