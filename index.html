@@ -11267,10 +11267,46 @@
         // Every Awards table above is the S4 version. Each season has its own
         // copy, keyed by that season's PLAYER_INFO nicks; applyAwardsSeason()
         // points the active names at the chosen season's copy.
-        // S3 award titles/summaries, notable stats and best-pistol totals are
-        // still to be written — until then high/mid players show the
-        // "coming later" placeholders and best pistol shows 0.
-        const AWARDS_CONTENT_S3 = {};
+        // S3 award titles + summaries (supplied text). Torrek and Kapi are
+        // short-summary (mid-sample) players, so title: null like S4's mid tier.
+        const AWARDS_CONTENT_S3 = {
+            'Remo': {
+                title: "The Benchmark",
+                summary: "Remo tops the S3 roster in rating (1.38), K/D (1.49), multikill rate and the FIREPOWER composite, and what turns that into a title is how few columns he doesn’t lead. He wins the opening duel 65% of the time, he’s the team’s best clutcher with 37 clutches won and the top clutch points per round, he has the best survival rate and KAST, and he throws the most useful flashes on the roster, at roughly three times the team’s flash-assist rate. Fragger, closer, survivor and utility player usually describe four different people; here they describe one. The headline numbers are backed by consistency: he cleared a 1.00 rating in 43 of his 52 maps, and he’s the top-rated player on every map in the pool except Mirage, where he’s second. The interesting wrinkle is how he gets there. His headshot rate is the lowest of the regulars at 46%, so this isn’t one-tap precision — it’s volume and damage, plus a real AWP threat that accounts for one in eight of his kills and spikes on Mirage. The honest gaps are the support columns: trading, assists and support rounds all sit near the bottom of the roster, which fits a player the team builds around rather than one who builds around others. And the team record is a reminder of what one player can’t do alone — 26 wins and 26 losses, including 3–7 on Inferno while he posted a 1.35 rating there. Over 52 matches the shape is clear: when a round needed someone, it was usually him."
+            },
+            'Nefik': {
+                title: "The Second Gun",
+                summary: "Nefik played more S3 games than anyone (63), and the profile that comes out of that volume is a genuine two-weapon player. On Dust II and Nuke he’s the team’s AWP — 38% of his Dust II kills and 23% of his Nuke kills come through the scope, both team highs, with Nuke sniper output more than four times the team average. On Inferno, Mirage, Ancient and Overpass he barely touches it and plays as a rifler, and his level hardly moves between the two modes: he’s top two on the team on five of the six maps where he has a real sample, inside a tight 1.07–1.23 rating band. That steadiness is his best trait. The second is late rounds: 32 clutches won, second only to Remo, the #2 1v1 win rate, and the top clutch points per round on Nuke. The aim holds up too, with the third-best headshot rate overall and a team-best 68% on Ancient. Among the five players who logged 45+ games he’s the second-best by rating, behind only Remo; Ołmi and Jano rate higher, but over less than a third of his games. The honest caveats are real, though. He’s last on the roster in the UTILITY composite, near the bottom in entrying, and his teams won just 44% of his matches, sixth of seven. He isn’t the player who sets rounds up — he’s the one who finishes them, with whichever weapon the map asks for. Over 63 matches that’s a proven, repeatable role, not a hot streak."
+            },
+            'Badum': {
+                title: "Cleanup Crew",
+                summary: "Badum’s S3 is the profile of a player who rarely goes first and rarely needs to. He takes the opening duel less often than anyone on the roster, and he makes up for it on the follow-up: the team-best assisted-kills rate, with 37.8% of his kills coming off a teammate’s damage, the second-highest share of trade kills, and the third-best TRADING composite. When the entry dies, Badum is usually the one punishing it, and when he does die first himself, the team trades him back more often than almost anyone else. The kills he gets are efficient too — at 103 damage per kill, only Remo wastes less damage finishing his targets. What he doesn’t have is a spike. His rating sits at a modest 1.10, fifth of seven, and his maps hold remarkably steady between 0.93 and 1.08; there’s no map where he takes over, and none where he disappears. The AWP is mostly shelved, with barely one in twenty of his kills coming through the scope. The honest read is that he’s a mid-table fragger with an above-table role: his teams won 48.9% of his matches, third-best on the roster, which fits a player whose value is in finishing what others start rather than starting it. Over 47 matches that’s a real, stable identity — not a star, but the teammate the stars need behind them."
+            },
+            'Vulpes': {
+                title: "The Space Maker",
+                summary: "Vulpes has the second-lowest K/D of the S3 regulars at 0.72, cleared a 1.00 rating in fewer than one map in five, and none of that is the point. His job is the one the scoreboard can’t see. He’s #1 on the roster in the ENTRYING composite and #1 in support rounds on five of the seven maps — Ancient, Dust II, Mirage, Overpass and Train — which makes him the player sent into contact so someone else can take the space behind him. What turns that into value rather than just deaths is the next number: no other regular gets traded as often, and when he’s the first to fall, the team pays it back 25.3% of the time, again the best among the regulars. He also leads the team in assists per round, with 342 assists across 60 matches, and the kills he does get are more often trades than anyone else’s in the regular rotation. That’s a down-payment model: Vulpes spends his life early, and the team collects on it. The costs are plain and shouldn’t be dressed up. He loses more isolated duels than anyone — a 37% 1v1 win rate, last on the team — wins only 43% of his opening duels, and his utility output is below average, so his value sits almost entirely in positioning and timing rather than mechanics. A disorganized side would waste him. His teams won 46.7% of his matches, right at the team average, about what you’d expect from a player whose work only shows up when someone else cashes it in."
+            },
+            'Krakers': {
+                title: "The Battering Ram",
+                summary: "Krakers is the lowest-rated of the S3 regulars at 0.84, with the lowest K/D (0.59) and ADR among them, and he cleared a 1.00 rating in only 8 of his 62 maps. Those numbers are real, and the title doesn’t pretend otherwise. But they describe a job as much as a level. He takes the opening duel more often than anyone on the roster and leads the team in support rounds, which makes him the side’s most frequent first point of contact — and first contact is where ratings go to die. He loses that duel more than he wins it, with a 39% opening success rate, the lowest of the regulars, yet when he does win it the round goes the team’s way 69% of the time. The other half of the breach is the grenades. He does the most utility damage on the roster, 120 per game against a team average of 91 and a huge 224 per game on Inferno, and he’s top three in assists per round. His damage per kill is the team’s highest, which says the same thing from another angle: he softens targets far more often than he finishes them. That’s the breacher’s trade — throw the utility, take the first look, and accept that the frags land on someone else’s line. The costs aren’t small. The team’s lowest survival rate and KAST mean he gives up a lot of rounds early, and a side that doesn’t follow him in gets nothing back. His teams went 28–34. The value is real, but it’s narrow, and it depends on the four people behind him."
+            },
+            'Torrek': {
+                title: null,
+                summary: "This rests on a small sample (12 games), so read it as an early sketch rather than a verdict. Over those games he grades as a trade-first role player: he’d rank #1 in trade-kill share, traded deaths and the ENTRYING composite, and second in TRADING, if the sample held. When he died first, the team traded him back 34.8% of the time, nearly double the team average. He rarely takes the opening duel himself, and his fragging sits around replacement level (a 1.02 rating, 0.85 K/D), so this is a structure profile rather than a star one — but it’s a coherent one."
+            },
+            'Kapi': {
+                title: null,
+                summary: "This rests on a small sample (11 games), so treat it as an early sketch rather than a verdict. The most trustworthy thread is caution: over those games he’d rank among the hardest players on the roster to kill early, with the second-lowest opening-death rate and the second-longest time alive per round, and when he did die first, the team traded him back more often than it did any regular. A 55% headshot rate backs a solid 1.03 rating. The gap is utility — the lowest grenade output in the group by a wide margin — and his teams went 4–7. A careful rifler, waiting on volume."
+            },
+            'Jano': {
+                title: "The Lone Wolf",
+                summary: "Jano’s S3 numbers describe a player who does his best work alone. Over 18 matches he leads the roster in sniper share (17.6% of his kills through the scope) and the SNIPING composite, takes the most opening kills per round, wins the most isolated 1v1s (55.6%), and spends the longest time alive per round — fittingly, he’s also the player most often left as the last one standing. Add the second-best headshot rate, FIREPOWER composite and multikill rate, and a 1.26 rating that’s third on the team, and the individual case is strong. The other side of the lone wolf is that he barely interacts with the pack. He’s last on the roster in TRADING, assists per round and the ENTRYING composite, and when he dies first the team rarely trades him back. That’s what a lurking AWP looks like in the numbers: his kills come from his own angles rather than off a teammate’s damage, and his deaths happen where nobody can follow up. The most uncomfortable number is the result. His teams went 7–11, the worst record among the regulars, and his opening kills turned into round wins only 57% of the time, sixth of seven — the picks happened, but too often in rounds the team couldn’t convert. The caveat is volume: 18 matches is a small window, and the record in particular is the kind of stat that swings hardest on few games. The mechanics, though — the aim, the AWP, the duels — are the traits that show through fastest, and those look real."
+            },
+            'Ołmi': {
+                title: "The Win Condition",
+                summary: "Ołmi only played 18 S3 matches, and in that window he was the most complete player on the roster not named Remo. He holds the team-best ADR (98.9, a hair above Remo), the best headshot rate (57.1%) and the best win rate (10–8, 55.6%), and he’s second in rating, K/D, KAST, survival and maps with a 1.00+ rating. What makes the profile unusual is that it’s genuinely two-way: he’s also second in the UTILITY and TRADING composites and in assists per round, so the damage comes alongside the support work rather than instead of it. The title comes from what’s missing. He won just 4 clutches and is rarely the last player standing — not because he loses late rounds, but because his rounds tend to be settled before they get there. When he wins the opening duel the team takes the round 74% of the time, the best mark on the roster, and he’s the second-hardest regular to kill first. He decides rounds early and leaves little for the endgame. The caveat has to be stated plainly: 18 matches is a fraction of what the core regulars played, and his Mirage run (5 wins from 5) is exactly the kind of small-sample streak that won’t hold forever. But the stats carrying his case — damage, accuracy, KAST, utility — are the ones that settle fastest, so the read is more trustworthy than the volume suggests. On these numbers he’s the clearest #2 on the roster, with the sample as the only asterisk."
+            }
+        };
         // S3 notable stats. Picks chosen by hand; the #N ranks were computed
         // from the S3 sheet: high-sample players are ranked among the 7
         // high-sample players, mid-sample players as if added to that group.
@@ -11369,7 +11405,24 @@
                 { label: "#4 Assisted kills%", metric: 'assistedKills', map: 'All' }
             ]
         };
-        const BEST_PISTOL_TOTALS_S3 = {};
+        // S3 best-pistol totals (hand-entered). Players not listed had none.
+        const BEST_PISTOL_TOTALS_S3 = {
+            'Nefik': 35,
+            'Remo': 34,
+            'Krakers': 23,
+            'Badum': 17,
+            'Vulpes': 17,
+            'Jano': 16,
+            'Ołmi': 15,
+            'Kapi': 5,
+            'Torrek': 4,
+            'Bator': 1,
+            'Tytan': 0,
+            'Kapciuszek': 0,
+            'Ala': 0,
+            'Olek': 0,
+            'Winiar': 0
+        };
         const AWARDS_CONTENT_S5 = {};
         const NOTABLE_STATS_BY_PLAYER_S5 = {};
         const BEST_PISTOL_TOTALS_S5 = {};
