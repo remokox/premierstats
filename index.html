@@ -2103,6 +2103,20 @@
             transform: translateY(-50%) scale(0.98);
         }
 
+        /* Season line sits small above "AWARDS" so the button keeps its width. */
+        .awards-button-text {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1.05;
+        }
+        .awards-button-season {
+            font-size: 0.7rem;
+            letter-spacing: 3px;
+            opacity: 0.85;
+        }
+        .awards-button-season:empty { display: none; }
+
         .awards-button .medal {
             font-size: 1.3rem;
             filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
@@ -2797,7 +2811,10 @@
             </div>
             <button class="awards-button" id="awards-button" type="button" aria-label="Awards">
                 <span class="medal">🥇</span>
-                AWARDS
+                <span class="awards-button-text">
+                    <span class="awards-button-season" id="awards-button-season"></span>
+                    <span>AWARDS</span>
+                </span>
                 <span class="medal">🥈</span>
             </button>
             <div class="awards-message" id="awards-message" role="status" hidden>No data yet</div>
@@ -3508,7 +3525,7 @@
         <!-- AWARDS PAGE -->
         <div id="awards" class="page">
             <div class="section">
-                <h2 class="section-header">Awards</h2>
+                <h2 class="section-header" id="awards-header">Awards</h2>
 
                 <div class="awards-selector-row">
                     <label for="awards-player-select">Player</label>
@@ -9742,7 +9759,7 @@
         // Membership is an explicit per-name list (not a games-count threshold),
         // so tiers can be curated by hand. Any name not listed defaults to 'low'
         // as the safe fallback (treat unknown/thin data as untrustworthy).
-        const SAMPLE_TIERS = {
+        const SAMPLE_TIERS_S4 = {
             high: [
                 'remokox', 'Große Cigarette', 'MasnoPro Vulpes Wójcior', 'Badum',
                 'MasnoCoach THUNDER', 'Torrek', 'flamezvitality', 'monke',
@@ -9757,14 +9774,31 @@
             ]
         };
 
+        // Season 3: more than 15 games = full award, 10-15 = short summary,
+        // fewer than 10 = participation. Keys are the S3 PLAYER_INFO nicks.
+        const SAMPLE_TIERS_S3 = {
+            high: ['Nefik', 'Krakers', 'Vulpes', 'Remo', 'Badum', 'Jano', 'Ołmi'],
+            mid:  ['Torrek', 'Kapi'],
+            low:  ['Bator', 'Tytan', 'Olek', 'Kapciuszek', 'Ala', 'Winiar']
+        };
+
+        // Season 5: filled in when the season ends (Awards is locked until then).
+        const SAMPLE_TIERS_S5 = { high: [], mid: [], low: [] };
+
+        // Active pointer, repointed per season by applyAwardsSeason().
+        let SAMPLE_TIERS = SAMPLE_TIERS_S4;
+
         // Reverse index: player name -> tier ('high' | 'mid' | 'low').
-        const PLAYER_SAMPLE_TIER = (() => {
+        // Rebuilt whenever the active season's tiers change.
+        let PLAYER_SAMPLE_TIER = {};
+        function rebuildSampleTierIndex() {
             const map = {};
             for (const tier of ['high', 'mid', 'low']) {
                 for (const name of SAMPLE_TIERS[tier]) map[name] = tier;
             }
-            return map;
-        })();
+            PLAYER_SAMPLE_TIER = map;
+        }
+        rebuildSampleTierIndex();
 
         // Resolve a player's sample tier; unknown names fall back to 'low'.
         function getSampleTier(playerName) {
@@ -9776,7 +9810,7 @@
         // award title + extended summary. Mid-tier (low-sample) players have NO
         // title (title: null) and a short strengths-focused summary. The lowest
         // sample tier is handled by the existing 'low' branch and is not here.
-        const AWARDS_CONTENT = {
+        const AWARDS_CONTENT_S4 = {
             'remokox': {
                 title: 'The Ceiling',
                 summary: "Remo is the best player on the roster, and the stats don't leave much room to argue otherwise — a 1.43 rating that sits clear of the field, with the top marks in K/D, ADR, opening duels, clutches, and survival. What makes the title fit isn't just that he's first, it's what kind of first he is. He carries the entrying load, the part of the game where you're supposed to trade your life for space, and somehow posts the best survival rate on the team while doing it. Those two things usually pull against each other; in his profile they coexist. He also does the quieter work — team-best flash support — which is the sort of thing star fraggers often leave to lesser players. Over 260 matches there's no sample-size caveat to lean on, so this is just the shape of him. The honest framing is that he's the height the rest of the roster is measured against: not because everyone else is bad, but because he's set the bar a notch above where second place lives. He'll have off maps like anyone, and Mirage is a genuine soft spot. But across the season, when the team needs a round opened, a clutch closed, or simply someone to out-frag the other side's best, he's the answer more often than not."
@@ -10463,7 +10497,7 @@
         // count below. Per-game rate divides by (matches * 2) because there are
         // 2 pistol rounds per game — set via perGameDivisor = 2 on the booster.
         // Keys must match PLAYER_INFO exactly (mind diacritics).
-        const BEST_PISTOL_TOTALS = {
+        const BEST_PISTOL_TOTALS_S4 = {
             'remokox': 162,
             'Große Cigarette': 135,
             'MasnoPro Vulpes Wójcior': 57,
@@ -10519,7 +10553,7 @@
         // by rate among players with >= 30 matches. Sub-30 players show their
         // rate but "<30 games" instead of a rank, and are excluded from the pool.
         let boostersView = 'totals';
-        const BOOSTERS_MIN_GAMES = 25;
+        let BOOSTERS_MIN_GAMES = 25; // per season, set by applyAwardsSeason()
 
         // Cache populated once per player-render so toggling doesn't refetch.
         // { matchesPlayed: {playerKey:int},
@@ -10686,7 +10720,7 @@
                     if (mp >= BOOSTERS_MIN_GAMES && d.rankByPct[playerName] !== undefined) {
                         rankEl.textContent = ordinal(d.rankByPct[playerName]);
                     } else {
-                        rankEl.textContent = '<25 games';
+                        rankEl.textContent = `<${BOOSTERS_MIN_GAMES} games`;
                     }
                 }
             });
@@ -10719,7 +10753,7 @@
         // Threshold for a player to help SET the radar's percentile bounds.
         // Strictly greater than 30 (not inclusive), per spec — distinct from the
         // boosters' BOOSTERS_MIN_GAMES which is >= 30.
-        const RADAR_MIN_GAMES = 30;
+        let RADAR_MIN_GAMES = 30; // per season, set by applyAwardsSeason()
 
         // Linear / inclusive percentile (matches spreadsheet PERCENTILE.INC).
         // sorted must be ascending. p in [0,1]. Returns interpolated value.
@@ -10945,7 +10979,7 @@
         //   label  — exact display text, INCLUDING the "#N " rank prefix
         //   metric — key into NS_METRICS (column + format)
         //   map    — row block to read ('All' = overall)
-        const NOTABLE_STATS_BY_PLAYER = {
+        const NOTABLE_STATS_BY_PLAYER_S4 = {
             // ---- High sample ----
             'remokox': [
                 { label: '#1 Rating 3.0',              metric: 'rating30',        map: 'All' },
@@ -11206,7 +11240,7 @@
             }).join('');
 
             const midNote = (tier === 'mid')
-                ? '<div class="ns-note">Showing ranks if a player was added to high sample size players - &gt;=30 games</div>'
+                ? `<div class="ns-note">Showing ranks if a player was added to high sample size players - ${AWARDS_HIGH_LABEL}</div>`
                 : '';
 
             container.innerHTML = header + midNote +
@@ -11218,6 +11252,63 @@
                     </tr></thead>
                     <tbody>${rowsHtml}</tbody>
                 </table>`;
+        }
+
+        // ===== Awards: per-season data =====
+        // Every Awards table above is the S4 version. Each season has its own
+        // copy, keyed by that season's PLAYER_INFO nicks; applyAwardsSeason()
+        // points the active names at the chosen season's copy.
+        // S3 award titles/summaries, notable stats and best-pistol totals are
+        // still to be written — until then high/mid players show the
+        // "coming later" placeholders and best pistol shows 0.
+        const AWARDS_CONTENT_S3 = {};
+        const NOTABLE_STATS_BY_PLAYER_S3 = {};
+        const BEST_PISTOL_TOTALS_S3 = {};
+        const AWARDS_CONTENT_S5 = {};
+        const NOTABLE_STATS_BY_PLAYER_S5 = {};
+        const BEST_PISTOL_TOTALS_S5 = {};
+
+        const AWARDS_SEASON_DATA = {
+            s4: { tiers: SAMPLE_TIERS_S4, content: AWARDS_CONTENT_S4,
+                  notable: NOTABLE_STATS_BY_PLAYER_S4, pistol: BEST_PISTOL_TOTALS_S4,
+                  // radar: strictly more than N games; boosters: N or more.
+                  radarMin: 30, boostersMin: 25, highLabel: '&gt;=30 games' },
+            // S3: "more than 15 games" for both (boosters >= 16 == more than 15).
+            s3: { tiers: SAMPLE_TIERS_S3, content: AWARDS_CONTENT_S3,
+                  notable: NOTABLE_STATS_BY_PLAYER_S3, pistol: BEST_PISTOL_TOTALS_S3,
+                  radarMin: 15, boostersMin: 16, highLabel: 'more than 15 games' },
+            s5: { tiers: SAMPLE_TIERS_S5, content: AWARDS_CONTENT_S5,
+                  notable: NOTABLE_STATS_BY_PLAYER_S5, pistol: BEST_PISTOL_TOTALS_S5,
+                  radarMin: 30, boostersMin: 25, highLabel: '&gt;=30 games' }
+        };
+
+        let AWARDS_CONTENT = AWARDS_CONTENT_S4;
+        let NOTABLE_STATS_BY_PLAYER = NOTABLE_STATS_BY_PLAYER_S4;
+        let BEST_PISTOL_TOTALS = BEST_PISTOL_TOTALS_S4;
+        let AWARDS_HIGH_LABEL = AWARDS_SEASON_DATA.s4.highLabel;
+
+        const SEASON_SHORT_LABEL = { s3: 'Season 3', s4: 'Season 4', s5: 'Season 5' };
+
+        function applyAwardsSeason(key) {
+            const d = AWARDS_SEASON_DATA[key] || AWARDS_SEASON_DATA.s4;
+            SAMPLE_TIERS = d.tiers;
+            rebuildSampleTierIndex();
+            AWARDS_CONTENT = d.content;
+            NOTABLE_STATS_BY_PLAYER = d.notable;
+            BEST_PISTOL_TOTALS = d.pistol;
+            RADAR_MIN_GAMES = d.radarMin;
+            BOOSTERS_MIN_GAMES = d.boostersMin;
+            AWARDS_HIGH_LABEL = d.highLabel;
+            if (typeof boostersCache !== 'undefined') boostersCache = null;
+
+            // "SEASON 3" above "AWARDS" on the header button, "Season 3 Awards" on the page.
+            const label = SEASON_SHORT_LABEL[key] || 'Season 4';
+            const btn = document.getElementById('awards-button-season');
+            if (btn) btn.textContent = label.toUpperCase();
+            const awBtn = document.getElementById('awards-button');
+            if (awBtn) awBtn.setAttribute('aria-label', label + ' Awards');
+            const h = document.getElementById('awards-header');
+            if (h) h.textContent = label + ' Awards';
         }
 
         // (Re)fill the Awards player dropdown from the ACTIVE season's roster.
@@ -11340,8 +11431,9 @@
             // Reflow all map filters to the chosen season's pool (Overpass vs Cache).
             rebuildMapDropdowns();
 
-            // Refill the Awards dropdown with this season's nicknames, then
-            // lock/unlock Awards depending on season.
+            // Point Awards at this season's data/cutoffs/labels, refill the
+            // dropdown with this season's nicknames, then lock/unlock Awards.
+            applyAwardsSeason(key);
             populateAwardsSelector();
             applySeasonLockedTabs();
 
