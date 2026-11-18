@@ -10972,7 +10972,15 @@
             'timeAliveRound':  { col: 134, fmt: 'int'  },  // ED
             'sniperKillsPct':  { col: 148, fmt: 'pct1' },  // ER
             'openingScore':    { col: 116, fmt: 'int'  },  // DL ("OPENING on <map>" score)
-            'dpr':             { col: 38,  fmt: 'dec2' }   // AL (deaths per round)
+            'dpr':             { col: 38,  fmt: 'dec2' },  // AL (deaths per round)
+            // Added for S3 picks:
+            'kd':              { col: 14,  fmt: 'dec2' },  // N
+            'clutchesWon':     { col: 127, fmt: 'int'  },  // DW (1v1..1v5 clutches won)
+            'tradeKillsPct':   { col: 89,  fmt: 'pct1' },  // CK
+            'openingDeathsTraded':{ col: 76, fmt: 'pct1' },// BX
+            'lastAlive':       { col: 131, fmt: 'pct1' },  // EA
+            'utilityScore':    { col: 168, fmt: 'int'  },  // FL ("UTILITY on <map>" score)
+            'tradeRatio':      { col: 32,  fmt: 'dec2' }   // AF (trade/being traded ratio)
         };
 
         // Per-player ordered stat lists (high + mid sample). Each entry:
@@ -11262,7 +11270,104 @@
         // still to be written — until then high/mid players show the
         // "coming later" placeholders and best pistol shows 0.
         const AWARDS_CONTENT_S3 = {};
-        const NOTABLE_STATS_BY_PLAYER_S3 = {};
+        // S3 notable stats. Picks chosen by hand; the #N ranks were computed
+        // from the S3 sheet: high-sample players are ranked among the 7
+        // high-sample players, mid-sample players as if added to that group.
+        // Low-sample players use the general NOTABLE_STATS_LOW set.
+        const NOTABLE_STATS_BY_PLAYER_S3 = {
+            // ---- High sample ----
+            'Remo': [
+                { label: "#1 Rating 3.0", metric: 'rating30', map: 'All' },
+                { label: "#1 K/D", metric: 'kd', map: 'All' },
+                { label: "#1 Multikill rate", metric: 'multikillRate', map: 'All' },
+                { label: "#1 Maps with 1+ rating%", metric: 'mapsPlusRating', map: 'All' },
+                { label: "#1 Opening success %", metric: 'openingSuccess', map: 'All' },
+                { label: "#1 Clutch points per round", metric: 'clutchPtsRound', map: 'All' },
+                { label: "#1 Enemies flashed per game", metric: 'enemiesFlashedG', map: 'All' },
+                { label: "#1 Survival rate", metric: 'survivalRate', map: 'All' }
+            ],
+            'Nefik': [
+                { label: "#3 HS%", metric: 'hs', map: 'All' },
+                { label: "#2 Clutches won", metric: 'clutchesWon', map: 'All' },
+                { label: "#2 1v1 win%", metric: 'oneVoneWin', map: 'All' },
+                { label: "#1 Nuke sniper kills per round", metric: 'sniperKillsRound', map: 'Nuke' },
+                { label: "#1 Nuke clutch points per round", metric: 'clutchPtsRound', map: 'Nuke' },
+                { label: "#2 Overpass utility kills per 100 rounds", metric: 'utilKills100', map: 'Overpass' },
+                { label: "#2 Dust II opening kills per round", metric: 'openingKillsRound', map: 'Dust II' },
+                { label: "#2 Trader on Mirage", metric: 'tradeRatio', map: 'Mirage' }
+            ],
+            'Badum': [
+                { label: "#2 Lowest damage per kill", metric: 'damagePerKill', map: 'All' },
+                { label: "#2 Trade kills%", metric: 'tradeKillsPct', map: 'All' },
+                { label: "#1 Assisted kills%", metric: 'assistedKills', map: 'All' },
+                { label: "#2 Opening deaths traded%", metric: 'openingDeathsTraded', map: 'All' },
+                { label: "#2 Inferno 1v1 win%", metric: 'oneVoneWin', map: 'Inferno' },
+                { label: "#2 Inferno utility kills per 100 rounds", metric: 'utilKills100', map: 'Inferno' },
+                { label: "#1 ENTRYING on Mirage", metric: 'entryingScore', map: 'Mirage' },
+                { label: "#2 Mirage HS%", metric: 'hs', map: 'Mirage' }
+            ],
+            'Vulpes': [
+                { label: "#1 ENTRYING score", metric: 'entryingScore', map: 'All' },
+                { label: "#1 TRADING score", metric: 'tradingScore', map: 'All' },
+                { label: "#2 Support rounds%", metric: 'supportRounds', map: 'All' },
+                { label: "#1 Traded deaths%", metric: 'tradedDeaths', map: 'All' },
+                { label: "#1 Opening deaths traded%", metric: 'openingDeathsTraded', map: 'All' },
+                { label: "#1 Assists per round", metric: 'assistsRound', map: 'All' },
+                { label: "#2 Overpass win rate", metric: 'winRate', map: 'Overpass' },
+                { label: "#2 Assisted kills%", metric: 'assistedKills', map: 'All' }
+            ],
+            'Krakers': [
+                { label: "#1 Utility damage per game", metric: 'utilDamageGame', map: 'All' },
+                { label: "#1 Support rounds%", metric: 'supportRounds', map: 'All' },
+                { label: "#1 Opening attempts%", metric: 'openingAttempts', map: 'All' },
+                { label: "#2 ENTRYING score", metric: 'entryingScore', map: 'All' },
+                { label: "#5 TRADING score", metric: 'tradingScore', map: 'All' },
+                { label: "#1 UTILITY on Inferno", metric: 'utilityScore', map: 'Inferno' },
+                { label: "#1 Nuke assists per round", metric: 'assistsRound', map: 'Nuke' },
+                { label: "#1 Dust II opening deaths traded%", metric: 'openingDeathsTraded', map: 'Dust II' }
+            ],
+            'Jano': [
+                { label: "#2 HS%", metric: 'hs', map: 'All' },
+                { label: "#1 Opening kills per round", metric: 'openingKillsRound', map: 'All' },
+                { label: "#2 First kill in won rounds%", metric: 'firstKillWonRounds', map: 'All' },
+                { label: "#1 Sniper kills per round", metric: 'sniperKillsRound', map: 'All' },
+                { label: "#1 1v1 win%", metric: 'oneVoneWin', map: 'All' },
+                { label: "#2 Clutch points per round", metric: 'clutchPtsRound', map: 'All' },
+                { label: "#1 Trade/being traded ratio", metric: 'tradeRatio', map: 'All' },
+                { label: "#1 Utility kills per 100 rounds", metric: 'utilKills100', map: 'All' }
+            ],
+            'Ołmi': [
+                { label: "#1 ADR", metric: 'adr', map: 'All' },
+                { label: "#1 HS%", metric: 'hs', map: 'All' },
+                { label: "#1 Win rate", metric: 'winRate', map: 'All' },
+                { label: "#2 Rating 3.0", metric: 'rating30', map: 'All' },
+                { label: "#2 Maps with 1+ rating%", metric: 'mapsPlusRating', map: 'All' },
+                { label: "#2 KAST", metric: 'kast', map: 'All' },
+                { label: "#2 Utility kills per 100 rounds", metric: 'utilKills100', map: 'All' },
+                { label: "#1 Win% after opening", metric: 'winAfterOpening', map: 'All' }
+            ],
+            // ---- Mid sample ----
+            'Torrek': [
+                { label: "#2 Win rate", metric: 'winRate', map: 'All' },
+                { label: "#2 TRADING score", metric: 'tradingScore', map: 'All' },
+                { label: "#1 ENTRYING score", metric: 'entryingScore', map: 'All' },
+                { label: "#1 Traded deaths%", metric: 'tradedDeaths', map: 'All' },
+                { label: "#1 Opening deaths traded%", metric: 'openingDeathsTraded', map: 'All' },
+                { label: "#3 Support rounds%", metric: 'supportRounds', map: 'All' },
+                { label: "#1 Trade kills%", metric: 'tradeKillsPct', map: 'All' },
+                { label: "#2 Assisted kills%", metric: 'assistedKills', map: 'All' }
+            ],
+            'Kapi': [
+                { label: "#3 HS%", metric: 'hs', map: 'All' },
+                { label: "#5 Maps with 1+ rating%", metric: 'mapsPlusRating', map: 'All' },
+                { label: "#2 Fewest opening deaths per round", metric: 'openingDeathsRound', map: 'All' },
+                { label: "#3 Last alive%", metric: 'lastAlive', map: 'All' },
+                { label: "#2 Time alive per round", metric: 'timeAliveRound', map: 'All' },
+                { label: "#4 Saves per round loss", metric: 'savesPerLoss', map: 'All' },
+                { label: "#1 Opening deaths traded%", metric: 'openingDeathsTraded', map: 'All' },
+                { label: "#4 Assisted kills%", metric: 'assistedKills', map: 'All' }
+            ]
+        };
         const BEST_PISTOL_TOTALS_S3 = {};
         const AWARDS_CONTENT_S5 = {};
         const NOTABLE_STATS_BY_PLAYER_S5 = {};
