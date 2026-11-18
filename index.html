@@ -874,12 +874,6 @@
         .role-bar-goat { background: #1dd15d; }
         .role-bar-mid  { background: #f5a623; }
         .role-bar-noob { background: #e05555; }
-        .role-bar-placeholder-note {
-            margin-top: 4px;
-            font-size: 0.7rem;
-            color: var(--text-secondary);
-            font-style: italic;
-        }
 
         .map-filter-container {
             display: flex;
@@ -9476,8 +9470,8 @@
         const AWARDS_PHOTO_BASE = 'https://raw.githubusercontent.com/remokox/premierstats/main/';
 
         /* --- Role in a team ---
-           Static scaffolding. Bar percentages are DEMO placeholders until per-player
-           calculation is wired. Tier thresholds are transcribed verbatim (incl. the
+           Bars start as "Loading…" and are filled per player by loadRolesData()
+           from the ecohunters/Database sheet. Tier thresholds are transcribed verbatim (incl. the
            boundary overlaps we flagged) — display only; the calc step resolves those.
            Final display order should later sort by green (GOAT) %; for now, screenshot order. */
         const ROLES = [
@@ -9503,11 +9497,11 @@
               goat: 'below 0.85',                     mid: '1.12 or below',         noob: 'above 1.12' }
         ];
 
-        // DEMO bar splits [goat, mid, noob] summing to 100 — replaced per player later.
-        const ROLE_DEMO_BARS = [
-            [45, 35, 20], [30, 45, 25], [55, 30, 15], [25, 40, 35], [40, 35, 25],
-            [20, 50, 30], [35, 40, 25], [50, 30, 20], [30, 35, 35], [15, 45, 40]
-        ];
+        // Grey full-width bar carrying a status message ("Loading…", "No match
+        // data", …). Shown until a player's real split has been computed.
+        function roleMessageBarHTML(msg) {
+            return `<div class="role-bar-seg" style="width:100%;background:var(--bg-secondary);color:var(--text-secondary);font-style:italic;">${esc(msg)}</div>`;
+        }
 
         function esc(s) {
             return String(s).replace(/[&<>"']/g, c => (
@@ -9527,7 +9521,6 @@
             const grid = document.getElementById('roles-grid');
             if (!grid) return;
             grid.innerHTML = ROLES.map((r, i) => {
-                const [g, m, n] = ROLE_DEMO_BARS[i] || [34, 33, 33];
                 return `
                 <div class="role-card">
                     <img class="role-card-icon" src="${AWARDS_PHOTO_BASE + r.icon}"
@@ -9546,8 +9539,7 @@
                                 </span>
                             </span>
                         </div>
-                        <div class="role-bar" id="role-bar-${i}">${buildBarHTML(g, m, n)}</div>
-                        <div class="role-bar-placeholder-note" id="role-note-${i}">demo values — not real yet</div>
+                        <div class="role-bar" id="role-bar-${i}">${roleMessageBarHTML('Loading…')}</div>
                     </div>
                 </div>`;
             }).join('');
@@ -9668,7 +9660,7 @@
         const sumCols = (row, cols) => cols.reduce((t, c) => t + num(row[c]), 0);
 
         // Reads the ecohunters sheet, computes real bars for the roles that are wired.
-        // Currently wired: Main AWP (index 0). Others stay on demo values.
+        // All 10 roles are wired to real data.
         // Map-filtered: when mapName !== 'all', only that map's matches are counted,
         // matching the same row[2] map-name convention the other ecohunters-based
         // features use (see loadOverviewKdChart).
@@ -9678,8 +9670,20 @@
             if (!info || !info.ecoName) return;
             const ecoName = info.ecoName;
 
+            // Clear the previous player's/map's bars while this one loads.
+            ROLES.forEach((_, i) => {
+                const bar = document.getElementById(`role-bar-${i}`);
+                if (bar) bar.innerHTML = roleMessageBarHTML('Loading…');
+            });
+
             const data = await fetchSheetData(SHEET_GIDS.ecohunters);
-            if (!data) return; // network/fetch failure — leave demo bars as-is
+            if (!data) { // network/fetch failure — say so instead of leaving a stale bar
+                ROLES.forEach((_, i) => {
+                    const bar = document.getElementById(`role-bar-${i}`);
+                    if (bar) bar.innerHTML = roleMessageBarHTML('Failed to load data');
+                });
+                return;
+            }
 
             // Convert the nav filter value to the sheet's map-name string.
             // null => "All" (no map restriction).
@@ -9720,7 +9724,6 @@
         // role's bar. Real for all future roles.
         function applyRole(roleIndex, rows, bucketFn, emptyMsg) {
             const bar = document.getElementById(`role-bar-${roleIndex}`);
-            const note = document.getElementById(`role-note-${roleIndex}`);
             if (!bar) return;
 
             let goat = 0, mid = 0, noob = 0, counted = 0;
@@ -9734,14 +9737,12 @@
             }
 
             if (counted === 0) {
-                bar.innerHTML = `<div class="role-bar-seg" style="width:100%;background:var(--bg-secondary);color:var(--text-secondary);font-style:italic;">${esc(emptyMsg || 'No match data')}</div>`;
-                if (note) note.style.display = 'none';
+                bar.innerHTML = roleMessageBarHTML(emptyMsg || 'No match data');
                 return;
             }
 
             const [g, m, n] = pctSplit(goat, mid, noob);
             bar.innerHTML = buildBarHTML(g, m, n);
-            if (note) note.style.display = 'none'; // real data — hide the "demo values" note
         }
 
         function resetAwardsSelection() {
@@ -11321,7 +11322,7 @@
                 { label: "#1 Support rounds%", metric: 'supportRounds', map: 'All' },
                 { label: "#1 Opening attempts%", metric: 'openingAttempts', map: 'All' },
                 { label: "#2 ENTRYING score", metric: 'entryingScore', map: 'All' },
-                { label: "#5 TRADING score", metric: 'tradingScore', map: 'All' },
+                { label: "#1 TRADING on Overpass", metric: 'tradingScore', map: 'Overpass' },
                 { label: "#1 UTILITY on Inferno", metric: 'utilityScore', map: 'Inferno' },
                 { label: "#1 Nuke assists per round", metric: 'assistsRound', map: 'Nuke' },
                 { label: "#1 Dust II opening deaths traded%", metric: 'openingDeathsTraded', map: 'Dust II' }
