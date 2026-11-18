@@ -4222,14 +4222,13 @@
             return isS5Layout() ? arr.slice().reverse() : arr;
         }
 
-        // Awards isn't ready until the season ends. In S5 (and S3 for now), lock
-        // the tab to a note and disable its selector; in S4, leave it fully
-        // functional. Idempotent — safe to call on every season switch.
+        // Awards isn't ready until the season ends. In S5, lock the tab to a note
+        // and disable its selector; in S4 and S3 (S3 itself is password-gated),
+        // leave it fully functional. Idempotent — safe to call on every season switch.
         const SEASON_LOCKED_NOTE = 'This part of the site will be populated when the season ends.';
-        const SEASON_LOCKED_NOTE_S3 = 'This part of the site is not available for Season 3.';
         function applySeasonLockedTabs() {
-            const locked = ACTIVE_SEASON === 's5' || ACTIVE_SEASON === 's3';
-            const lockedNote = ACTIVE_SEASON === 's3' ? SEASON_LOCKED_NOTE_S3 : SEASON_LOCKED_NOTE;
+            const locked = ACTIVE_SEASON === 's5';
+            const lockedNote = SEASON_LOCKED_NOTE;
 
             const awSelect = document.getElementById('awards-player-select');
             const awCard = document.querySelector('#awards .awards-card');
@@ -4240,7 +4239,7 @@
                 if (awCard) awCard.style.display = 'none';
                 if (awPrompt) { awPrompt.style.display = 'block'; awPrompt.textContent = lockedNote; }
             } else {
-                // Re-enable selectors for S4 and restore default prompts.
+                // Re-enable selectors for S4/S3 and restore default prompts.
                 if (awSelect) awSelect.disabled = false;
                 if (awPrompt) awPrompt.textContent = 'Select a player to view their awards.';
                 if (typeof resetAwardsSelection === 'function') resetAwardsSelection();
@@ -9867,7 +9866,7 @@
         };
 
         function renderAwards(playerName) {
-            if (ACTIVE_SEASON === 's5' || ACTIVE_SEASON === 's3') { applySeasonLockedTabs(); return; }
+            if (ACTIVE_SEASON === 's5') { applySeasonLockedTabs(); return; }
             const info = PLAYER_INFO[playerName];
             if (!info) return;
 
