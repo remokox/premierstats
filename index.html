@@ -9879,7 +9879,7 @@
             const photo = document.getElementById('awards-photo');
             if (photo) {
                 photo.src = AWARDS_PHOTO_BASE + info.photo;
-                photo.alt = info.nickname;
+                photo.alt = info.longName || info.nickname;
             }
 
             // Performance graph — to be remade.
@@ -11486,7 +11486,9 @@
             Object.keys(PLAYER_INFO).forEach(name => {
                 const opt = document.createElement('option');
                 opt.value = name;
-                opt.textContent = name;
+                // Show the long display name (e.g. S3 'Remo' -> 'remokox'); the
+                // value stays the short key so all lookups keep working.
+                opt.textContent = PLAYER_INFO[name].longName || PLAYER_INFO[name].nickname || name;
                 select.appendChild(opt);
             });
         }
