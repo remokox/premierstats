@@ -11572,9 +11572,121 @@
                 summary: "This rests on a small sample (11 games), so it’s a sketch and the verdict is modest. The individual numbers are thin, a 0.71 rating and 0.48 K/D, the lowest in the group, but there’s a consistent thread in how he plays. If the sample held, he’d rank #1 in the TRADING composite and in assisted-kill share, with nearly half his kills coming off a teammate’s damage, and #2 in trade-kill share and support rounds. So far it’s a follow-up, support-leaning profile rather than a fragging one. More games are needed before reading it either way."
             }
         };
-        // S2 notable stats and best-pistol totals: not supplied yet.
-        const NOTABLE_STATS_BY_PLAYER_S2 = {};
-        const BEST_PISTOL_TOTALS_S2 = {};
+        // S2 notable stats. Stat picks supplied; the #N ranks were computed from
+        // the S2 sheet: high-sample players are ranked among the 7 high-sample
+        // players, mid-sample players as if added to that group. "Fewest" stats
+        // rank lower-is-better. Low-sample players use NOTABLE_STATS_LOW.
+        const NOTABLE_STATS_BY_PLAYER_S2 = {
+            // ---- High sample ----
+            'Remo': [
+                { label: "#1 Rating 3.0", metric: 'rating30', map: 'All' },
+                { label: "#1 K/D", metric: 'kd', map: 'All' },
+                { label: "#1 ADR", metric: 'adr', map: 'All' },
+                { label: "#1 Multikill rate", metric: 'multikillRate', map: 'All' },
+                { label: "#1 Maps with 1+ rating%", metric: 'mapsPlusRating', map: 'All' },
+                { label: "#1 Clutch points per round", metric: 'clutchPtsRound', map: 'All' },
+                { label: "#1 Opening success %", metric: 'openingSuccess', map: 'All' },
+                { label: "#1 KAST", metric: 'kast', map: 'All' }
+            ],
+            'Nefik': [
+                { label: "#2 HS%", metric: 'hs', map: 'All' },
+                { label: "#3 K/D", metric: 'kd', map: 'All' },
+                { label: "#1 Sniper kills per round", metric: 'sniperKillsRound', map: 'All' },
+                { label: "#3 Multikill rate", metric: 'multikillRate', map: 'All' },
+                { label: "#1 Win% after opening", metric: 'winAfterOpening', map: 'All' },
+                { label: "#1 Dust II opening kills per round", metric: 'openingKillsRound', map: 'Dust II' },
+                { label: "#1 Dust II win rate", metric: 'winRate', map: 'Dust II' },
+                { label: "#1 Trader on Mirage", metric: 'tradeRatio', map: 'Mirage' }
+            ],
+            'Badum': [
+                { label: "#1 HS%", metric: 'hs', map: 'All' },
+                { label: "#1 1v1 win%", metric: 'oneVoneWin', map: 'All' },
+                { label: "#1 UTILITY score", metric: 'utilityScore', map: 'All' },
+                { label: "#2 Enemies flashed per game", metric: 'enemiesFlashedG', map: 'All' },
+                { label: "#1 Opening deaths traded%", metric: 'openingDeathsTraded', map: 'All' },
+                { label: "#2 TRADING score", metric: 'tradingScore', map: 'All' },
+                { label: "#3 Support rounds%", metric: 'supportRounds', map: 'All' },
+                { label: "#1 Time alive per round", metric: 'timeAliveRound', map: 'All' }
+            ],
+            'Vulpes': [
+                { label: "#2 Support rounds%", metric: 'supportRounds', map: 'All' },
+                { label: "#3 Assists per round", metric: 'assistsRound', map: 'All' },
+                { label: "#2 Traded deaths%", metric: 'tradedDeaths', map: 'All' },
+                { label: "#2 ENTRYING score", metric: 'entryingScore', map: 'All' },
+                { label: "#2 Opening deaths traded%", metric: 'openingDeathsTraded', map: 'All' },
+                { label: "#1 Dust II saves per round loss", metric: 'savesPerLoss', map: 'Dust II' },
+                { label: "#1 Dust II utility kills per 100 rounds", metric: 'utilKills100', map: 'Dust II' },
+                { label: "#1 Inferno assisted kills%", metric: 'assistedKills', map: 'Inferno' }
+            ],
+            'Krakers': [
+                { label: "#2 Utility damage per game", metric: 'utilDamageGame', map: 'All' },
+                { label: "#1 Support rounds%", metric: 'supportRounds', map: 'All' },
+                { label: "#2 Assists per round", metric: 'assistsRound', map: 'All' },
+                { label: "#3 Win rate", metric: 'winRate', map: 'All' },
+                { label: "#1 ENTRYING score", metric: 'entryingScore', map: 'All' },
+                { label: "#1 TRADING score", metric: 'tradingScore', map: 'All' },
+                { label: "#1 Assisted kills%", metric: 'assistedKills', map: 'All' },
+                { label: "#2 Opening attempts%", metric: 'openingAttempts', map: 'All' }
+            ],
+            'Jano': [
+                { label: "#2 Rating 3.0", metric: 'rating30', map: 'All' },
+                { label: "#2 K/D", metric: 'kd', map: 'All' },
+                { label: "#2 KAST", metric: 'kast', map: 'All' },
+                { label: "#2 1v1 win%", metric: 'oneVoneWin', map: 'All' },
+                { label: "#2 Maps with 1+ rating%", metric: 'mapsPlusRating', map: 'All' },
+                { label: "#1 Utility damage per game", metric: 'utilDamageGame', map: 'All' },
+                { label: "#1 Enemies flashed per game", metric: 'enemiesFlashedG', map: 'All' },
+                { label: "#1 Fewest opening deaths per round", metric: 'openingDeathsRound', map: 'All' }
+            ],
+            'Ołmi': [
+                { label: "#2 ADR", metric: 'adr', map: 'All' },
+                { label: "#3 Rating 3.0", metric: 'rating30', map: 'All' },
+                { label: "#2 Opening success %", metric: 'openingSuccess', map: 'All' },
+                { label: "#2 Opening kills per round", metric: 'openingKillsRound', map: 'All' },
+                { label: "#1 Utility kills per 100 rounds", metric: 'utilKills100', map: 'All' },
+                { label: "#1 Assists per round", metric: 'assistsRound', map: 'All' },
+                { label: "#1 Traded deaths%", metric: 'tradedDeaths', map: 'All' },
+                { label: "#3 KAST", metric: 'kast', map: 'All' }
+            ],
+            // ---- Mid sample (ranked as if added to the high-sample group) ----
+            'Torrek': [
+                { label: "#2 Maps with 1+ rating%", metric: 'mapsPlusRating', map: 'All' },
+                { label: "#1 Survival rate", metric: 'survivalRate', map: 'All' },
+                { label: "#4 KAST", metric: 'kast', map: 'All' },
+                { label: "#1 Fewest opening deaths per round", metric: 'openingDeathsRound', map: 'All' },
+                { label: "#2 Support rounds%", metric: 'supportRounds', map: 'All' },
+                { label: "#3 Assists per round", metric: 'assistsRound', map: 'All' },
+                { label: "#2 TRADING score", metric: 'tradingScore', map: 'All' },
+                { label: "#1 Fewest deaths per round", metric: 'dpr', map: 'All' }
+            ],
+            'Olek': [
+                { label: "#2 Support rounds%", metric: 'supportRounds', map: 'All' },
+                { label: "#3 Assists per round", metric: 'assistsRound', map: 'All' },
+                { label: "#1 TRADING score", metric: 'tradingScore', map: 'All' },
+                { label: "#1 Assisted kills%", metric: 'assistedKills', map: 'All' },
+                { label: "#3 Opening deaths traded%", metric: 'openingDeathsTraded', map: 'All' },
+                { label: "#2 Trade kills%", metric: 'tradeKillsPct', map: 'All' },
+                { label: "#5 ENTRYING score", metric: 'entryingScore', map: 'All' },
+                { label: "#5 Last alive%", metric: 'lastAlive', map: 'All' }
+            ]
+        };
+        // S2 best-pistol totals, summed from the supplied pistol log (128 matches,
+        // 2 pistol rounds each; shared points on ties are counted for each player).
+        const BEST_PISTOL_TOTALS_S2 = {
+            'Remo': 67,
+            'Nefik': 62,
+            'Badum': 55,
+            'Vulpes': 33,
+            'Krakers': 27,
+            'Jano': 15,
+            'Ołmi': 10,
+            'Marcinek': 4,
+            'Winiar': 3,
+            'Torrek': 3,
+            'Kapi': 1,
+            'Olek': 1,
+            'Mingdon': 0
+        };
         const AWARDS_CONTENT_S5 = {};
         const NOTABLE_STATS_BY_PLAYER_S5 = {};
         const BEST_PISTOL_TOTALS_S5 = {};
